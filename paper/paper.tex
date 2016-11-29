@@ -1,3 +1,24 @@
 #generate a paper tex file
 
-#Method
+#Method:
+magSN = parallaxSN = 16 (including systematic parallax error in tgas)
+minimum galactic latitude = 5 degrees
+no NaNs in apass photometry, apass errors > 0
+matched in Apass, wise, 2mass, rave
+check that matching looks good with extreme colors
+calculate distance modulus from sampling of gaia distances
+correct for dust using Bayestar (Schlafly+Finkbeiner); minimal dust to matched stars
+use absolute V band magnitude, B-V, g-r r-i colors
+
+build KDTree of matched stars in Mv/color space
+grab 2048 nearest neighbors
+calculate chisq like distance metric between each chosen star and its neighbors
+generate posterior belief of a chosen stars spectroscopic characteristics (ie Teff, logg, FeH)
+  given the spectroscopic characteristics (and uncertainties) of its nearest neighbors in Mv/color space
+.
+.
+.
+.
+
+#Discussion:
+Apass HR Diagram looks very different from Rave HR Diagram, MS stars are incorrectly being labeled as giants
