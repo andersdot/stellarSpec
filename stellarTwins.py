@@ -226,8 +226,8 @@ def draw_ellipse(mu, C, scales=[1, 2, 3], ax=None, **kwargs):
 
 def XD(raveTwins, raveStar, raveCutMatched, chisqApass, ngauss=2):
 
-    amp_guess = np.zeros(ngauss) + 1.
-    mean_guess = np.array([[4.5, 4.0, 0], [4.5, 3.5, 0]])
+    amp_guess = np.zeros(ngauss)[:,None] + 1.
+    mean_guess = np.array([4.5, 4.0, 0.0])[:,None] #np.array([[4.5, 4.0, 0], [4.5, 3.5, 0]])
 
     temp = raveCutMatched['TEFF'][raveTwins]/1000.
     temp_err = raveCutMatched['E_TEFF'][raveTwins]/1000.
@@ -557,15 +557,15 @@ def plotComparisons(indices, apassTwinIndex, apassSourceIndex, raveTwinIndex, ra
     plt.savefig(filename)
 
 if __name__ == '__main__':
-    plot = sys.argv[1]
-    print plot
+    try: plot = np.bool(sys.argv[1])
+    except IndexError: plot = False
     b_v_lim = [0.25, 1.5]
     g_r_lim = None #[0, 1.5]
 
     r_i_lim = None #[-0.25, 0.75]
     M_v_lim = None #[10, 2]
 
-    teff_lim = [7, 4] #kK
+    teff_lim = [7, 4] #kKd
     log_g_lim = [6, 3]
     feh_lim = [-1.5, 1]
 
@@ -588,7 +588,7 @@ if __name__ == '__main__':
     print 'Number of Matched stars is: ', len(tgasCutMatched)
 
     #plot broad colors to check that cross matching was done properly
-    crossMatchCheck(apassCutMatched, twoMassCutMatched, wiseCutMatched)
+    if plot: crossMatchCheck(apassCutMatched, twoMassCutMatched, wiseCutMatched)
     meanMuMatched, varmuCutMatched = distanceModulus(distCutMatched)
 
     apassMagKeys = ['bmag', 'gmag', 'vmag', 'rmag', 'imag']
@@ -635,6 +635,11 @@ if __name__ == '__main__':
     for i in range(nstars):
         neffRave[i] = neff(np.exp(-0.5*chisqRave[i]))
         neffApass[i] = neff(np.exp(-0.5*chisqApass[i]))
+    maxNeffRave = 50.
+    minNeffRave = 150.
+
+    maxNeffApass = 25.
+    minNeffApass = 100.
 
     if plot:
         logg = raveCutMatched['LOGG'][raveSourceIndex]
@@ -643,11 +648,6 @@ if __name__ == '__main__':
         dwarfs = (logg < 5.) & (logg > 4.2) & (teff > 4500)
         warm = teff > 4500
 
-        maxNeffRave = 50.
-        minNeffRave = 150.
-
-        maxNeffApass = 25.
-        minNeffApass = 100.
         fig, ax = plt.subplots(figsize=(7, 5))
         points = ax.scatter(neffApass, neffRave, lw=0, alpha=0.5, c=logg, norm=mpl.colors.Normalize(), cmap='cool')
         ax.fill_between([np.min(neffApass), maxNeffApass], [np.max(neffRave), np.max(neffRave)], y2 = [minNeffRave, minNeffRave], color='black', alpha=0.1)
@@ -672,7 +672,7 @@ if __name__ == '__main__':
         randarray = data['index']
     except IOError:
         nValues = 3 #logg, Teff, Fe/H
-        ngauss = 2
+        ngauss = 1
         nstars = 100
         gaussAmplitudes = np.zeros((nstars, ngauss))
         gaussMeans = np.zeros((nstars, ngauss, nValues))
@@ -685,9 +685,20 @@ if __name__ == '__main__':
 
 
     fig, ax = plt.subplots(3)
-    for i, key in enumerate(['TEFF', 'LOGG', 'FE_H']):
-        ax[i].scatter(raveCutMatched[raveSourceIndex[randarray]][key], gaussMeans[:,0,i])
-        ax[i].scatter(raveCutMatched[raveSourceIndex[randarray]][key], gaussMeans[:,1,i])
+    for i, (key, keyerror) in enumerate(zip(['TEFF', 'LOGG', 'FE_H'],['E_TEFF', 'E_LOGG', 'E_FE_H'])):
+        mean = (gaussMeans[:,0,i]*gaussAmplitudes[:,0] + gaussMeans[:,1, i]*gaussAmplitudes[:,1])/(gaussAmplitudes[:,0] + gaussAmplitudes[:,1])
+        cov = (gaussCov[:,0, i, i] + gaussCov[:,1,i,i])
+        if key == 'TEFF':
+            mean = 1000.*mean
+            cov = 1000.*cov
+        #ax[i].scatter(raveCutMatched[raveSourceIndex[randarray]][key], gaussMeans[:,0,i])
+        ax[i].scatter(raveCutMatched[raveSourceIndex[randarray]][key], mean)
+        ax[i].errorbar(raveCutMatched[raveSourceIndex[randarray]][key], mean, xerr=raveCutMatched[raveSourceIndex[randarray]][keyerror], yerr=np.sqrt(cov), fmt="none", ecolor='black', zorder=0, lw=0.5, mew=0)
+        xmin, xmax = ax[i].get_xlim()
+        plotarray = np.linspace(xmin, xmax, 100)
+        ax[i].plot(plotarray, plotarray)
+
+
     plt.show()
 
     #nplot = 10
