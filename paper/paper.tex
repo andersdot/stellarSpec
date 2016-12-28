@@ -2,13 +2,17 @@
 % Copyright 2016 the authors.
 \documentclass[11pt,letterpaper]{article}
 
-\newcommand{\acronym}[1]{\small{#1}}
+\newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\Gaia}{\project{Gaia}}
 
+\linespread{1.09}
+\setlength{\parindent}{1.2\baselineskip}
+\sloppy\sloppypar\raggedbottom\frenchspacing
 \begin{document}
 
-\section*{A photometric method for obtaining spectroscopic parameters of stars}
+\section*{\raggedright%
+A photometric method for obtaining spectroscopic parameters of stars}
 
 \noindent
 Lauren Anderson (Flatiron), David W. Hogg (Flatiron), others
@@ -58,7 +62,7 @@ by the Center for Computational Astrophysics at the Simons Foundation
 in New York City.
 
 This work has made use of data from the European Space Agency (ESA)
-mission \Gaia\ (http://www.cosmos.esa.int/gaia), processed by the \Gaia
+mission \Gaia\ (http://www.cosmos.esa.int/gaia), processed by the \Gaia\ %
 Data Processing and Analysis Consortium (\acronym{DPAC},
 http://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the
 \acronym{DPAC} has been provided by national institutions, in particular the
