@@ -5,6 +5,9 @@
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\Gaia}{\project{Gaia}}
+\newcommand{\GALEX}{\project{\acronym{GALEX}}}
+\newcommand{\APASS}{\project{\acronym{APASS}}}
+\newcommand{\RAVEon}{\project{\acronym{RAVE}-on}}
 
 \linespread{1.09}
 \setlength{\parindent}{1.2\baselineskip}
@@ -12,13 +15,40 @@
 \begin{document}
 
 \section*{\raggedright%
-A photometric method for obtaining spectroscopic parameters of stars}
+A photometric method for obtaining spectroscopic parameters of stars,
+with no use of physical models}
 
 \noindent
 Lauren Anderson (Flatiron), David W. Hogg (Flatiron), others
 
 \paragraph{Abstract:}
-foo and bar
+% Context
+Stellar photospheres, to first order, have their spectral properties
+set by the local quantities (spectroscopic parameters) effective
+temperature, surface gravity, and metallicity (chemical composition);
+As their name suggests, spectroscopic parameters can be determined
+with stellar spectra and photosphere models.
+Global stellar structure, including radii, masses, and bolometric
+luminosities cannot be predicted theoretically without a physical
+model of stellar structure or stellar evolution.
+The \Gaia\ Mission has already delivered parallaxes---and therefore
+luminosity information---for millions of stars; \GALEX\ and
+\APASS\ deliver multi-band photometry; for a subset, \RAVEon\ delivers
+spectroscopic parameters.
+% Aims
+In this project, we infer spectroscopic parameters for stars for which
+only photometry and astrometry is available.
+We make no use of stellar structure or evolution models.
+% Methods
+After showing empirically that stars with similar luminosities and
+colors have similar spectroscopic parameters, we train a very flexible
+regression model of the relationship between luminosity, color, and
+the spectroscopic parameters.
+The model is a modification of a k-nearest-neighbors method.
+We use this model to paint spectroscopic parameters onto stars that have
+not been observed spectroscopically.
+% Results
+We find XXX and YYY. Things degrade in ZZZ way when WWW.
 
 \section{Introduction}
 
