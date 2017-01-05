@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from xdgmm import XDGMM
 from sklearn.learning_curve import validation_curve
-from sklearn.model_selection import ShuffleSplit
+from sklearn.cross_validation import ShuffleSplit
 import demo_plots
 
 
@@ -88,16 +88,17 @@ if __name__ == '__main__':
     ngauss = 32
      #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
-    fig, axes = plt.subplots(1, figsize=(7,7))
+    fig, axes = plt.subplots(figsize=(7,7))
     #fig, axes = plt.subplots(1, 2, figsize=(12,5))
-    for j, ax in enumerate(axes):
-        X = np.vstack([data1, data2]).T
-        Xerr = np.zeros(X.shape, X.shape[-1:])
+    for j, ax in enumerate([axes]):
+        X = np.vstack([data1[j], data2[j]]).T
+        print X.shape + X.shape[-1:]
+        Xerr = np.zeros(X.shape + X.shape[-1:])
         diag = np.arange(X.shape[-1])
-        Xerr[:, diag, diag] = np.vstack([err1**2., err2**2.]).T
+        Xerr[:, diag, diag] = np.vstack([err1[j]**2., err2[j]**2.]).T
         xdgmm = XDGMM(method='Bovy')
-        param_range(np.array([1, 2, 4, 8, 16]))
-        shuffle_split = ShuffleSplit(n_splits=len(X), test_size=0.3)
+        param_range = np.array([1, 2, 4, 8, 16])
+        shuffle_split = ShuffleSplit(len(X), 3, test_size=0.3)
         train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
         np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
         train_scores_mean = np.mean(train_scores, axis=1)
