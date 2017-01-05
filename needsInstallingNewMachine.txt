@@ -1,0 +1,6 @@
+needs for setting up on new machine
+  extreme_deconvolution installed: https://github.com/jobovy/extreme-deconvolution
+  dust maps installed: http://dustmaps.readthedocs.io/en/latest/installation.html#using-pip
+                        and copy over dust map files from laptop
+  xdgmm installed: https://github.com/tholoien/XDGMM
+  cp XDGMM/Notebook/demo_plots.py into working directory 

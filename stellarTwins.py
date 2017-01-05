@@ -14,6 +14,7 @@ from dustmaps.sfd import SFDQuery
 from dustmaps.bayestar import BayestarQuery
 from astropy.coordinates import SkyCoord
 import astropy.units as units
+from scipy.integrate import cumtrapz
 import sys
 params = {'legend.fontsize': 'x-large',
           'figure.figsize': (15, 5),
@@ -22,7 +23,6 @@ params = {'legend.fontsize': 'x-large',
          'xtick.labelsize':'x-large',
          'ytick.labelsize':'x-large'}
 plt.rcParams.update(params)
-
 
 def distMetric(sourceInd, matchedInd, apassMagnitudes, varMuMatched, p=False):
     colorChiSq = 0.0
@@ -57,11 +57,8 @@ def raveChisq(raveSourceIndex, raveTwinIndex, raveCutMatched):
 def neff(weights):
     return np.sum(weights)**2./np.sum(weights**2.)
 
-def gaussian(mean, sigma, array, amplitude=None):
-    if amplitude:
-        return amplitude*np.exp(-(array - mean)**2./(2.*sigma**2.))
-    else:
-        return 1./np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
+def gaussian(mean, sigma, array, amplitude=1.):
+    return amplitude/np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
 
 def pdf(mean, sigma, area, array):
     return np.sum(area/np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.)), axis=1)
@@ -209,22 +206,22 @@ def draw_ellipse(mu, C, scales=[1, 2, 3], ax=None, **kwargs):
     sigma_x2 = C[0, 0]
     sigma_y2 = C[1, 1]
     sigma_xy = C[0, 1]
-    print sigma_x2, sigma_y2, sigma_xy
+    #print sigma_x2, sigma_y2, sigma_xy
     alpha = 0.5 * np.arctan2(2 * sigma_xy,
                              (sigma_x2 - sigma_y2))
     tmp1 = 0.5 * (sigma_x2 + sigma_y2)
     tmp2 = np.sqrt(0.25 * (sigma_x2 - sigma_y2) ** 2 + sigma_xy ** 2)
-    print tmp1, tmp2
+    #print tmp1, tmp2
     sigma1 = np.sqrt(np.abs(tmp1 + tmp2))
     sigma2 = np.sqrt(np.abs(tmp1 - tmp2))
-    print sigma1, sigma2
+    #print sigma1, sigma2
     for scale in scales:
         ax.add_patch(Ellipse((mu[0], mu[1]),
                              2 * scale * sigma1, 2 * scale * sigma2,
                              alpha * 180. / np.pi,
                              **kwargs))
 
-def XD(raveTwins, raveStar, raveCutMatched, chisqApass, ngauss=2):
+def XD(raveTwins, raveCutMatched, chisqApass, ngauss=2):
 
     amp_guess = np.zeros(ngauss)[:,None] + 1.
     mean_guess = np.array([4.5, 4.0, 0.0])[:,None] #np.array([[4.5, 4.0, 0], [4.5, 3.5, 0]])
@@ -549,7 +546,7 @@ def plotComparisons(indices, apassTwinIndex, apassSourceIndex, raveTwinIndex, ra
     for plotNumber, j in enumerate(indices):
         try:
             plotRainbows(axes[plotNumber][0:3], apassTwinIndex[j], apassSourceIndex[j], raveTwinIndex[j], raveSourceIndex[j], apassCutMatched, raveCutMatched, varmuCutMatched, chisqApass[j], vmax=10)
-            amp, mean, cov = XD(raveTwinIndex[j], raveSourceIndex[j], raveCutMatched, chisqApass[j], ngauss=ngauss)
+            amp, mean, cov = XD(raveTwinIndex[j], raveCutMatched, chisqApass[j], ngauss=ngauss)
             plotXD2d(axes[plotNumber][3:6], raveTwinIndex[j], raveSourceIndex[j], raveCutMatched, chisqApass[j], mean, cov, ngauss=ngauss, fracMaxPlot=0.01)
         except ValueError:
             pdb.set_trace()
@@ -569,10 +566,10 @@ if __name__ == '__main__':
     log_g_lim = [6, 3]
     feh_lim = [-1.5, 1]
 
-    maxlogg = 5
-    minlogg = 4.2
-    mintemp = 4500
-    SNthreshold = 16
+    maxlogg = 20
+    minlogg = 1
+    mintemp = 100
+    SNthreshold = 4
     filename = 'cutMatchedArrays.' + str(minlogg) + '_' + str(maxlogg) + '_' + str(mintemp) + '_' + str(SNthreshold) + '.npz'
 
     try:
@@ -629,7 +626,45 @@ if __name__ == '__main__':
     #chisqThreshold = 100
     apassSourceIndex, apassTwinIndex, chisqApass = apassSourceTwinIndex(M_V, B_V, g_r, r_i, apassCutMatched, varmuCutMatched, nstars=nstars, nydim=nydim, nNeighbors=nNeighbors)
     raveSourceIndex, raveTwinIndex, chisqRave = raveSourceTwinIndex(apassSourceIndex, apassTwinIndex, raveCutMatched, tgasCutMatched, nstars=nstars, nydim=nydim)
+    nx = 10000
+    nmodel = 20
+    x_model = np.linspace(1, 10, nx)
 
+    mu = np.linspace(3, 6, nmodel)
+    sigma = np.linspace(0.01, 0.5, nmodel)
+    posterior = np.zeros((nmodel,nmodel))
+    for obsIndex in [6]:
+        x_obs = raveCutMatched[raveTwinIndex[obsIndex]]['TEFF']/1000.
+        sigma_obs = raveCutMatched[raveTwinIndex[obsIndex]]['E_TEFF']/1000.
+        x_rave = raveCutMatched[raveSourceIndex[obsIndex]]['TEFF']/1000.
+        sigma_rave = raveCutMatched[raveSourceIndex[obsIndex]]['E_TEFF']/1000.
+        plot=False
+        weight_obs = np.exp(-0.5*chisqApass[obsIndex])
+        for m, mean in enumerate(mu):
+            for s, sig in enumerate(sigma):
+
+                #integrand = gaussian(x_obs[:, None], sigma_obs[:, None], x_model, amplitude=weight_obs[:, None])*gaussian(mean, variance, x_model)
+                #integral = cumtrapz(integrand, x=x_model)
+                #loglikelihood = np.log(integral[:,-1])
+                loglikelihood = np.log(gaussian(mean, sig + sigma_obs, x_obs, amplitude=weight_obs))
+                posterior[m, s] = np.sum(loglikelihood)
+                #if plot:
+                #    fig, ax = plt.subplots(2)
+                #    for foo in np.arange(nNeighbors-1): ax[0].plot(x_model, integrand[foo], alpha=0.5, color='blue')
+                #    ax[1].scatter(loglikelihood, np.log(weight_obs))
+                #    plt.show()
+        fig, ax = plt.subplots(2)
+        maxIndex = np.where(posterior == np.max(posterior))
+        ax[0].plot(x_model, gaussian(mu[maxIndex[0]], sigma[maxIndex[1]], x_model, amplitude=1), color='black', lw=2, label='XD')
+        for foo in range(len(x_obs)): ax[1].plot(x_model, gaussian(x_obs[foo], sigma_obs[foo], x_model, amplitude = weight_obs[foo]), alpha=0.1, color='blue')
+        ax[0].plot(x_model, gaussian(x_rave, sigma_rave, x_model, amplitude=1), color='blue', linestyle='--', lw=2, label='Rave')
+        ax[1].set_xlabel('TEFF [kK]')
+        ax[1].set_yscale('log')
+        ax[1].set_ylim(1,)
+        # plt.tight_layout()
+        #print x_obs[np.argsort(weight_obs)[::-1]][0:100], sigma_obs[np.argsort(weight_obs)[::-1]][0:100]
+        plt.show()
+    pdb.set_trace()
     neffRave = np.zeros(nstars)
     neffApass = np.zeros(nstars)
     for i in range(nstars):
@@ -672,15 +707,15 @@ if __name__ == '__main__':
         randarray = data['index']
     except IOError:
         nValues = 3 #logg, Teff, Fe/H
-        ngauss = 1
-        nstars = 100
+        ngauss = 2
+        nstars = 5
         gaussAmplitudes = np.zeros((nstars, ngauss))
         gaussMeans = np.zeros((nstars, ngauss, nValues))
         gaussCov = np.zeros((nstars, ngauss, nValues, nValues))
 
         randarray = np.random.randint(0, high=len(apassCutMatched), size=nstars)
         for i, j in enumerate(randarray):
-            gaussAmplitudes[i], gaussMeans[i], gaussCov[i] = XD(raveTwinIndex[j], raveSourceIndex[j], raveCutMatched, chisqApass[j], ngauss=ngauss)
+            gaussAmplitudes[i], gaussMeans[i], gaussCov[i] = XD(raveTwinIndex[j], raveCutMatched, chisqApass[j], ngauss=ngauss)
             np.savez('gaussianArrays.npz', gaussAmplitudes=gaussAmplitudes, gaussMeans=gaussMeans, gaussCov=gaussCov, index=randarray)
 
 
