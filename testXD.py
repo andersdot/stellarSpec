@@ -1,16 +1,19 @@
+import matplotlib
+matplotlib.use('pdf')
+import matplotlib.pyplot as plt
+import os
 import stellarTwins as st
 from extreme_deconvolution import extreme_deconvolution as ed
 import astropy.units as units
 import numpy as np
 import pdb
-import matplotlib.pyplot as plt
 import time
 from sklearn.model_selection import train_test_split
 
 from xdgmm import XDGMM
 from sklearn.learning_curve import validation_curve
 from sklearn.cross_validation import ShuffleSplit
-import demo_plots
+import demo_plots as dp
 
 
 def XD(data_1, err_1, data_2, err_2, ngauss=2, mean_guess=np.array([[0.5, 6.], [1., 4.]]), w=0.0):
@@ -85,30 +88,50 @@ if __name__ == '__main__':
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 32
-     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
-
+    ngauss = 64
+    N = 53000
+    #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
+    xdgmm = XDGMM(method='Bovy')
     fig, axes = plt.subplots(figsize=(7,7))
+    optimize = False
+    subset = False
     #fig, axes = plt.subplots(1, 2, figsize=(12,5))
-    for j, ax in enumerate([axes]):
-        X = np.vstack([data1[j], data2[j]]).T
-        print X.shape + X.shape[-1:]
-        Xerr = np.zeros(X.shape + X.shape[-1:])
-        diag = np.arange(X.shape[-1])
-        Xerr[:, diag, diag] = np.vstack([err1[j]**2., err2[j]**2.]).T
-        xdgmm = XDGMM(method='Bovy')
-        param_range = np.array([1, 2, 4, 8, 16])
-        shuffle_split = ShuffleSplit(len(X), 3, test_size=0.3)
-        train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
-        np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
-        train_scores_mean = np.mean(train_scores, axis=1)
-        train_scores_std  = np.std(train_scores, axis=1)
-        test_scores_mean = np.mean(test_scores, axis=1)
-        test_scores_std = np.std(test_scores, axis=1)
-        plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
-        import pdb;pdb.set_trace()
+    for j, ax in zip([1],[axes]):
+        try: 
+            xdgmm = XDGMM(filename='xdgmm.'+ str(ngauss) + 'gauss.53k.fit')
+        except IOError:
 
+            if subset:
+                ind = np.random.randint(0, len(data1[j]), size=1024)
+                X = np.vstack([data1[j][ind], data2[j][ind]]).T
+                Xerr = np.zeros(X.shape + X.shape[-1:])
+                diag = np.arange(X.shape[-1])
+                Xerr[:, diag, diag] = np.vstack([err1[j][ind]**2., err2[j][ind]**2.]).T
+            else:
+                X = np.vstack([data1[j], data2[j]]).T
+                Xerr = np.zeros(X.shape + X.shape[-1:])
+                diag = np.arange(X.shape[-1])
+                Xerr[:, diag, diag] = np.vstack([err1[j]**2., err2[j]**2.]).T
+                
+            if optimize:    
+                param_range = np.array([1, 2, 4, 8, 16, 32, 64, 128]) #, 4, 8, 16])
+                shuffle_split = ShuffleSplit(len(X), 16, test_size=0.3)
+                train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
+                np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
+                train_scores_mean = np.mean(train_scores, axis=1)
+                train_scores_std  = np.std(train_scores, axis=1)
+                test_scores_mean = np.mean(test_scores, axis=1)
+                test_scores_std = np.std(test_scores, axis=1)
+                dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
+                import pdb;pdb.set_trace()
 
+            xdgmm.n_components = ngauss
+            xdgmm = xdgmm.fit(X, Xerr)
+            xdgmm.save_model('xdgmm.'+ str(ngauss) + 'gauss.53k.fit')
+    sample = xdgmm.sample(N)
+    dp.plot_sample(data1[j], data2[j], data1[j], data2[j], sample, xdgmm, xlabel=xlabel[j], ylabel=ylabel[j], xerr=err1[j], yerr=err2[j])
+    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.png')
+"""
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)
 
@@ -130,6 +153,6 @@ if __name__ == '__main__':
         ax.set_xlabel(xlabel[j])
         ax.set_ylabel(ylabel[j])
     ax.set_title('eXtreme Deconvolution')
-    fig.savefig('testXD_' + str(ngauss) + '.png')
     plt.tight_layout()
-    plt.show()
+    fig.savefig('testXD_' + str(ngauss) + '.png')
+"""
