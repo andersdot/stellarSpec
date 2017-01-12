@@ -15,6 +15,8 @@ from sklearn.learning_curve import validation_curve
 from sklearn.cross_validation import ShuffleSplit
 import demo_plots as dp
 
+def fixAbsMag(x):
+    return 5.*np.log10(10.*x)
 
 def XD(data_1, err_1, data_2, err_2, ngauss=2, mean_guess=np.array([[0.5, 6.], [1., 4.]]), w=0.0):
 
@@ -32,6 +34,16 @@ def XD(data_1, err_1, data_2, err_2, ngauss=2, mean_guess=np.array([[0.5, 6.], [
 
     return amp_guess, mean_guess, cov_guess
 
+def timing(X, Xerr, nstars=1024, ngauss=64):
+    amp_guess = np.zeros(ngauss) + np.random.rand(ngauss)
+    cov_guess = np.zeros(((ngauss,) + X.shape[-1:] + X.shape[-1:]))
+    cov_guess[:,diag,diag] = 1.0
+    mean_guess = np.random.rand(ngauss,2)*10.
+    start = time.time()
+    ed(X, Xerr, amp_guess, mean_guess, cov_guess)
+    end = time.time()
+    return end-start, nstars
+
 if __name__ == '__main__':
     b_v_lim = [0.25, 1.5]
     g_r_lim = None #[0, 1.5]
@@ -46,8 +58,8 @@ if __name__ == '__main__':
     maxlogg = 20
     minlogg = 1
     mintemp = 100
-    SNthreshold = 4
-    filename = 'cutMatchedArrays.' + str(minlogg) + '_' + str(maxlogg) + '_' + str(mintemp) + '_' + str(SNthreshold) + '.npz'
+    SNthreshold = 1
+    filename = 'cutMatchedArrays.tgasApassSN1.npz'
 
     try:
         cutMatchedArrays = np.load(filename)
@@ -88,17 +100,19 @@ if __name__ == '__main__':
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 64
-    N = 53000
+    ngauss = 1028
+    N = 120000
     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
     xdgmm = XDGMM(method='Bovy')
     fig, axes = plt.subplots(figsize=(7,7))
     optimize = False
     subset = False
+    timing = False
+    nstar = '1.2M'
     #fig, axes = plt.subplots(1, 2, figsize=(12,5))
     for j, ax in zip([1],[axes]):
         try: 
-            xdgmm = XDGMM(filename='xdgmm.'+ str(ngauss) + 'gauss.53k.fit')
+            xdgmm = XDGMM(filename='xdgmm.'+ str(ngauss) + 'gauss.'+nstar+'.fit')
         except IOError:
 
             if subset:
@@ -112,9 +126,18 @@ if __name__ == '__main__':
                 Xerr = np.zeros(X.shape + X.shape[-1:])
                 diag = np.arange(X.shape[-1])
                 Xerr[:, diag, diag] = np.vstack([err1[j]**2., err2[j]**2.]).T
-                
+                if timing:
+                    numData = [1024, 2048, 4096, 8192]
+                    totTime = np.zeros(4)
+                    for i, ns in enumerate(numData): 
+                        totalTime, numStar = timing(X, Xerr, nstars=ns, ngauss=64)
+                        print totalTime, numStar
+                        totTime[i] = totalTime
+                        plt.plot(numData, totTime)
+                        plt.savefig('timing64Gaussians.png')
+
             if optimize:    
-                param_range = np.array([1, 2, 4, 8, 16, 32, 64, 128]) #, 4, 8, 16])
+                param_range = np.array([256, 512, 1024, 2048, 4096, 8182]) #, 2, 4, 8, 16, 32, 64, 128]) #, 4, 8, 16])
                 shuffle_split = ShuffleSplit(len(X), 16, test_size=0.3)
                 train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
                 np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
@@ -123,13 +146,14 @@ if __name__ == '__main__':
                 test_scores_mean = np.mean(test_scores, axis=1)
                 test_scores_std = np.std(test_scores, axis=1)
                 dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
-                import pdb;pdb.set_trace()
+                
 
             xdgmm.n_components = ngauss
             xdgmm = xdgmm.fit(X, Xerr)
-            xdgmm.save_model('xdgmm.'+ str(ngauss) + 'gauss.53k.fit')
+            xdgmm.save_model('xdgmm.'+ str(ngauss) + 'gauss.'+nstar+'.fit')
     sample = xdgmm.sample(N)
-    dp.plot_sample(data1[j], data2[j], data1[j], data2[j], sample, xdgmm, xlabel=xlabel[j], ylabel=ylabel[j], xerr=err1[j], yerr=err2[j])
+    dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]), xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
+    #dp.plot_sample(data1[j], data2[j], data1[j], data2[j], sample, xdgmm, xlabel=xlabel[j], ylabel=ylabel[j], xerr=err1[j], yerr=err2[j])    
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
