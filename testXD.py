@@ -34,6 +34,16 @@ def XD(data_1, err_1, data_2, err_2, ngauss=2, mean_guess=np.array([[0.5, 6.], [
 
     return amp_guess, mean_guess, cov_guess
 
+def scalability(numberOfStars = [1024, 2048, 4096, 8192]):
+    totTime = np.zeros(4)
+    for i, ns in enumerate(numberOfStars):
+        totalTime, numStar = timing(X, Xerr, nstars=ns, ngauss=64)
+        print totalTime, numStar
+        totTime[i] = totalTime
+        plt.plot(numData, totTime)
+        plt.savefig('timing64Gaussians.png')
+
+
 def timing(X, Xerr, nstars=1024, ngauss=64):
     amp_guess = np.zeros(ngauss) + np.random.rand(ngauss)
     cov_guess = np.zeros(((ngauss,) + X.shape[-1:] + X.shape[-1:]))
@@ -43,6 +53,28 @@ def timing(X, Xerr, nstars=1024, ngauss=64):
     ed(X, Xerr, amp_guess, mean_guess, cov_guess)
     end = time.time()
     return end-start, nstars
+
+def subset(data1, data2, err1, err2, nsamples=1024):
+    ind = np.random.randint(0, len(data1[j]), size=nsamples)
+    return matrixize(data1[ind], data2[ind], err1[ind], err2[ind])
+
+def matrixize(data1, data2, err1, err2):
+    X = np.vstack([data1, data2]).T
+    Xerr = np.zeros(X.shape + X.shape[-1:])
+    diag = np.arange(X.shape[-1])
+    Xerr[:, diag, diag] = np.vstack([err1**2., err2**2.]).T
+    return X, Xerr
+
+def optimize(param_range=np.array([256, 512, 1024, 2048, 4096, 8182])):
+    shuffle_split = ShuffleSplit(len(X), 16, test_size=0.3)
+    train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
+    np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std  = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
+    return train_scores, test_scores
 
 if __name__ == '__main__':
     b_v_lim = [0.25, 1.5]
@@ -58,6 +90,7 @@ if __name__ == '__main__':
     maxlogg = 20
     minlogg = 1
     mintemp = 100
+
     SNthreshold = 1
     filename = 'cutMatchedArrays.tgasApassSN1.npz'
 
@@ -82,7 +115,6 @@ if __name__ == '__main__':
     #M_V = apassCutMatched['vmag'] - V_RedCoeff*bayesDust - meanMuMatched
     g_r = apassCutMatched['gmag'] - g_RedCoeff*bayesDust - (apassCutMatched['rmag'] - r_RedCoeff*bayesDust)
     r_i = apassCutMatched['rmag'] - r_RedCoeff*bayesDust - (apassCutMatched['imag'] - i_RedCoeff*bayesDust)
-
     B_V = apassCutMatched['bmag'] - B_RedCoeff*bayesDust - (apassCutMatched['vmag'] - V_RedCoeff*bayesDust)
     B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
 
@@ -92,71 +124,62 @@ if __name__ == '__main__':
     absMagKinda = tgasCutMatched['parallax']*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
     absMagKinda_err = tgasCutMatched['parallax_error']*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
     #absMagKinda_err = np.sqrt(tgasCutMatched['parallax_error']**2. + 0.3**2.)*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
-    #print absMagKinda_err
-    #plt.scatter(B_V, absMagKinda, alpha=0.1, lw=0)
-    #plt.show()
+
     data1 = [B_V, B_V]
     data2 = [temp, absMagKinda]
     err1 = [B_V_err, B_V_err]
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 1028
+    ngauss = 8
     N = 120000
-    #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
-    xdgmm = XDGMM(method='Bovy')
-    fig, axes = plt.subplots(figsize=(7,7))
     optimize = False
     subset = False
     timing = False
     nstar = '1.2M'
     #fig, axes = plt.subplots(1, 2, figsize=(12,5))
-    for j, ax in zip([1],[axes]):
-        try: 
-            xdgmm = XDGMM(filename='xdgmm.'+ str(ngauss) + 'gauss.'+nstar+'.fit')
-        except IOError:
+    #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
-            if subset:
-                ind = np.random.randint(0, len(data1[j]), size=1024)
-                X = np.vstack([data1[j][ind], data2[j][ind]]).T
-                Xerr = np.zeros(X.shape + X.shape[-1:])
-                diag = np.arange(X.shape[-1])
-                Xerr[:, diag, diag] = np.vstack([err1[j][ind]**2., err2[j][ind]**2.]).T
-            else:
-                X = np.vstack([data1[j], data2[j]]).T
-                Xerr = np.zeros(X.shape + X.shape[-1:])
-                diag = np.arange(X.shape[-1])
-                Xerr[:, diag, diag] = np.vstack([err1[j]**2., err2[j]**2.]).T
-                if timing:
-                    numData = [1024, 2048, 4096, 8192]
-                    totTime = np.zeros(4)
-                    for i, ns in enumerate(numData): 
-                        totalTime, numStar = timing(X, Xerr, nstars=ns, ngauss=64)
-                        print totalTime, numStar
-                        totTime[i] = totalTime
-                        plt.plot(numData, totTime)
-                        plt.savefig('timing64Gaussians.png')
 
-            if optimize:    
-                param_range = np.array([256, 512, 1024, 2048, 4096, 8182]) #, 2, 4, 8, 16, 32, 64, 128]) #, 4, 8, 16])
-                shuffle_split = ShuffleSplit(len(X), 16, test_size=0.3)
-                train_scores, test_scores = validation_curve(xdgmm, X=X, y=Xerr, param_name='n_components', param_range=param_range, n_jobs=3, cv=shuffle_split, verbose=1)
-                np.savez('xdgmm_scores.npz', train_scores=train_scores, test_scores=test_scores)
-                train_scores_mean = np.mean(train_scores, axis=1)
-                train_scores_std  = np.std(train_scores, axis=1)
-                test_scores_mean = np.mean(test_scores, axis=1)
-                test_scores_std = np.std(test_scores, axis=1)
-                dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
-                
+    for thresholdSN in [16, 8, 4, 2, 1]:
+        fig, axes = plt.subplots(figsize=(7,7))
 
-            xdgmm.n_components = ngauss
-            xdgmm = xdgmm.fit(X, Xerr)
-            xdgmm.save_model('xdgmm.'+ str(ngauss) + 'gauss.'+nstar+'.fit')
-    sample = xdgmm.sample(N)
-    dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]), 
-                   xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
+        parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] < thresholdSN
+        sigMax = 1.086/thresholdSN
+        lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
 
-    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.png')
+        indices = parallaxSNcut & lowPhotErrorcut
+
+        filename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.fit'
+        for j, ax in zip([1],[axes]):
+            try:
+                xdgmm = XDGMM(filename=filename)
+            except IOError:
+                if subset: X, Xerr = subset(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indieces], nsamples=1024)
+                else: X, Xerr = matrixize(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indices])
+
+                if timing: scalability(numberOfStars=[1024, 2048, 4096, 8192])
+                if optimize:
+                    test_scores, train_scores = optimize(param_range=np.array([256, 512, 1024, 2048, 4096, 8182]))
+                    #maybe pick ngauss based on train_scores vs test_scores?
+
+
+                try:
+                    xdgmm = XDGMM(method='Bovy', mu=mus, V=Vs, weights=amps)
+                except NameError:
+                    print 'This is the first fit'
+                    xdgmm = XDGMM(method='Bovy')
+                xdgmm.n_components = ngauss
+                xdgmm = xdgmm.fit(X, Xerr)
+                xdgmm.save_model(filename)
+            mus = xdgmm.mu
+            Vs = xdgmm.V
+            amps = xdgmm.weights
+            sample = xdgmm.sample(N)
+            dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]),
+                            xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
+
+            os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)
