@@ -364,7 +364,7 @@ def observationsCutMatched(maxlogg=5., minlogg=4.2, mintemp=4500., SNthreshold=1
     hasDust = medianDist >= minDist
     raveMatch = np.in1d(tgas['source_id'], tgasRave['source_id'])
     if galacticLatMax: inDisk = np.abs(tgas['b'] <= galacticLatMax)
-    matched = goodDistance & noNans & posErrors & lowPhotError & noDust & apassMatch & raveMatch & twoMassMatch & wiseMatch & lowPhotError_IR
+    matched = goodDistance & noNans & posErrors & lowPhotError & apassMatch
 
 
 

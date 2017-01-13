@@ -90,7 +90,8 @@ if __name__ == '__main__':
     temp_err = raveCutMatched['E_TEFF']/1000.
 
     absMagKinda = tgasCutMatched['parallax']*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
-    absMagKinda_err = np.sqrt(tgasCutMatched['parallax_error']**2. + 0.3**2.)*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
+    absMagKinda_err = tgasCutMatched['parallax_error']*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
+    #absMagKinda_err = np.sqrt(tgasCutMatched['parallax_error']**2. + 0.3**2.)*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
     #print absMagKinda_err
     #plt.scatter(B_V, absMagKinda, alpha=0.1, lw=0)
     #plt.show()
@@ -152,8 +153,9 @@ if __name__ == '__main__':
             xdgmm = xdgmm.fit(X, Xerr)
             xdgmm.save_model('xdgmm.'+ str(ngauss) + 'gauss.'+nstar+'.fit')
     sample = xdgmm.sample(N)
-    dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]), xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
-    #dp.plot_sample(data1[j], data2[j], data1[j], data2[j], sample, xdgmm, xlabel=xlabel[j], ylabel=ylabel[j], xerr=err1[j], yerr=err2[j])    
+    dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]), 
+                   xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
+
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
