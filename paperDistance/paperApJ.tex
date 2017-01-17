@@ -1,0 +1,116 @@
+%% This is emulateapj reformatting of the AASTEX sample document
+%%
+\documentclass[iop]{emulateapj}
+
+\newcommand{\vdag}{(v)^\dagger}
+\newcommand{\myemail}{landerson@simonsfoundation.org}
+
+%% You can insert a short comment on the title page using the command below.
+
+\slugcomment{Stars are kinda cool again.}
+
+%% If you wish, you may supply running head information, although
+%% this information may be modified by the editorial offices.
+%% The left head contains a list of authors,
+%% usually a maximum of three (otherwise use et al.).  The right
+%% head is a modified title of up to roughly 44 characters.
+%% Running heads will not print in the manuscript style.
+
+\shorttitle{Measuring Mo Betta Distances}
+\shortauthors{Anderson et al}
+
+%% This is the end of the preamble.  Indicate the beginning of the
+%% paper itself with \begin{document}.
+
+\begin{document}
+
+%% LaTeX will automatically break titles if they run longer than
+%% one line. However, you may use \\ to force a line break if
+%% you desire.
+
+\title{Mo Betta Gaia Distance Measurements, \\
+    Using Gaia + APASS photometry}
+
+%% Use \author, \affil, and the \and command to format
+%% author and affiliation information.
+%% Note that \email has replaced the old \authoremail command
+%% from AASTeX v4.0. You can use \email to mark an email address
+%% anywhere in the paper, not just in the front matter.
+%% As in the title, use \\ to force line breaks.
+
+\author{Lauren Anderson and David Hogg\altaffilmark{1}}
+\affil{Center for Computational Astrophysics}
+
+\author{Boris Leistedt}
+\affil{NYU}
+
+\author{Adrian Price-Whelan}
+\affil{Princeton}
+
+\and
+
+\author{Andrew Casey}
+\affil{Somewhere in the UK}
+
+\altaffiltext{1}{NYU}
+
+\begin{abstract}
+
+\end{abstract}
+
+
+\keywords{stars}
+
+
+\section{Introduction}
+
+Given the likelihood measurements of the parallax to local stars from Gaia, and using prior information for the distances to these stars built from the data themselves, we make more precise measurements of the distances to local stars in Gaia than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus which therefore informs the individual measurements that they are drawn from a tighter distribution. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models. 
+
+\section{Data}
+
+We use stars cross matched in the TGAS and APASS set of observations. We require there are no NaNs in any APASS photometric band, as well as every band having positive errors. We check that the match between APASS and TGAS is good using extreme APASS-WISE colors. We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from sampling of posterior Gaia distances from Adrain. There is minimal dust to the matched stars. To build our model here we use the Gaia G band magnitude, parallax and APASS B-V color. 
+
+\section{Methods}
+
+We build a prior for the distance measurement of Gaia stars using the Gaia measured parallaxes plus APASS photometry to build a color-magnitude-like diagram that serves as the prior for distance measurements of Gaia stars. Instead of making assumptions about the physical distributions of stars in the galaxy, or using stellar models for the modeled HR diagram of stars, we build a prior from the data themselves. 
+
+
+magSN = parallaxSN = 16 (excluding systematic parallax error in tgas)
+train gaussian means, mus, Vs on progressively lower SN dataset 
+
+\begin{equation}
+\label{eq:bayes}
+P(\theta|\textbf{D}, \textbf{I}) = P(\theta ) \frac{P(\textbf{D} |\theta,\textbf{I})}{P(\textbf{D})},
+\end{equation}
+
+
+
+
+Crossvalidation 
+
+\subsection{Formalism} \label{bozomath}
+
+\section{Results}
+
+\section{Discussion}
+Apass HR Diagram looks very different from Rave HR Diagram, MS stars are incorrectly being labeled as giants
+
+\acknowledgments
+
+
+\appendix
+
+\section{Appendix material}
+
+
+\begin{thebibliography}{}
+\end{thebibliography}
+
+\clearpage
+
+\end{document}
+
+
+
+%%
+%% End of file `sample.tex'.
