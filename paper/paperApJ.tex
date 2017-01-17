@@ -63,7 +63,8 @@
 
 
 \section{Introduction}
-Given the likelihood measurements of the parallax from Gaia, and using prior information for the distances built from the data themselves, we make more precise measurements of the distances to Gaia stars than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus the therefore inform the individual measurements of a tighter distribution that they are drawn from. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models. 
+
+Given the likelihood measurements of the parallax to local stars from Gaia, and using prior information for the distances to these stars built from the data themselves, we make more precise measurements of the distances to local stars in Gaia than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus which therefore informs the individual measurements that they are drawn from a tighter distribution. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models. 
 
 \section{Data}
 
@@ -76,6 +77,14 @@ We build a prior for the distance measurement of Gaia stars using the Gaia measu
 
 magSN = parallaxSN = 16 (excluding systematic parallax error in tgas)
 train gaussian means, mus, Vs on progressively lower SN dataset 
+
+\begin{equation}
+\label{eq:bayes}
+P(\theta|\textbf{D}, \textbf{I}) = P(\theta ) \frac{P(\textbf{D} |\theta,\textbf{I})}{P(\textbf{D})},
+\end{equation}
+
+
+
 
 Crossvalidation 
 
