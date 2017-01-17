@@ -367,7 +367,6 @@ def observationsCutMatched(maxlogg=5., minlogg=4.2, mintemp=4500., SNthreshold=1
     matched = goodDistance & noNans & posErrors & lowPhotError & apassMatch
 
 
-
     tgasMatched = tgas[matched]
     magsMatched = tgasApass[matched]
     wiseMatched = tgasWise[matched]

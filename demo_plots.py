@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from astroML.plotting.tools import draw_ellipse
 from astroML.plotting import setup_text_plots
 from sklearn.mixture import GMM as skl_GMM
+import drawEllipse
 
 def plot_bic(param_range,bics,lowest_comp):
     plt.clf()
@@ -50,7 +51,7 @@ def plot_val_curve(param_range, train_mean, train_std, test_mean,
     plt.savefig('val_curve.png')
 
 def fixAbsMag(x):
-    return 5.*np.log10(10.*x) 
+    return 5.*np.log10(10.*x)
 
 def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None):
     setup_text_plots(fontsize=16, usetex=True)
@@ -76,8 +77,10 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
 
     ax4 = fig.add_subplot(224)
     for i in range(xdgmm.n_components):
-        draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
-                     ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
+        points = drawEllipse(xdgmm.mu[i], xdgmmV[i])
+        ax4.plot(points[0, :], fixAbsMag(points[1,:]), alpha=xdgmm.weights[i]/np.max(xdgmm.weights), 'k-')
+        #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
+        #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
     titles = ["Observed Distribution", "Obs+Noise Distribution",
               "Extreme Deconvolution\n  resampling",
@@ -85,7 +88,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
 
     ax = [ax1, ax2, ax3, ax4]
 
-    for i in range(3):
+    for i in range(4):
         ax[i].set_xlim(-2, 3)
         ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
@@ -105,14 +108,14 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
         else:
             ax[i].set_ylabel(ylabel, fontsize = 18)
 
-    ax[3].text(0.05, 0.95, titles[3],
-                   ha='left', va='top', transform=ax[3].transAxes)
+    #ax[3].text(0.05, 0.95, titles[3],
+    #               ha='left', va='top', transform=ax[3].transAxes)
 
-    ax[3].set_ylabel(r'$\varpi10^{0.2*m_G}$', fontsize=18)
-    ax[3].set_xlim(-2, 3)
-    ax[3].set_ylim(3, -1)
-    ax[3].yaxis.tick_right()
-    ax[3].yaxis.set_label_position("right")
+    #ax[3].set_ylabel(r'$\varpi10^{0.2*m_G}$', fontsize=18)
+    #ax[3].set_xlim(-2, 3)
+    #ax[3].set_ylim(3, -1)
+    #ax[3].yaxis.tick_right()
+    #ax[3].yaxis.set_label_position("right")
     plt.tight_layout()
     plt.savefig('plot_sample.png')
 

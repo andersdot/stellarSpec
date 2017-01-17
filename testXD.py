@@ -144,7 +144,7 @@ if __name__ == '__main__':
     for thresholdSN in [16, 8, 4, 2, 1]:
         fig, axes = plt.subplots(figsize=(7,7))
 
-        parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] < thresholdSN
+        parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
         sigMax = 1.086/thresholdSN
         lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
 
@@ -176,8 +176,8 @@ if __name__ == '__main__':
             Vs = xdgmm.V
             amps = xdgmm.weights
             sample = xdgmm.sample(N)
-            dp.plot_sample(data1[j], fixAbsMag(data2[j]), data1[j], fixAbsMag(data2[j]), sample[:,0],fixAbsMag(sample[:,1]),
-                            xdgmm, xlabel=xlabel[j], ylabel='M$_\mathrm{G}$', xerr=err1[j], yerr=fixAbsMag(err2[j]))
+            dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
+                   sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices])) #xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$',
 
             os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.png')
 """
