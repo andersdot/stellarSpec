@@ -1,0 +1,101 @@
+% This file is part of the stellarTwins project.
+% Copyright 2016 the authors.
+\documentclass[11pt,letterpaper]{article}
+
+\newcommand{\acronym}[1]{{\small{#1}}}
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\Gaia}{\project{Gaia}}
+\newcommand{\GALEX}{\project{\acronym{GALEX}}}
+\newcommand{\APASS}{\project{\acronym{APASS}}}
+\newcommand{\RAVEon}{\project{\acronym{RAVE}-on}}
+
+\linespread{1.09}
+\setlength{\parindent}{1.2\baselineskip}
+\sloppy\sloppypar\raggedbottom\frenchspacing
+\begin{document}
+
+\section*{\raggedright%
+A photometric method for obtaining spectroscopic parameters of stars,
+with no use of physical models}
+
+\noindent
+Lauren Anderson (Flatiron), David W. Hogg (Flatiron), others
+
+\paragraph{Abstract:}
+% Context
+Stellar photospheres, to first order, have their spectral properties
+set by the local quantities (spectroscopic parameters) effective
+temperature, surface gravity, and metallicity (chemical composition);
+As their name suggests, spectroscopic parameters can be determined
+with (medium to high resolution) spectral data and photosphere models.
+Global stellar structure, including radii, masses, and bolometric
+luminosities cannot be predicted theoretically without a physical
+model of stellar structure or stellar evolution.
+The \Gaia\ Mission has already delivered parallaxes---and therefore
+luminosity information---for millions of stars; \GALEX\ and
+\APASS\ deliver multi-band photometry; for a subset, \RAVEon\ delivers
+spectroscopic parameters.
+% Aims
+In this project, we infer spectroscopic parameters for stars for which
+only photometry and astrometry is available.
+We make no use of stellar structure or evolution models.
+% Methods
+After showing empirically that stars with similar luminosities and
+colors have similar spectroscopic parameters, we train a very flexible
+regression model of the relationship between luminosity, color, and
+the spectroscopic parameters.
+The model is a modification of a k-nearest-neighbors method.
+We use this model to paint spectroscopic parameters onto stars that have
+not been observed spectroscopically.
+% Results
+We find XXX and YYY. Things degrade in ZZZ way when WWW.
+
+\section{Introduction}
+
+Label transfer, The Cannon, etc.
+
+\section{Method}
+
+magSN = parallaxSN = 16 (including systematic parallax error in tgas)
+
+minimum galactic latitude = 5 degrees
+
+no NaNs in apass photometry, apass errors > 0
+
+matched in Apass, wise, 2mass, rave
+
+check that matching looks good with extreme colors
+
+calculate distance modulus from sampling of gaia distances
+
+correct for dust using Bayestar (Schlafly+Finkbeiner); minimal dust to matched stars
+
+use absolute V band magnitude, B-V, g-r r-i colors
+
+build KDTree of matched stars in Mv/color space
+
+grab 2048 nearest neighbors
+
+calculate chisq like distance metric between each chosen star and its neighbors
+
+generate posterior belief of a chosen stars spectroscopic characteristics (ie Teff, logg, FeH)
+
+given the spectroscopic characteristics (and uncertainties) of its nearest neighbors in Mv/color space
+
+\section{Discussion}
+
+Apass HR Diagram looks very different from Rave HR Diagram, MS stars are incorrectly being labeled as giants
+
+\paragraph{Acknowledgements:}
+This project was developed in part at the 2016 NYC Gaia Sprint, hosted
+by the Center for Computational Astrophysics at the Simons Foundation
+in New York City.
+
+This work has made use of data from the European Space Agency (ESA)
+mission \Gaia\ (http://www.cosmos.esa.int/gaia), processed by the \Gaia\ %
+Data Processing and Analysis Consortium (\acronym{DPAC},
+http://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the
+\acronym{DPAC} has been provided by national institutions, in particular the
+institutions participating in the Gaia Multilateral Agreement.
+
+\end{document}
