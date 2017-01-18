@@ -131,7 +131,7 @@ if __name__ == '__main__':
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 8
+    ngauss = 1028
     N = 120000
     optimize = False
     subset = False
@@ -141,7 +141,10 @@ if __name__ == '__main__':
     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
 
+        
     for thresholdSN in [16, 8, 4, 2, 1]:
+    #for ngauss in [8, 128]:
+        #thresholdSN = 1
         fig, axes = plt.subplots(figsize=(7,7))
 
         parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
@@ -149,7 +152,7 @@ if __name__ == '__main__':
         lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
 
         indices = parallaxSNcut & lowPhotErrorcut
-
+        #filename = 'xdgmm.1028gauss.1.2M.fit'
         filename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.fit'
         for j, ax in zip([1],[axes]):
             try:
@@ -177,9 +180,9 @@ if __name__ == '__main__':
             amps = xdgmm.weights
             sample = xdgmm.sample(N)
             dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
-                   sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices])) #xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$',
+                   sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
 
-            os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.png')
+            os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)

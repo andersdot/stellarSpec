@@ -8,6 +8,7 @@
 ##################
 *.hdf5
 *.fits
+*.fit
 
 # Compiled source #
 ###################
@@ -36,6 +37,8 @@
 *.log
 *.sql
 *.sqlite
+*.err
+*.out
 
 # OS generated files #
 ######################

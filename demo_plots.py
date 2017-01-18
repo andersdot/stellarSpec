@@ -77,8 +77,8 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
 
     ax4 = fig.add_subplot(224)
     for i in range(xdgmm.n_components):
-        points = drawEllipse(xdgmm.mu[i], xdgmmV[i])
-        ax4.plot(points[0, :], fixAbsMag(points[1,:]), alpha=xdgmm.weights[i]/np.max(xdgmm.weights), 'k-')
+        points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
+        ax4.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
         #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
         #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
