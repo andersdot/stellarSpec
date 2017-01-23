@@ -89,7 +89,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
-        ax[i].set_xlim(-2, 3)
+        ax[i].set_xlim(-1, 3)
         ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
         #ax[i].xaxis.set_major_locator(plt.MultipleLocator([-1, 0, 1]))

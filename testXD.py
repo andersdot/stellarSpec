@@ -118,6 +118,12 @@ if __name__ == '__main__':
     B_V = apassCutMatched['bmag'] - B_RedCoeff*bayesDust - (apassCutMatched['vmag'] - V_RedCoeff*bayesDust)
     B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
 
+    g_r = apassCutMatched['gmag'] - apassCutMatched['rmag'] 
+    r_i = apassCutMatched['rmag'] - apassCutMatched['imag'] 
+    B_V = apassCutMatched['bmag'] - apassCutMatched['vmag'] 
+    B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
+
+
     temp = raveCutMatched['TEFF']/1000.
     temp_err = raveCutMatched['E_TEFF']/1000.
 
@@ -142,7 +148,7 @@ if __name__ == '__main__':
 
 
         
-    for thresholdSN in [16, 8, 4, 2, 1]:
+    for thresholdSN in [1]: #[16, 8, 4, 2, 1]:
     #for ngauss in [8, 128]:
         #thresholdSN = 1
         fig, axes = plt.subplots(figsize=(7,7))
