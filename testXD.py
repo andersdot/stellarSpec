@@ -14,6 +14,7 @@ from xdgmm import XDGMM
 from sklearn.learning_curve import validation_curve
 from sklearn.cross_validation import ShuffleSplit
 import demo_plots as dp
+import drawEllipse
 
 def fixAbsMag(x):
     return 5.*np.log10(10.*x)
@@ -76,6 +77,18 @@ def optimize(param_range=np.array([256, 512, 1024, 2048, 4096, 8182])):
     dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
     return train_scores, test_scores
 
+def multiplyGaussians(mean1, cov1, mean2, cov2):
+    a = mean1
+    b = mean2
+    A = cov1
+    B = cov2
+    d = len(a)
+    C = np.linalg.inv(np.linalg.inv(A) + np.linalg.inv(B))
+    c = C*np.linalg.inv(A)*a + C*np.linalg.inv(B)*b
+    exponent = -0.5*(np.transpose(a)*np.linalg.inv(A)*a + np.transpose(b)*np.linalg.inv(B)*b-np.transpose(c)*np.linalg.inv(C)*c)
+    z_c = (2*np.pi)**(-d/2.)*np.linalg.det(C)**0.5*np.linalg.det(A)**-0.5*np.linalg.det(B)**-0.5*np.exp(exponent)
+    return c, C, z_c
+
 if __name__ == '__main__':
     b_v_lim = [0.25, 1.5]
     g_r_lim = None #[0, 1.5]
@@ -113,15 +126,24 @@ if __name__ == '__main__':
     i_RedCoeff = 1.698
     bayesDust = st.dust(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, np.median(distCutMatched, axis=1)*units.pc)
     #M_V = apassCutMatched['vmag'] - V_RedCoeff*bayesDust - meanMuMatched
-    g_r = apassCutMatched['gmag'] - g_RedCoeff*bayesDust - (apassCutMatched['rmag'] - r_RedCoeff*bayesDust)
-    r_i = apassCutMatched['rmag'] - r_RedCoeff*bayesDust - (apassCutMatched['imag'] - i_RedCoeff*bayesDust)
-    B_V = apassCutMatched['bmag'] - B_RedCoeff*bayesDust - (apassCutMatched['vmag'] - V_RedCoeff*bayesDust)
+    #g_r = apassCutMatched['gmag'] - g_RedCoeff*bayesDust - (apassCutMatched['rmag'] - r_RedCoeff*bayesDust)
+    #r_i = apassCutMatched['rmag'] - r_RedCoeff*bayesDust - (apassCutMatched['imag'] - i_RedCoeff*bayesDust)
+    #B_V = apassCutMatched['bmag'] - B_RedCoeff*bayesDust - (apassCutMatched['vmag'] - V_RedCoeff*bayesDust)
+
+    #M_V = apassCutMatched['vmag'] - meanMuMatched
+    g_r = apassCutMatched['gmag'] - apassCutMatched['rmag']
+    r_i = apassCutMatched['rmag'] - apassCutMatched['imag']
+    B_V = apassCutMatched['bmag'] - apassCutMatched['vmag']
     B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
 
-    g_r = apassCutMatched['gmag'] - apassCutMatched['rmag'] 
-    r_i = apassCutMatched['rmag'] - apassCutMatched['imag'] 
-    B_V = apassCutMatched['bmag'] - apassCutMatched['vmag'] 
-    B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
+
+    fig, ax = plt.subplots()
+    ax.scatter(apassCutMatched['bmag'] - apassCutMatched['vmag'], bayesDust)
+    ax.set_xlabel('B-V', fontsize=20)
+    ax.set_ylabel('E(B-V)', fontsize=20)
+    #ax.set_ylim()
+    #ax.set_yscale('log')
+    fig.savefig('BV_vs_dust.png')
 
 
     temp = raveCutMatched['TEFF']/1000.
@@ -137,7 +159,7 @@ if __name__ == '__main__':
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 1028
+    ngauss = 8
     N = 120000
     optimize = False
     subset = False
@@ -147,8 +169,13 @@ if __name__ == '__main__':
     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
 
+<<<<<<< HEAD
         
     for thresholdSN in [1]: #[16, 8, 4, 2, 1]:
+=======
+
+    for thresholdSN in [1]:
+>>>>>>> da75fc4efe5b66654e4ab6282d3ef578d4abe5db
     #for ngauss in [8, 128]:
         #thresholdSN = 1
         fig, axes = plt.subplots(figsize=(7,7))
@@ -189,6 +216,17 @@ if __name__ == '__main__':
                    sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
 
             os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
+            index = 0
+            mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index], err2[j][index])
+            figtest, axtest = plt.subplots()
+            points = drawEllipse.plotvector(mean2, cov2)
+            axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'b-', alpha=1.0)
+            for gg in arange(xdgmm.n_components):
+                newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2, cov2)
+                points = drawEllipse.plotvector(newMean, newCov)
+                axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=newAmp/np.max(xdgmm.weights))
+
+            figtest.savefig('posterior.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)

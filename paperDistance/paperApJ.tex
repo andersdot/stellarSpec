@@ -16,7 +16,7 @@
 %% head is a modified title of up to roughly 44 characters.
 %% Running heads will not print in the manuscript style.
 
-\shorttitle{Measuring Mo Betta Distances}
+\shorttitle{Measuring Mo' Betta Distances}
 \shortauthors{Anderson et al}
 
 %% This is the end of the preamble.  Indicate the beginning of the
@@ -28,7 +28,7 @@
 %% one line. However, you may use \\ to force a line break if
 %% you desire.
 
-\title{Mo Betta Gaia Distance Measurements, \\
+\title{Mo' Betta Gaia Distance Measurements, \\
     Using Gaia + APASS photometry}
 
 %% Use \author, \affil, and the \and command to format
@@ -80,10 +80,11 @@ train gaussian means, mus, Vs on progressively lower SN dataset
 
 \begin{equation}
 \label{eq:bayes}
-P(\theta|\textbf{D}, \textbf{I}) = P(\theta ) \frac{P(\textbf{D} |\theta,\textbf{I})}{P(\textbf{D})},
+P(\theta|\textbf{E}, \textbf{I}) = P(\theta ) \frac{P(\textbf{E} |\theta,\textbf{I})}{P(\textbf{E})},
 \end{equation}
 
 
+where $\theta$ is the model parameters that generate the evidence $\textbf{E}$, and P($\theta$) is the prior knowledge of the model, and $P(\textbf{E} |\theta,\textbf{I})$ is the likelihood of the evidence, given the model and some other prior assumptions. Our evidence is the parallaxes and G band magnitudes from Gaia, and the B and V band magnitudes from APASS. We build the prior from this evidence using extreme deconvolution 
 
 
 Crossvalidation 

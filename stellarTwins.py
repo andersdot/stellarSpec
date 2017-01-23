@@ -57,8 +57,10 @@ def raveChisq(raveSourceIndex, raveTwinIndex, raveCutMatched):
 def neff(weights):
     return np.sum(weights)**2./np.sum(weights**2.)
 
-def gaussian(mean, sigma, array, amplitude=1.):
-    return amplitude/np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
+def gaussian(mean, sigma, array, amplitude=None):
+    if amplitude: return amplitude*np.exp(-(array - mean)**2./(2.*sigma**2.))
+    else: return 1./np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
+
 
 def pdf(mean, sigma, area, array):
     return np.sum(area/np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.)), axis=1)
