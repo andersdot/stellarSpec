@@ -169,13 +169,7 @@ if __name__ == '__main__':
     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
 
-<<<<<<< HEAD
-        
     for thresholdSN in [1]: #[16, 8, 4, 2, 1]:
-=======
-
-    for thresholdSN in [1]:
->>>>>>> da75fc4efe5b66654e4ab6282d3ef578d4abe5db
     #for ngauss in [8, 128]:
         #thresholdSN = 1
         fig, axes = plt.subplots(figsize=(7,7))
@@ -217,15 +211,17 @@ if __name__ == '__main__':
 
             os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
             index = 0
+            dimension = 0
             mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index], err2[j][index])
             figtest, axtest = plt.subplots()
-            points = drawEllipse.plotvector(mean2, cov2)
+            points = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
             axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'b-', alpha=1.0)
-            for gg in arange(xdgmm.n_components):
-                newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2, cov2)
-                points = drawEllipse.plotvector(newMean, newCov)
+            for gg in range(xdgmm.n_components):
+                newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
+                print newMean, newCov, newAmp
+                points = drawEllipse.plotvector(newMean[0], newCov)
                 axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=newAmp/np.max(xdgmm.weights))
-
+            print mean2, cov2, xdgmm.mu, xdgmm.V
             figtest.savefig('posterior.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
