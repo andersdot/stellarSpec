@@ -3,13 +3,13 @@ import numpy as	np
 def fixAbsMag(x):
     return 5.*np.log10(10.*x)
 
-def plotvector(mean, var):
+def plotvector(mean, var, step=0.001):
     """
     mean, var should be *projected* to the 2-d space in which plotting is about to occur
     """
     assert mean.shape == (2,)
     assert var.shape ==	(2, 2)
-    ts = np.arange(0, 2. * np.pi, 0.001) #magic
+    ts = np.arange(0, 2. * np.pi, step) #magic
     w, v = np.linalg.eigh(var)
     ps = np.sqrt(w[0]) * (v[:, 0])[:,None] * (np.cos(ts))[None, :] + \
          np.sqrt(w[1]) * (v[:, 1])[:,None] * (np.sin(ts))[None, :] + \

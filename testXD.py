@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('pdf')
+#matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 import os
 import stellarTwins as st
@@ -15,6 +15,24 @@ from sklearn.learning_curve import validation_curve
 from sklearn.cross_validation import ShuffleSplit
 import demo_plots as dp
 import drawEllipse
+from astropy.coordinates import SkyCoord
+import astropy.units as units
+
+def convert2gal(ra, dec):
+    return SkyCoord([ra, dec], unit=(units.hourangle, units.deg))
+
+def m67indices(tgas, plot=False, dl=0.1, db=0.1):
+    ra = '08:51:18.0'
+    dec = '+11:49:00'
+    l, b = '215.6960', '31.8963'
+    index = (tgas['b'] < np.float(b) + db) & \
+            (tgas['b'] > np.float(b) - db) & \
+            (tgas['l'] < np.float(l) + dl) & \
+            (tgas['l'] > np.float(l) - dl)
+    if plot:
+        plt.scatter(tgas['l'][index], tgas['b'][index], alpha=0.5, lw=0)
+        plt.show()
+    return index
 
 def fixAbsMag(x):
     return 5.*np.log10(10.*x)
@@ -84,12 +102,16 @@ def multiplyGaussians(mean1, cov1, mean2, cov2):
     B = cov2
     d = len(a)
     C = np.linalg.inv(np.linalg.inv(A) + np.linalg.inv(B))
-    c = C*np.linalg.inv(A)*a + C*np.linalg.inv(B)*b
-    exponent = -0.5*(np.transpose(a)*np.linalg.inv(A)*a + np.transpose(b)*np.linalg.inv(B)*b-np.transpose(c)*np.linalg.inv(C)*c)
+    c = np.dot(np.dot(C,np.linalg.inv(A)),a) + np.dot(np.dot(C,np.linalg.inv(B)),b)
+    exponent = -0.5*(np.dot(np.dot(np.transpose(a),np.linalg.inv(A)),a) + \
+                     np.dot(np.dot(np.transpose(b),np.linalg.inv(B)),b) - \
+                     np.dot(np.dot(np.transpose(c),np.linalg.inv(C)),c))
     z_c = (2*np.pi)**(-d/2.)*np.linalg.det(C)**0.5*np.linalg.det(A)**-0.5*np.linalg.det(B)**-0.5*np.exp(exponent)
+
     return c, C, z_c
 
 if __name__ == '__main__':
+    np.random.seed(2)
     b_v_lim = [0.25, 1.5]
     g_r_lim = None #[0, 1.5]
 
@@ -105,7 +127,7 @@ if __name__ == '__main__':
     mintemp = 100
 
     SNthreshold = 1
-    filename = 'cutMatchedArrays.tgasApassSN1.npz'
+    filename = 'cutMatchedArrays.tgasApassSN0.npz'
 
     try:
         cutMatchedArrays = np.load(filename)
@@ -118,6 +140,8 @@ if __name__ == '__main__':
     except IOError:
         tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(maxlogg=maxlogg, minlogg=minlogg, mintemp=mintemp, SNthreshold=SNthreshold, filename=filename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
+
+    indicesM67 = m67indices(tgasCutMatched, plot=True, db=1., dl=1.)
 
     B_RedCoeff = 3.626
     V_RedCoeff = 2.742
@@ -135,7 +159,8 @@ if __name__ == '__main__':
     r_i = apassCutMatched['rmag'] - apassCutMatched['imag']
     B_V = apassCutMatched['bmag'] - apassCutMatched['vmag']
     B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
-
+    #plt.hist(B_V_err, bins=100)
+    #plt.show()
 
     fig, ax = plt.subplots()
     ax.scatter(apassCutMatched['bmag'] - apassCutMatched['vmag'], bayesDust)
@@ -159,7 +184,7 @@ if __name__ == '__main__':
     err2 = [temp_err, absMagKinda_err]
     xlabel = ['B-V', 'B-V']
     ylabel = ['Teff [kK]', r'$\varpi 10^{0.2*m_G}$']
-    ngauss = 8
+    ngauss = 128
     N = 120000
     optimize = False
     subset = False
@@ -202,27 +227,60 @@ if __name__ == '__main__':
                 xdgmm.n_components = ngauss
                 xdgmm = xdgmm.fit(X, Xerr)
                 xdgmm.save_model(filename)
-            mus = xdgmm.mu
-            Vs = xdgmm.V
-            amps = xdgmm.weights
+            #mus = xdgmm.mu
+            #Vs = xdgmm.V
+            #amps = xdgmm.weights
             sample = xdgmm.sample(N)
-            dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
-                   sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
+            #dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
+            #       sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
 
-            os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
-            index = 0
-            dimension = 0
-            mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index], err2[j][index])
-            figtest, axtest = plt.subplots()
-            points = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
-            axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'b-', alpha=1.0)
+            #os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
+            badParallax = np.argsort(err2[j])[::-1]
+            figtest, testax = plt.subplots(1, 2, figsize=(12,5))
+            testax[1].scatter(sample[:,0],fixAbsMag(sample[:,1]), alpha=0.05, lw=0)
             for gg in range(xdgmm.n_components):
-                newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
-                print newMean, newCov, newAmp
-                points = drawEllipse.plotvector(newMean[0], newCov)
-                axtest.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=newAmp/np.max(xdgmm.weights))
-            print mean2, cov2, xdgmm.mu, xdgmm.V
-            figtest.savefig('posterior.png')
+                points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+                testax[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+
+            for index in indicesM67: #np.random.randint(0, len(badParallax), 10)]:
+                dimension = 0
+                mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index]**2., err2[j][index]**2.)
+                print 'the data points mean are:', mean2, np.shape(mean2), ' the data points cov are:', cov2, np.shape(cov2)
+                pointsData = drawEllipse.plotvector(mean2[dimension].T, cov2[dimension].T)
+                #figtest, testax = plt.subplots(1, 2, figsize=(12,5))
+
+                testax[1].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g-', alpha=1.0, lw=4)
+                testax[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g-', alpha=1.0, lw=4)
+                ndim = 2
+                allMeans = np.zeros((xdgmm.n_components, ndim))
+                allAmps = np.zeros(xdgmm.n_components)
+                allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
+                for gg in range(xdgmm.n_components):
+                    #points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+                    #testax[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+                    newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
+                    #print 'the new means are:', newMean, np.shape(newMean),' the new covs are:', newCov, np.shape(newCov), ' the new amps are:', newAmp, np.shape(newAmp)
+                    allMeans[gg] = newMean
+                    allAmps[gg] = newAmp
+                    allCovs[gg] = newCov
+
+                for gg in range(xdgmm.n_components):
+                    points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
+                    testax[1].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', lw=2, alpha=allAmps[gg]/np.max(allAmps)) #, alpha=newAmp/np.max(xdgmm.weights))
+                    testax[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', lw=2, alpha=allAmps[gg]/np.max(allAmps))
+                #print mean2, cov2, xdgmm.mu, xdgmm.V
+            for j in [0,1]:
+                testax[j].set_xlabel('B-V')
+                testax[j].set_ylabel(r'M$_\mathrm{G}$')
+            nsigma = 5.
+                #print mean2[dimension][0], mean2[dimension][1], 3.*cov2[dimension][0,0], 3.*cov2[dimension][1,1]
+            #testax[1].set_xlim(mean2[dimension][0] - nsigma*np.sqrt(cov2[dimension][0,0]), mean2[dimension][0] + nsigma*np.sqrt(cov2[dimension][0,0]))
+            #testax[1].set_ylim(drawEllipse.fixAbsMag(mean2[dimension][1] + nsigma*np.sqrt(cov2[dimension][1,1])), drawEllipse.fixAbsMag(mean2[dimension][1] - nsigma*np.sqrt(cov2[dimension][1,1])))
+            testax[0].set_xlim(-0.5, 2)
+            testax[0].set_ylim(9, -3)
+            #plt.tight_layout()
+            plt.show()
+            #figtest.savefig('posterior.png')
 """
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)
