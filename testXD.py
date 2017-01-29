@@ -17,6 +17,7 @@ import demo_plots as dp
 import drawEllipse
 from astropy.coordinates import SkyCoord
 import astropy.units as units
+import scipy.integrate
 
 def convert2gal(ra, dec):
     return SkyCoord([ra, dec], unit=(units.hourangle, units.deg))
@@ -24,15 +25,27 @@ def convert2gal(ra, dec):
 def m67indices(tgas, plot=False, dl=0.1, db=0.1):
     ra = '08:51:18.0'
     dec = '+11:49:00'
-    l, b = '215.6960', '31.8963'
+    l, b = '215.6960', '31.8963' #M67
+    #l, b = '166.5707', '-23.5212' #pleiades
     index = (tgas['b'] < np.float(b) + db) & \
             (tgas['b'] > np.float(b) - db) & \
             (tgas['l'] < np.float(l) + dl) & \
             (tgas['l'] > np.float(l) - dl)
     if plot:
         plt.scatter(tgas['l'][index], tgas['b'][index], alpha=0.5, lw=0)
-        plt.show()
+        plt.savefig('clusterOnSky.png')
     return index
+
+def fixParallax(parallaxKinda, apparent_mag):
+    return parallaxKinda/10.**(0.2*apparent_mag)
+
+
+def plotDistance(ax, mean, sigma, amp, apparent_mag, logminParallax=-4., logmaxParallax=0., lw=1, color='black', alpha=1.0, npoints=10000):
+    x = np.logspace(logminParallax, logmaxParallax, npoints)
+    distance = 1./fixParallax(x, apparent_mag)
+    varpiDist = st.gaussian(mean, sigma, x, amplitude=amp)
+    ax.plot(distance, varpiDist, 'k', alpha=alpha, lw=lw, color=color)
+
 
 def fixAbsMag(x):
     return 5.*np.log10(10.*x)
@@ -95,18 +108,22 @@ def optimize(param_range=np.array([256, 512, 1024, 2048, 4096, 8182])):
     dp.plot_val_curve(param_range, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
     return train_scores, test_scores
 
-def multiplyGaussians(mean1, cov1, mean2, cov2):
-    a = mean1
-    b = mean2
-    A = cov1
-    B = cov2
+def multiplyGaussians(a, A, b, B):
+    Ainv = np.linalg.inv(A)
+    Binv = np.linalg.inv(B)
+    C = np.linalg.inv(Ainv + Binv)
+    Cinv = np.linalg.inv(C)
     d = len(a)
-    C = np.linalg.inv(np.linalg.inv(A) + np.linalg.inv(B))
-    c = np.dot(np.dot(C,np.linalg.inv(A)),a) + np.dot(np.dot(C,np.linalg.inv(B)),b)
-    exponent = -0.5*(np.dot(np.dot(np.transpose(a),np.linalg.inv(A)),a) + \
-                     np.dot(np.dot(np.transpose(b),np.linalg.inv(B)),b) - \
-                     np.dot(np.dot(np.transpose(c),np.linalg.inv(C)),c))
-    z_c = (2*np.pi)**(-d/2.)*np.linalg.det(C)**0.5*np.linalg.det(A)**-0.5*np.linalg.det(B)**-0.5*np.exp(exponent)
+    #print 'C is: ', C, 'A is: ', A, 'Ainv is: ', Ainv, 'B is: ', B, 'Binv is: ', Binv
+    #print 'the first term is : mean - ', a, ' first part - ', np.dot(C, Ainv), ' whole thing -', np.dot(np.dot(C,Ainv), a)
+    #print 'the second term is: mean - ', b, ' first part - ', np.dot(C, Binv), ' whole thing -', np.dot(np.dot(C,Binv), b)
+    c = np.dot(np.dot(C,Ainv),a) + np.dot(np.dot(C,Binv),b)
+    #print 'the new mean is :', c
+
+    exponent = -0.5*(np.dot(np.dot(np.transpose(a),Ainv),a) + \
+                     np.dot(np.dot(np.transpose(b),Binv),b) - \
+                     np.dot(np.dot(np.transpose(c),Cinv),c))
+    z_c= (2*np.pi)**(-d/2.)*np.linalg.det(C)**0.5*np.linalg.det(A)**-0.5*np.linalg.det(B)**-0.5*np.exp(exponent)
 
     return c, C, z_c
 
@@ -141,7 +158,7 @@ if __name__ == '__main__':
         tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(maxlogg=maxlogg, minlogg=minlogg, mintemp=mintemp, SNthreshold=SNthreshold, filename=filename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
 
-    indicesM67 = m67indices(tgasCutMatched, plot=True, db=1., dl=1.)
+    indicesM67 = m67indices(tgasCutMatched, plot=True, db=1.0, dl=1.0)
 
     B_RedCoeff = 3.626
     V_RedCoeff = 2.742
@@ -161,7 +178,7 @@ if __name__ == '__main__':
     B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
     #plt.hist(B_V_err, bins=100)
     #plt.show()
-
+    """
     fig, ax = plt.subplots()
     ax.scatter(apassCutMatched['bmag'] - apassCutMatched['vmag'], bayesDust)
     ax.set_xlabel('B-V', fontsize=20)
@@ -169,7 +186,7 @@ if __name__ == '__main__':
     #ax.set_ylim()
     #ax.set_yscale('log')
     fig.savefig('BV_vs_dust.png')
-
+    """
 
     temp = raveCutMatched['TEFF']/1000.
     temp_err = raveCutMatched['E_TEFF']/1000.
@@ -190,97 +207,178 @@ if __name__ == '__main__':
     subset = False
     timing = False
     nstar = '1.2M'
-    #fig, axes = plt.subplots(1, 2, figsize=(12,5))
-    #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
+
+    thresholdSN = 0.001
 
 
-    for thresholdSN in [0.001]: #[16, 8, 4, 2, 1]:
-    #for ngauss in [8, 128]:
-        #thresholdSN = 1
-        fig, axes = plt.subplots(figsize=(7,7))
+    fig, axes = plt.subplots(figsize=(7,7))
+    parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
+    sigMax = 1.086/thresholdSN
+    lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
 
-        parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
-        sigMax = 1.086/thresholdSN
-        lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
-
-        indices = parallaxSNcut & lowPhotErrorcut
+    indices = parallaxSNcut & lowPhotErrorcut
         #filename = 'xdgmm.1028gauss.1.2M.fit'
-        filename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.fit'
-        for j, ax in zip([1],[axes]):
-            try:
-                xdgmm = XDGMM(filename=filename)
-            except IOError:
-                if subset: X, Xerr = subset(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indieces], nsamples=1024)
-                else: X, Xerr = matrixize(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indices])
+    filename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.fit'
+    for j, ax in zip([1],[axes]):
+        try:
+            xdgmm = XDGMM(filename=filename)
+        except IOError:
+            if subset: X, Xerr = subset(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indieces], nsamples=1024)
+            else: X, Xerr = matrixize(data1[j][indices], data2[j][indices], err1[j][indices], err2[j][indices])
 
-                if timing: scalability(numberOfStars=[1024, 2048, 4096, 8192])
-                if optimize:
+            if timing: scalability(numberOfStars=[1024, 2048, 4096, 8192])
+            if optimize:
                     test_scores, train_scores = optimize(param_range=np.array([256, 512, 1024, 2048, 4096, 8182]))
                     #maybe pick ngauss based on train_scores vs test_scores?
 
 
-                try:
-                    xdgmm = XDGMM(method='Bovy', mu=mus, V=Vs, weights=amps)
-                except NameError:
-                    print 'This is the first fit'
-                    xdgmm = XDGMM(method='Bovy')
-                xdgmm.n_components = ngauss
-                xdgmm = xdgmm.fit(X, Xerr)
-                xdgmm.save_model(filename)
-            #mus = xdgmm.mu
-            #Vs = xdgmm.V
-            #amps = xdgmm.weights
-            sample = xdgmm.sample(N)
-            #dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
-            #       sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
+            try:
+                xdgmm = XDGMM(method='Bovy', mu=mus, V=Vs, weights=amps)
+            except NameError:
+                print 'This is the first fit'
+                xdgmm = XDGMM(method='Bovy')
+            xdgmm.n_components = ngauss
+            xdgmm = xdgmm.fit(X, Xerr)
+            xdgmm.save_model(filename)
+        sample = xdgmm.sample(N)
+        figPrior, axPrior = plt.subplots()
+        for gg in range(xdgmm.n_components):
+            points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+            axPrior.plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5)
+        axPrior.invert_yaxis()
+        figPrior.savefig('prior.png')
+            #alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
-            #os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
-            badParallax = np.argsort(err2[j])[::-1]
-            figtest, testax = plt.subplots(1, 2, figsize=(12,5))
-            testax[1].scatter(sample[:,0],fixAbsMag(sample[:,1]), alpha=0.05, lw=0)
+        #dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
+        #       sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
+
+        #os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
+        badParallax = np.argsort(err2[j])[::-1]
+        nPosteriorPoints = 10000
+        summedPosterior = np.zeros((np.sum(indicesM67), nPosteriorPoints))
+
+        for k, index in enumerate(np.where(indicesM67)[0]):
+            individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
+            figPost, axPost = plt.subplots(1, 3, figsize=(17,7))
+            figtest, testax = plt.subplots(1, 3, figsize=(17,7))
+            windowFactor = 100.
+            logminabsMagKinda = np.log10(tgasCutMatched['parallax'][index]*1e-3/windowFactor*10.**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
+            logmaxabsMagKinda = np.log10(tgasCutMatched['parallax'][index]*1e-3*windowFactor*10**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
+            xabsMagKinda = np.logspace(logminabsMagKinda, logmaxabsMagKinda, nPosteriorPoints)
+            xparallax = fixParallax(xabsMagKinda, tgasCutMatched['phot_g_mean_mag'][index])
+            print 'the min and max of xparallax is: ', np.min(xparallax), np.max(xparallax)
+
+
+            dimension = 0
+            mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index], err2[j][index])
+            pointsData = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
+
+            #print 'the observed parallax is: ',tgasCutMatched['parallax'][index], 'the fixed parallax is: ', fixParallax(data2[j][index], tgasCutMatched['phot_g_mean_mag'][index])
+
+            testax[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g')
+            axPost[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g')
+
+            testax[1].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
+            axPost[1].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
+
+            testax[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
+            axPost[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
+
+            ndim = 2
+            allMeans = np.zeros((xdgmm.n_components, ndim))
+            allAmps = np.zeros(xdgmm.n_components)
+            allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
             for gg in range(xdgmm.n_components):
                 points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
                 testax[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+                axPost[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
-            for index in indicesM67: #np.random.randint(0, len(badParallax), 10)]:
-                dimension = 0
-                mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index]**2., err2[j][index]**2.)
-                print 'the data points mean are:', mean2, np.shape(mean2), ' the data points cov are:', cov2, np.shape(cov2)
-                pointsData = drawEllipse.plotvector(mean2[dimension].T, cov2[dimension].T)
-                #figtest, testax = plt.subplots(1, 2, figsize=(12,5))
+                newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
+                newAmp *= xdgmm.weights[gg]
+                allMeans[gg] = newMean
+                allAmps[gg] = newAmp
+                allCovs[gg] = newCov
+            #print 'the old average distance was: ', 1./(tgasCutMatched['parallax'][index]*1e-3)
+            #print 'the new average distances are: ', 1./fixParallax(allMeans[:,1], tgasCutMatched['phot_g_mean_mag'][index])
+            for gg in range(xdgmm.n_components):
+                points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
 
-                testax[1].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g-', alpha=1.0, lw=4)
-                testax[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g-', alpha=1.0, lw=4)
-                ndim = 2
-                allMeans = np.zeros((xdgmm.n_components, ndim))
-                allAmps = np.zeros(xdgmm.n_components)
-                allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
-                for gg in range(xdgmm.n_components):
-                    #points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-                    #testax[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-                    newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
-                    #print 'the new means are:', newMean, np.shape(newMean),' the new covs are:', newCov, np.shape(newCov), ' the new amps are:', newAmp, np.shape(newAmp)
-                    allMeans[gg] = newMean
-                    allAmps[gg] = newAmp
-                    allCovs[gg] = newCov
+                testax[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
+                axPost[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
 
-                for gg in range(xdgmm.n_components):
-                    points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
-                    testax[1].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', lw=2, alpha=allAmps[gg]/np.max(allAmps)) #, alpha=newAmp/np.max(xdgmm.weights))
-                    testax[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', lw=2, alpha=allAmps[gg]/np.max(allAmps))
-                #print mean2, cov2, xdgmm.mu, xdgmm.V
-            for j in [0,1]:
-                testax[j].set_xlabel('B-V')
-                testax[j].set_ylabel(r'M$_\mathrm{G}$')
-            nsigma = 5.
-                #print mean2[dimension][0], mean2[dimension][1], 3.*cov2[dimension][0,0], 3.*cov2[dimension][1,1]
-            #testax[1].set_xlim(mean2[dimension][0] - nsigma*np.sqrt(cov2[dimension][0,0]), mean2[dimension][0] + nsigma*np.sqrt(cov2[dimension][0,0]))
-            #testax[1].set_ylim(drawEllipse.fixAbsMag(mean2[dimension][1] + nsigma*np.sqrt(cov2[dimension][1,1])), drawEllipse.fixAbsMag(mean2[dimension][1] - nsigma*np.sqrt(cov2[dimension][1,1])))
+                testax[1].plot(xparallax*1e3, st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg]),  lw=1, color='black', alpha=0.5)
+                testax[2].plot(1./xparallax, st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg]),  lw=1, color='black', alpha=0.5)
+
+                summedPosterior[k,:] += st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg])
+                individualPosterior[gg,:] = st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg])
+            if np.max(summedPosterior[k,:][xparallax < 10]) > 1:
+                figAll, axAll = plt.subplots()
+                for ii in range(xdgmm.n_components): axAll.plot(1./xparallax, individualPosterior[ii,:])
+                axAll.set_xscale('log')
+                axAll.set_yscale('log')
+                axAll.set_ylim(1e-2,)
+                figAll.savefig('allPosteriorsBug.' + str(k) + '.png')
+                pdb.set_trace()
+            normalization = scipy.integrate.cumtrapz(summedPosterior[k,:], xparallax)[-1]
+            summedPosterior[k,:] = summedPosterior[k,:]/normalization
+            axPost[1].plot(fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index])*1e3, summedPosterior[k,:], 'k', lw=2)
+            axPost[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xparallax), 'g', lw=2)
+            axPost[2].plot(1./xparallax, summedPosterior[k,:], 'k', lw=2)
+
+            xlim = (tgasCutMatched['parallax'][index]-3.*tgasCutMatched['parallax_error'][index], tgasCutMatched['parallax'][index]+3.*tgasCutMatched['parallax_error'][index])
+            xlimDist = (10,)
             testax[0].set_xlim(-0.5, 2)
             testax[0].set_ylim(9, -3)
+            testax[1].set_xlim(xlim)
+            testax[1].set_xlabel('Parallax [mas]')
+
+            testax[2].set_xscale('log')
+            testax[2].set_yscale('log')
+            testax[2].set_ylim(1e-2,)
+            testax[2].set_xlim(10,)
+            testax[2].set_xlabel('Distance [pc]')
+
+            axPost[0].set_xlim(-0.5, 2)
+            axPost[0].set_ylim(9, -3)
+            axPost[0].set_xlabel('B-V', fontsize=18)
+            axPost[0].set_ylabel(r'M$_\mathrm{G}$', fontsize=18)
+            axPost[1].set_xlim(xlim)
+            #axPost[1].set_ylim(0, 10)
+            axPost[1].set_xlabel('Parallax [mas]', fontsize=18)
+
+            axPost[2].set_xscale('log')
+            #axPost[2].set_yscale('log')
+            #axPost[2].set_ylim(1e-2,)
+            #axPost[2].set_xlim(10,)
+            #axPost[2].set_ylim(0, 10)
+            axPost[2].set_xlabel('Distance [pc]', fontsize=18)
             #plt.tight_layout()
-            plt.show()
-            #figtest.savefig('posterior.png')
+            figPost.savefig('example.' + str(k) + '.png')
+            #plt.show()
+                #pdb.set_trace()
+                #print mean2, cov2, xdgmm.mu, xdgmm.V
+    np.save('summedPosteriorM67', summedPosterior)
+    fig, ax = plt.subplots(2, figsize=(7, 15))
+    for k, index in enumerate(np.where(indicesM67)[0]):
+        windowFactor = 100.
+        logminParallax = np.log10(tgasCutMatched['parallax'][index]*1e-3/windowFactor*10.**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
+        logmaxParallax = np.log10(tgasCutMatched['parallax'][index]*1e-3*windowFactor*10**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
+        xparallax = np.logspace(logminParallax, logmaxParallax, nPosteriorPoints)
+
+        ax[0].plot(1./fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index]), st.gaussian(data2[j][index], err2[j][index], xparallax), 'g', lw=2, alpha=0.5)
+        ax[1].plot(1./fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index]), summedPosterior[k,:], 'k', lw=2, alpha=0.5)
+    ax[0].plot(np.zeros(1000) + 800, np.linspace(0, 8, 1000), 'b--', lw=2)
+    ax[0].plot(np.zeros(1000) + 900, np.linspace(0, 8, 1000), 'b--', lw=2)
+    ax[1].plot(np.zeros(1000) + 800, np.linspace(0, 30., 1000), 'b--', lw=2)
+    ax[1].plot(np.zeros(1000) + 900, np.linspace(0, 30., 1000), 'b--', lw=2)
+
+    ax[0].set_xlim(10,3000)
+    ax[1].set_xlim(10, 3000)
+    ax[1].set_ylim(0, 30)
+    ax[0].set_xlabel('Distance [pc]')
+    ax[1].set_xlabel('Distance [pc]')
+    plt.savefig('distancesM67.png')
+
 """
         mean_guess = np.random.rand(ngauss,2)*10.
         X_train, X_test, y_train, y_test, xerr_train, xerr_test, yerr_train, yerr_test = train_test_split(data1[j], data2[j], err1[j], err2[j], test_size=0.4, random_state=0)
