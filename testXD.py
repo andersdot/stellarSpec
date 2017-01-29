@@ -194,7 +194,7 @@ if __name__ == '__main__':
     #[np.array([[0.5, 6.], [1., 4.]]), np.array([[0.5, 1.], [1., 2.]])]
 
 
-    for thresholdSN in [1]: #[16, 8, 4, 2, 1]:
+    for thresholdSN in [0.001]: #[16, 8, 4, 2, 1]:
     #for ngauss in [8, 128]:
         #thresholdSN = 1
         fig, axes = plt.subplots(figsize=(7,7))
