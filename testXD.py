@@ -143,7 +143,7 @@ if __name__ == '__main__':
     minlogg = 1
     mintemp = 100
 
-    SNthreshold = 1
+    SNthreshold = 0.001
     filename = 'cutMatchedArrays.tgasApassSN0.npz'
 
     try:
@@ -158,7 +158,7 @@ if __name__ == '__main__':
         tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(maxlogg=maxlogg, minlogg=minlogg, mintemp=mintemp, SNthreshold=SNthreshold, filename=filename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
 
-    indicesM67 = m67indices(tgasCutMatched, plot=True, db=1.0, dl=1.0)
+    indicesM67 = m67indices(tgasCutMatched, plot=False, db=1.0, dl=1.0)
 
     B_RedCoeff = 3.626
     V_RedCoeff = 2.742
