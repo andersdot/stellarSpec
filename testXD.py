@@ -25,8 +25,8 @@ def convert2gal(ra, dec):
 def m67indices(tgas, plot=False, dl=0.1, db=0.1):
     ra = '08:51:18.0'
     dec = '+11:49:00'
-    l, b = '215.6960', '31.8963' #M67
-    #l, b = '166.5707', '-23.5212' #pleiades
+    l, b = '215.6960', '31.8963' #M67 800 pc
+    #l, b = '166.5707', '-23.5212' #pleiades 132 pc
     index = (tgas['b'] < np.float(b) + db) & \
             (tgas['b'] > np.float(b) - db) & \
             (tgas['l'] < np.float(l) + dl) & \
@@ -36,18 +36,21 @@ def m67indices(tgas, plot=False, dl=0.1, db=0.1):
         plt.savefig('clusterOnSky.png')
     return index
 
-def fixParallax(parallaxKinda, apparent_mag):
-    return parallaxKinda/10.**(0.2*apparent_mag)
+def absMagKinda2Parallax(absMagKinda, apparentMag):
+    return absMagKinda/10.**(0.2*apparentMag)
 
 
-def plotDistance(ax, mean, sigma, amp, apparent_mag, logminParallax=-4., logmaxParallax=0., lw=1, color='black', alpha=1.0, npoints=10000):
+def parallax2absMagKinda(parallax, apparentMag):
+    return parallax*10.**(0.2*apparentMag)
+
+def plotDistance(ax, mean, sigma, amp, apparentMag, logminParallax=-4., logmaxParallax=0., lw=1, color='black', alpha=1.0, npoints=10000):
     x = np.logspace(logminParallax, logmaxParallax, npoints)
-    distance = 1./fixParallax(x, apparent_mag)
+    distance = 1./absMag2Parallax(x, apparentMag)
     varpiDist = st.gaussian(mean, sigma, x, amplitude=amp)
     ax.plot(distance, varpiDist, 'k', alpha=alpha, lw=lw, color=color)
 
 
-def fixAbsMag(x):
+def absMagKinda2absMag(x):
     return 5.*np.log10(10.*x)
 
 def XD(data_1, err_1, data_2, err_2, ngauss=2, mean_guess=np.array([[0.5, 6.], [1., 4.]]), w=0.0):
@@ -127,6 +130,14 @@ def multiplyGaussians(a, A, b, B):
 
     return c, C, z_c
 
+def plotXarrays(minParallax, maxParallax, apparentMagnitude, nPosteriorPoints=10000):
+    minabsMagKinda = parallax2absMagKinda(minParallax, apparentMagnitude)
+    maxabsMagKinda = parallax2absMagKinda(maxParallax, apparentMagnitude)
+    xabsMagKinda = np.linspace(minabsMagKinda, maxabsMagKinda, nPosteriorPoints)
+    xparallax = np.linspace(minParallax, maxParallax, nPosteriorPoints)
+    return xparallax, xabsMagKinda
+
+
 if __name__ == '__main__':
     np.random.seed(2)
     b_v_lim = [0.25, 1.5]
@@ -158,7 +169,7 @@ if __name__ == '__main__':
         tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(maxlogg=maxlogg, minlogg=minlogg, mintemp=mintemp, SNthreshold=SNthreshold, filename=filename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
 
-    indicesM67 = m67indices(tgasCutMatched, plot=True, db=1.0, dl=1.0)
+    indicesM67 = m67indices(tgasCutMatched, plot=True, db=0.5, dl=0.5)
 
     B_RedCoeff = 3.626
     V_RedCoeff = 2.742
@@ -242,73 +253,57 @@ if __name__ == '__main__':
         figPrior, axPrior = plt.subplots()
         for gg in range(xdgmm.n_components):
             points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-            axPrior.plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5)
+            axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
         axPrior.invert_yaxis()
         figPrior.savefig('prior.png')
-            #alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
         #dp.plot_sample(data1[j][indices], fixAbsMag(data2[j][indices]), data1[j][indices], fixAbsMag(data2[j][indices]),
         #       sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[j][indices], yerr=fixAbsMag(err2[j][indices]), xlabel=xlabel[j], ylabel=r'M$_\mathrm{G}$')
 
         #os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
-        badParallax = np.argsort(err2[j])[::-1]
+
         nPosteriorPoints = 10000
         summedPosterior = np.zeros((np.sum(indicesM67), nPosteriorPoints))
-
+        projectedDimension = 1
         for k, index in enumerate(np.where(indicesM67)[0]):
             individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
             figPost, axPost = plt.subplots(1, 3, figsize=(17,7))
             figtest, testax = plt.subplots(1, 3, figsize=(17,7))
-            windowFactor = 100.
-            logminabsMagKinda = np.log10(tgasCutMatched['parallax'][index]*1e-3/windowFactor*10.**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
-            logmaxabsMagKinda = np.log10(tgasCutMatched['parallax'][index]*1e-3*windowFactor*10**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
-            xabsMagKinda = np.logspace(logminabsMagKinda, logmaxabsMagKinda, nPosteriorPoints)
-            xparallax = fixParallax(xabsMagKinda, tgasCutMatched['phot_g_mean_mag'][index])
+            windowFactor = 5.
+            minParallax = tgasCutMatched['parallax'][index]*1e-3 - windowFactor*tgasCutMatched['parallax_error'][index]*1e-3
+            maxParallax = tgasCutMatched['parallax'][index]*1e-3 + windowFactor*tgasCutMatched['parallax_error'][index]*1e-3
+            apparentMagnitude = tgasCutMatched['phot_g_mean_mag'][index]
+            xparallax, xabsMagKinda = plotXarrays(minParallax, maxParallax, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+            positive = xparallax > 0.
             print 'the min and max of xparallax is: ', np.min(xparallax), np.max(xparallax)
-
+            print 'the measured parallax is: ', tgasCutMatched['parallax'][index]*1e-3
 
             dimension = 0
             mean2, cov2 = matrixize(data1[j][index], data2[j][index], err1[j][index], err2[j][index])
             pointsData = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
-
-            #print 'the observed parallax is: ',tgasCutMatched['parallax'][index], 'the fixed parallax is: ', fixParallax(data2[j][index], tgasCutMatched['phot_g_mean_mag'][index])
-
-            testax[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g')
-            axPost[0].plot(pointsData[0, :], drawEllipse.fixAbsMag(pointsData[1,:]), 'g')
-
-            testax[1].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
-            axPost[1].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
-
-            testax[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
-            axPost[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
 
             ndim = 2
             allMeans = np.zeros((xdgmm.n_components, ndim))
             allAmps = np.zeros(xdgmm.n_components)
             allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
             for gg in range(xdgmm.n_components):
-                points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-                testax[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-                axPost[0].plot(points[0,:],drawEllipse.fixAbsMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
                 newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean2[dimension], cov2[dimension])
                 newAmp *= xdgmm.weights[gg]
                 allMeans[gg] = newMean
                 allAmps[gg] = newAmp
                 allCovs[gg] = newCov
-            #print 'the old average distance was: ', 1./(tgasCutMatched['parallax'][index]*1e-3)
-            #print 'the new average distances are: ', 1./fixParallax(allMeans[:,1], tgasCutMatched['phot_g_mean_mag'][index])
+
+                summedPosterior[k,:] += st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), xabsMagKinda, amplitude=newAmp)
+                individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), xabsMagKinda, amplitude=newAmp)
+
             for gg in range(xdgmm.n_components):
                 points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
+                axPost[0].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
 
-                testax[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
-                axPost[0].plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
+                points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+                axPost[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
-                testax[1].plot(xparallax*1e3, st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg]),  lw=1, color='black', alpha=0.5)
-                testax[2].plot(1./xparallax, st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg]),  lw=1, color='black', alpha=0.5)
-
-                summedPosterior[k,:] += st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg])
-                individualPosterior[gg,:] = st.gaussian(allMeans[gg, 1], np.sqrt(allCovs[gg, 1,1]), xabsMagKinda, amplitude=allAmps[gg])
             if np.max(summedPosterior[k,:][xparallax < 10]) > 1:
                 figAll, axAll = plt.subplots()
                 for ii in range(xdgmm.n_components): axAll.plot(1./xparallax, individualPosterior[ii,:])
@@ -316,65 +311,74 @@ if __name__ == '__main__':
                 axAll.set_yscale('log')
                 axAll.set_ylim(1e-2,)
                 figAll.savefig('allPosteriorsBug.' + str(k) + '.png')
-                pdb.set_trace()
-            normalization = scipy.integrate.cumtrapz(summedPosterior[k,:], xparallax)[-1]
+
+            normalization = scipy.integrate.cumtrapz(summedPosterior[k,:], xabsMagKinda)[-1]
+            print 'the normalization is :', normalization
+
             summedPosterior[k,:] = summedPosterior[k,:]/normalization
-            axPost[1].plot(fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index])*1e3, summedPosterior[k,:], 'k', lw=2)
-            axPost[2].plot(1./xparallax, st.gaussian(data2[j][index], err2[j][index], xparallax), 'g', lw=2)
-            axPost[2].plot(1./xparallax, summedPosterior[k,:], 'k', lw=2)
 
-            xlim = (tgasCutMatched['parallax'][index]-3.*tgasCutMatched['parallax_error'][index], tgasCutMatched['parallax'][index]+3.*tgasCutMatched['parallax_error'][index])
+            axPost[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g')
+
+            axPost[1].plot(xparallax*1e3, summedPosterior[k,:], 'k', lw=2)
+            axPost[1].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2)
+
+            axPost[2].plot(1./xparallax[positive], summedPosterior[k,:][positive], 'k', lw=2)
+            axPost[2].plot(1./xparallax[positive], st.gaussian(data2[j][index], err2[j][index], xabsMagKinda)[positive], 'g', lw=2)
+
+            xlim = (tgasCutMatched['parallax'][index]*1e-3 -3.*tgasCutMatched['parallax_error'][index]*1e-3, tgasCutMatched['parallax'][index]*1e-3 +3.*tgasCutMatched['parallax_error'][index]*1e-3)
             xlimDist = (10,)
-            testax[0].set_xlim(-0.5, 2)
-            testax[0].set_ylim(9, -3)
-            testax[1].set_xlim(xlim)
-            testax[1].set_xlabel('Parallax [mas]')
-
-            testax[2].set_xscale('log')
-            testax[2].set_yscale('log')
-            testax[2].set_ylim(1e-2,)
-            testax[2].set_xlim(10,)
-            testax[2].set_xlabel('Distance [pc]')
 
             axPost[0].set_xlim(-0.5, 2)
             axPost[0].set_ylim(9, -3)
             axPost[0].set_xlabel('B-V', fontsize=18)
             axPost[0].set_ylabel(r'M$_\mathrm{G}$', fontsize=18)
-            axPost[1].set_xlim(xlim)
-            #axPost[1].set_ylim(0, 10)
             axPost[1].set_xlabel('Parallax [mas]', fontsize=18)
-
+            axPost[1].set_xlim(-1, 6)
             axPost[2].set_xscale('log')
-            #axPost[2].set_yscale('log')
-            #axPost[2].set_ylim(1e-2,)
-            #axPost[2].set_xlim(10,)
-            #axPost[2].set_ylim(0, 10)
+            axPost[2].set_xlim(30, 3000)
             axPost[2].set_xlabel('Distance [pc]', fontsize=18)
-            #plt.tight_layout()
+
             figPost.savefig('example.' + str(k) + '.png')
             #plt.show()
                 #pdb.set_trace()
                 #print mean2, cov2, xdgmm.mu, xdgmm.V
     np.save('summedPosteriorM67', summedPosterior)
-    fig, ax = plt.subplots(2, figsize=(7, 15))
+    fig, ax = plt.subplots(2, 2, figsize=(15, 15))
+    ax = ax.flatten()
     for k, index in enumerate(np.where(indicesM67)[0]):
-        windowFactor = 100.
-        logminParallax = np.log10(tgasCutMatched['parallax'][index]*1e-3/windowFactor*10.**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
-        logmaxParallax = np.log10(tgasCutMatched['parallax'][index]*1e-3*windowFactor*10**(0.2*tgasCutMatched['phot_g_mean_mag'][index]))
-        xparallax = np.logspace(logminParallax, logmaxParallax, nPosteriorPoints)
+        windowFactor = 5.
+        minParallax = tgasCutMatched['parallax'][index]*1e-3 - windowFactor*tgasCutMatched['parallax_error'][index]*1e-3
+        maxParallax = tgasCutMatched['parallax'][index]*1e-3 + windowFactor*tgasCutMatched['parallax_error'][index]*1e-3
+        apparentMagnitude = tgasCutMatched['phot_g_mean_mag'][index]
+        xparallax, xabsMagKinda = plotXarrays(minParallax, maxParallax, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+        positive = 1./xparallax > 0.
+        ax[0].plot(xparallax*1e3, st.gaussian(data2[j][index], err2[j][index], xabsMagKinda), 'g', lw=2, alpha=0.5)
+        ax[2].plot(xparallax*1e3, summedPosterior[k,:], 'k', lw=2, alpha=0.5)
 
-        ax[0].plot(1./fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index]), st.gaussian(data2[j][index], err2[j][index], xparallax), 'g', lw=2, alpha=0.5)
-        ax[1].plot(1./fixParallax(xparallax, tgasCutMatched['phot_g_mean_mag'][index]), summedPosterior[k,:], 'k', lw=2, alpha=0.5)
-    ax[0].plot(np.zeros(1000) + 800, np.linspace(0, 8, 1000), 'b--', lw=2)
-    ax[0].plot(np.zeros(1000) + 900, np.linspace(0, 8, 1000), 'b--', lw=2)
-    ax[1].plot(np.zeros(1000) + 800, np.linspace(0, 30., 1000), 'b--', lw=2)
-    ax[1].plot(np.zeros(1000) + 900, np.linspace(0, 30., 1000), 'b--', lw=2)
+        ax[1].plot(1./xparallax[positive], st.gaussian(data2[j][index], err2[j][index], xabsMagKinda)[positive], 'g', lw=2, alpha=0.5)
+        ax[3].plot(1./xparallax[positive], summedPosterior[k,:][positive], 'k', lw=2, alpha=0.5)
+    ax[1].axvline(800, color="b", lw=2)
+    ax[1].axvline(900, color="b", lw=2)
+    ax[3].axvline(800, color="b", lw=2)
+    ax[3].axvline(900, color="b", lw=2)
+    ax[0].axvline(1./800*1e3, color="b", lw=2)
+    ax[0].axvline(1./900*1e3, color="b", lw=2)
+    ax[2].axvline(1./800*1e3, color="b", lw=2)
+    ax[2].axvline(1./900*1e3, color="b", lw=2)
 
-    ax[0].set_xlim(10,3000)
-    ax[1].set_xlim(10, 3000)
-    ax[1].set_ylim(0, 30)
-    ax[0].set_xlabel('Distance [pc]')
+    ax[0].set_xlim(-1, 6)
+    ax[2].set_xlim(-1, 6)
+    ax[1].set_xlim(30,3000)
+    ax[3].set_xlim(30,3000)
+
+    ax[1].set_xscale('log')
+    ax[3].set_xscale('log')
     ax[1].set_xlabel('Distance [pc]')
+    ax[3].set_xlabel('Distance [pc]')
+    ax[0].set_xlabel('Parallax [mas]')
+    ax[2].set_xlabel('Parallax [mas]')
+    ax[0].set_ylabel('Likelihood')
+    ax[2].set_ylabel('Posterior')
     plt.savefig('distancesM67.png')
 
 """

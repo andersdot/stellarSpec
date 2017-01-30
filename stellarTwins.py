@@ -58,7 +58,7 @@ def neff(weights):
     return np.sum(weights)**2./np.sum(weights**2.)
 
 def gaussian(mean, sigma, array, amplitude=None):
-    if amplitude: return amplitude*np.exp(-(array - mean)**2./(2.*sigma**2.))
+    if amplitude is not None: return amplitude*np.exp(-(array - mean)**2./(2.*sigma**2.))
     else: return 1./np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
 
 
