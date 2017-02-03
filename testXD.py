@@ -206,10 +206,7 @@ if __name__ == '__main__':
         #wiseCutMatched    = cutMatchedArrays['wiseCutMatched']
         #distCutMatched    = cutMatchedArrays['distCutMatched']
     except IOError:
-        maxlogg = 20
-        minlogg = 1
-        mintemp = 100
-        tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(maxlogg=maxlogg, minlogg=minlogg, mintemp=mintemp, SNthreshold=thresholdSN, filename=dataFilename)
+        tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(SNthreshold=thresholdSN, filename=dataFilename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
 
 
@@ -240,11 +237,11 @@ if __name__ == '__main__':
 
     if useDust:
         bayesDust = st.dust(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, np.median(distCutMatched, axis=1)*units.pc)
-        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], bayesDust, mag1) 
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], bayesDust, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']], bayesDust, mag2)
         absMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']], bayesDust, absmag)
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
-        #need to define color_err and absMagKinda_err when including dust correction 
+        #need to define color_err and absMagKinda_err when including dust correction
         color = mag1DustCorrected - mag2DustCorrected
     else:
         color = bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] - \
@@ -252,7 +249,7 @@ if __name__ == '__main__':
         color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. - bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
         absMagKinda = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
         absMagKinda_err = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
-                                                                                     
+
     data1 = color
     data2 = absMagKinda
     err1 = color_err
@@ -281,7 +278,7 @@ if __name__ == '__main__':
     else:
         indices = parallaxSNcut & lowPhotErrorcut
 
-    
+
     figDist, axDist = plt.subplots(2, 2, figsize=(15, 15))
 
     axDist = axDist.flatten()
@@ -311,7 +308,7 @@ if __name__ == '__main__':
 
         dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
                        sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
-        
+
         os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
 
 
@@ -323,7 +320,7 @@ if __name__ == '__main__':
         windowFactor = 5.
         minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
         maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
-        apparentMagnitude = tgasCutMatched['phot_g_mean_mag'][index]
+        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
         positive = xparallaxMAS > 0.

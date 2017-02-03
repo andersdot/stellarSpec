@@ -322,7 +322,7 @@ def tgasDistance(ndist=1024):
                 dist = np.concatenate((dist, f['distance'][:,:ndist]))
     return dist
 
-def observationsCutMatched(maxlogg=5., minlogg=4.2, mintemp=4500., SNthreshold=16., filename='cutMatchedArrays.npz'):
+def observationsCutMatched(SNthreshold=1., filename='cutMatchedArrays.npz'):
 
     #read in TGAS data for and matched sample for magnitudes
     tgas = fits.getdata("stacked_tgas.fits", 1)
@@ -365,7 +365,7 @@ def observationsCutMatched(maxlogg=5., minlogg=4.2, mintemp=4500., SNthreshold=1
     hasDust = medianDist >= minDist
     raveMatch = np.in1d(tgas['source_id'], tgasRave['source_id'])
     if galacticLatMax: inDisk = np.abs(tgas['b'] <= galacticLatMax)
-    matched = goodDistance & noNans & posErrors & lowPhotError & apassMatch
+    matched = goodDistance & noNans & posErrors & lowPhotError #& apassMatch
 
 
     tgasMatched = tgas[matched]
