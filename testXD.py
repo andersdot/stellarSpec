@@ -188,12 +188,13 @@ if __name__ == '__main__':
     projectedDimension = 1
 
     dataFilename = 'cutMatchedArrays.tgasApassSN0.npz'
-    xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.fit'
+    xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.fit'
 
     useDust = False
     optimize = False
     subset = False
     timing = False
+
 
     try:
         cutMatchedArrays  = np.load(dataFilename)
@@ -213,42 +214,56 @@ if __name__ == '__main__':
 
     indicesM67 = m67indices(tgasCutMatched, plot=False, db=0.5, dl=0.5)
 
+    if survey == 'APASS':
+        mag1 = 'B'
+        mag2 = 'V'
+        absmag = 'G'
+        xlabel='B-V'
+        ylabel = r'M$_\mathrm{G}$'
+
+    if survey == '2MASS':
+        mag1 = 'J'
+        mag2 = 'K'
+        absmag = 'J'
+        xlabel = 'J-K$_s$'
+        ylabel = r'M$_\mathrm{J}$'
+
+    bandDictionary = {'B':{key:'bmag', errKey:'e_bmag', array:'apassCutMatched'},
+                      'V':{key:'vmag', errKey:'e_vmag', array:'apassCutMatched'},
+                      'J':{key:'j_mag', errKey:'j_cmsig', array:'twoMassCutMatched'}
+                      'K':{key:'k_mag', errKey:'k_cmsig', array:'twoMassCutMatched'}
+                      'G':{key:'phot_g_mean_mag', array:'tgasCutMatched'}}
+
+
     if useDust:
         bayesDust = st.dust(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, np.median(distCutMatched, axis=1)*units.pc)
-        B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
-        V_dustcorrected = dustCorrection(apassCutMatched['vmag'], bayesDust, 'V')
-        #g_dustcorrected = dustCorrection(apassCutMatched['gmag'], bayesDust, 'g')
-        #r_dustcorrected = dustCorrection(apassCutMatched['rmag'], bayesDust, 'r')
-        #i_dustcorrected = dustCorrection(apassCutMatched['imag'], bayesDust, 'i')
-        #M_V = V_dustcorrected - meanMuMatched
-        #g_r = g_dustcorrected - r_dustcorrected 
-        #r_i = r_dustcorrected - i_dustcorrected
-        B_V = B_dustcorrected - V_dustcorrected
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1][array]  [bandDictionary[mag1][key]], bayesDust, mag1) 
+        mag2DustCorrected   = dustCorrection(bandDictionary[mag2][array]  [bandDictionary[mag2][key]], bayesDust, mag2)
+        absMagDustCorrected = dustCorrection(bandDictionary[absmag][array][bandDictionary[absmag][key]], bayesDust, absmag)
+        #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+        color = mag1DustCorrected - mag2DustCorrected
     else:
-        B_V = apassCutMatched['bmag'] - apassCutMatched['vmag']
+        color = bandDictionary[mag1][array][bandDictionary[mag1][key]] - 
+                bandDictionary[mag2][array][bandDictionary[mag2][key]]
+    color_err = np.sqrt(bandDictionary[mag1][array][bandDictionary[mag1][err_key]]**2. - bandDictionary[mag2][array][bandDictionary[mag2][err_key]]**2.)
 
-    B_V_err = np.sqrt(apassCutMatched['e_bmag']**2. + apassCutMatched['e_vmag']**2.)
-
-    absMagKinda = tgasCutMatched['parallax']*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
-    absMagKinda_err = tgasCutMatched['parallax_error']*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
-    #absMagKinda_err = np.sqrt(tgasCutMatched['parallax_error']**2. + 0.3**2.)*1e-3*10.**(0.2*tgasCutMatched['phot_g_mean_mag'])
-
-    data1 = B_V
+    absMagKinda = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag][array][bandDictionary[absmag][key]])
+    absMagKinda_err = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag][array][bandDictionary[absmag][errkey]])
+                                                                                     
+    data1 = color
     data2 = absMagKinda
-    err1 = B_V_err
+    err1 = color_err
     err2 = absMagKinda_err
-
-    xlabel = 'B-V'
-    ylabel = r'M$_\mathrm{G}$'
 
     summedPosterior = np.zeros((np.sum(indicesM67), nPosteriorPoints))
 
     parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
     sigMax = 1.086/thresholdSN
-    lowPhotErrorcut = (apassCutMatched['e_bmag'] < sigMax) & (apassCutMatched['e_vmag'] < sigMax) & (apassCutMatched['e_gmag'] < sigMax) & (apassCutMatched['e_rmag'] < sigMax) & (apassCutMatched['e_imag'] < sigMax)
+    lowPhotErrorcut = (apassCutMatched[bandDictionary[mag1][array][bandDictionary[mag1][err_key]]] < sigMax) & (apassCutMatched[bandDictionary[mag2][array][bandDictionary[mag2][err_key]]] < sigMax)
+
     indices = parallaxSNcut & lowPhotErrorcut
 
-
+    
     figDist, axDist = plt.subplots(2, 2, figsize=(15, 15))
     axDist = axDist.flatten()
 
@@ -261,10 +276,11 @@ if __name__ == '__main__':
         else: 
             X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
     
+        print 'initializing XD'
         xdgmm = XDGMM(method='Bovy')
         xdgmm.n_components = ngauss
         xdgmm = xdgmm.fit(X, Xerr)
-        xdgmm.save_model(filename)
+        xdgmm.save_model(xdgmmFilename)
         sample = xdgmm.sample(Nsamples)
         figPrior, axPrior = plt.subplots()
         for gg in range(xdgmm.n_components):
@@ -273,10 +289,10 @@ if __name__ == '__main__':
             axPrior.invert_yaxis()
         figPrior.savefig('prior.png')
 
-        dp.plot_sample(data1[indices], fixAbsMag(data2[indices]), data1[indices], fixAbsMag(data2[indices]),
-                       sample[:,0],fixAbsMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=fixAbsMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
+        dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
+                       sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         
-        os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.noSEED.png')
+        os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
 
 
     for k, index in enumerate(np.where(indicesM67)[0]):
@@ -327,7 +343,7 @@ if __name__ == '__main__':
         normalization_distancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 1./xparallaxMAS[positive])[-1]
         normalization_logdistancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude), np.log10(1./xparallaxMAS[positive]))[-1]
         
-        print 'the sum of log distance PDF is :', normalization_logdistancePrior
+        print 'the sum of log distance PDF is :', normalization_logdistancePosterior
         print 'the sum of distance PDF is :', normalization_distancePosterior
         
         axPost[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g')
@@ -343,8 +359,8 @@ if __name__ == '__main__':
         
         axPost[0].set_xlim(-0.5, 2)
         axPost[0].set_ylim(9, -3)
-        axPost[0].set_xlabel('B-V', fontsize=18)
-        axPost[0].set_ylabel(r'M$_\mathrm{G}$', fontsize=18)
+        axPost[0].set_xlabel(xlabel, fontsize=18)
+        axPost[0].set_ylabel(ylabel, fontsize=18)
 
         axPost[1].set_xlabel('Parallax [mas]', fontsize=18)
         axPost[1].set_xlim(-1, 6)
