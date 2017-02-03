@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
     np.random.seed(2)
     thresholdSN = 0.001
-    ngauss = 128
+    ngauss = 1024
     nstar = '1.2M'
     Nsamples = 120000
     nPosteriorPoints = 10000
@@ -241,6 +241,11 @@ if __name__ == '__main__':
     xlabel = 'B-V'
     ylabel = r'M$_\mathrm{G}$'
 
+    ylabel_posterior_logd = r'P(log d|$\varpi, \sigma_{\varpi}$)'
+    ylabel_posterior_d = r'P(d|$\varpi, \sigma_{\varpi}$)'
+    ylabel_posterior_parallax = r'P($\varpi_\mathrm{true}|\varpi, \sigma_{\varpi}$)'
+    ylabel_likelihood_d = r'P($\varpi$|d, $\sigma_{\varpi}$)'
+    ylabel_likelihood_logd = r'P($\varpi$|log d, $\sigma_{\varpi}$)'
     summedPosterior = np.zeros((np.sum(indicesM67), nPosteriorPoints))
 
     parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
@@ -249,9 +254,10 @@ if __name__ == '__main__':
     indices = parallaxSNcut & lowPhotErrorcut
 
 
-    figDist, axDist = plt.subplots(2, 2, figsize=(15, 15))
+    figDist, axDist = plt.subplots(2, 3, figsize=(25, 15))
     axDist = axDist.flatten()
 
+    figDistLin, axDistLin = plt.subplots(2, figsize=(7.5, 10), sharex=True)
 
     try:
         xdgmm = XDGMM(filename=xdgmmFilename)
@@ -264,7 +270,7 @@ if __name__ == '__main__':
         xdgmm = XDGMM(method='Bovy')
         xdgmm.n_components = ngauss
         xdgmm = xdgmm.fit(X, Xerr)
-        xdgmm.save_model(filename)
+        xdgmm.save_model(xdgmmFilename)
         sample = xdgmm.sample(Nsamples)
         figPrior, axPrior = plt.subplots()
         for gg in range(xdgmm.n_components):
@@ -295,7 +301,6 @@ if __name__ == '__main__':
 
         dimension = 0
         mean2, cov2 = matrixize(data1[index], data2[index], err1[index], err2[index])
-        pointsData = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
 
         ndim = 2
         allMeans = np.zeros((xdgmm.n_components, ndim))
@@ -315,10 +320,12 @@ if __name__ == '__main__':
         for gg in range(xdgmm.n_components):
             points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
             axPost[0].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
-
+            axDist[3].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
             points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
             axPost[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-
+            if k == 0:
+                axDist[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+                axDist[3].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
         normalization = np.sum(allAmps)
         print 'the summed amplitudes are :', np.sum(allAmps)
         #if normalization != np.sum(allAmps):
@@ -331,16 +338,27 @@ if __name__ == '__main__':
         print 'the sum of distance PDF is :', normalization_distancePosterior
         print 'the sum of log distance PDF is :', normalization_logdistancePosterior
 
+        pointsData = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
+
         axPost[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g')
+        axDist[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g')
+        axDist[3].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', alpha=0.5)
 
         axPost[1].plot(xparallaxMAS, summedPosterior[k,:]*10.**(0.2*apparentMagnitude), 'k', lw=2)
         axPost[1].plot(xparallaxMAS, st.gaussian(data2[index], err2[index], xabsMagKinda)*10.**(0.2*apparentMagnitude), 'g', lw=2)
+        axDist[1].plot(xparallaxMAS, st.gaussian(data2[index], err2[index], xabsMagKinda), 'g', lw=2, alpha=0.5)
+        axDist[4].plot(xparallaxMAS, summedPosterior[k,:]*10.**(0.2*apparentMagnitude), 'k', lw=2, alpha=0.5)
 
         axPost[2].plot(1./xparallaxMAS[positive], summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 'k', lw=2)
-        axPost[2].plot(1./xparallaxMAS[positive], st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 'g', lw=2)
+        axPost[2].plot(1./xparallaxMAS[positive], st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]*10.**(0.2*apparentMagnitude), 'g', lw=2)
+        axDistLin[0].plot(1./xparallaxMAS[positive], st.gaussian(data2[index], err2[index], xabsMagKinda)[positive], 'g', lw=2, alpha=0.5)
+        axDistLin[1].plot(1./xparallaxMAS[positive], summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 'k', lw=2, alpha=0.5)
 
         axPost[3].plot(np.log10(1./xparallaxMAS[positive]), summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), 'k', lw=2)
-        axPost[3].plot(np.log10(1./xparallaxMAS[positive]), st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), 'g', lw=2)
+        axPost[3].plot(np.log10(1./xparallaxMAS[positive]), st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]*10.**(0.2*apparentMagnitude), 'g', lw=2, label='likelihood')
+        axDist[2].plot(np.log10(1./xparallaxMAS[positive]), st.gaussian(data2[index], err2[index], xabsMagKinda)[positive], 'g', lw=2, alpha=0.5)
+        axDist[5].plot(np.log10(1./xparallaxMAS[positive]), summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), 'k', lw=2, alpha=0.5)
+
 
         axPost[0].set_xlim(-0.5, 2)
         axPost[0].set_ylim(9, -3)
@@ -349,47 +367,76 @@ if __name__ == '__main__':
 
         axPost[1].set_xlabel('Parallax [mas]', fontsize=18)
         axPost[1].set_xlim(-1, 6)
+        axPost[1].set_ylabel(ylabel_posterior_parallax)
 
         #axPost[2].set_xscale('log')
         axPost[2].set_xlim(0.01, 3)
         axPost[2].set_xlabel('Distance [kpc]', fontsize=18)
+        axPost[2].set_ylabel(ylabel_posterior_d)
 
         axPost[3].set_xlim(np.log10(0.3), np.log10(3))
         axPost[3].set_xlabel('log Distance [kpc]', fontsize=18)
+        axPost[3].set_ylabel(ylabel_posterior_logd)
+        plt.legend()
+        plt.tight_layout()
         figPost.savefig('example.' + str(k) + '.png')
-
-        axDist[0].plot(xparallaxMAS, st.gaussian(data2[index], err2[index], xabsMagKinda)*10.**(0.2*apparentMagnitude), 'g', lw=2, alpha=0.5)
-        axDist[2].plot(xparallaxMAS, summedPosterior[k,:], 'k', lw=2, alpha=0.5)*10.**(0.2*apparentMagnitude)
-
-        axDist[1].plot(np.log10(1./xparallaxMAS[positive]), st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), 'g', lw=2, alpha=0.5)
-        axDist[3].plot(np.log10(1./xparallaxMAS[positive]), summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), 'k', lw=2, alpha=0.5)
-
         np.save('summedPosteriorM67', summedPosterior)
 
 
-    axDist[1].axvline(np.log10(0.8), color="b", lw=2)
-    axDist[1].axvline(np.log10(0.9), color="b", lw=2)
-    axDist[3].axvline(np.log10(0.8), color="b", lw=2)
-    axDist[3].axvline(np.log10(0.9), color="b", lw=2)
+    axDist[0].set_xlabel('B-V', fontsize=18)
+    axDist[0].set_ylabel('M$_\mathrm{G}$', fontsize=18)
+    axDist[0].set_xlim(-0.5, 2.0)
+    axDist[0].set_ylim(9, -3)
+    axDist[3].set_xlabel('B-V', fontsize=18)
+    axDist[3].set_ylabel('M$_\mathrm{G}$', fontsize=18)
+    axDist[3].set_xlim(-0.5, 2.0)
+    axDist[3].set_ylim(9, -3)
 
-    axDist[0].axvline(1./0.8, color="b", lw=2)
-    axDist[0].axvline(1./0.9, color="b", lw=2)
-    axDist[2].axvline(1./0.8, color="b", lw=2)
-    axDist[2].axvline(1./0.9, color="b", lw=2)
 
-    axDist[0].set_xlim(-1, 6)
-    axDist[2].set_xlim(-1, 6)
+    axDist[1].axvline(1./0.8, color="b", lw=2)
+    axDist[1].axvline(1./0.9, color="b", lw=2)
+    axDist[4].axvline(1./0.8, color="b", lw=2)
+    axDist[4].axvline(1./0.9, color="b", lw=2)
 
-    axDist[1].set_xlim(np.log10(0.1),np.log10(3))
-    axDist[3].set_xlim(np.log10(0.1),np.log10(3))
 
-    #axDist[1].set_xscale('log')
-    #axDist[3].set_xscale('log')
-    axDist[1].set_xlabel('log Distance [kpc]')
-    axDist[3].set_xlabel('log Distance [kpc]')
+    axDist[1].set_xlabel('Parallax [mas]')
+    axDist[4].set_xlabel('Parallax [mas]')
+    axDist[1].set_ylabel(ylabel_likelihood_d, fontsize=18)
+    axDist[4].set_ylabel(ylabel_posterior_d, fontsize=18)
+    axDist[1].set_xlim(-1, 6)
+    axDist[4].set_xlim(-1, 6)
 
-    axDist[0].set_xlabel('Parallax [mas]')
-    axDist[2].set_xlabel('Parallax [mas]')
-    axDist[0].set_ylabel('Likelihood')
-    axDist[2].set_ylabel('Posterior')
+    axDist[2].axvline(np.log10(0.8), color="b", lw=2)
+    axDist[2].axvline(np.log10(0.9), color="b", lw=2)
+    axDist[5].axvline(np.log10(0.8), color="b", lw=2)
+    axDist[5].axvline(np.log10(0.9), color="b", lw=2)
+
+
+    axDist[2].set_xlabel('log Distance [kpc]')
+    axDist[5].set_xlabel('log Distance [kpc]')
+    axDist[2].set_ylabel(ylabel_likelihood_d, fontsize=18)
+    axDist[5].set_ylabel(ylabel_posterior_logd, fontsize=18)
+    axDist[2].set_xlim(np.log10(0.1),np.log10(3))
+    axDist[5].set_xlim(np.log10(0.1),np.log10(3))
+
+
+    plt.tight_layout()
     figDist.savefig('distancesM67.png')
+
+    axDistLin[0].set_xlim(0, 2)
+    axDistLin[1].set_xlim(0, 2)
+    axDistLin[0].set_yscale('log')
+    axDistLin[1].set_yscale('log')
+    axDistLin[0].set_ylim(1e-4, 1e-2)
+    axDistLin[1].set_ylim(1e-1, 50)
+    axDistLin[0].set_xlabel('Distance [kpc]')
+    axDistLin[1].set_xlabel('Distance [kpc]')
+    axDistLin[0].set_ylabel(ylabel_likelihood_d)
+    axDistLin[1].set_ylabel(ylabel_posterior_d)
+    axDistLin[0].axvline(0.8, color='b', lw=2)
+    axDistLin[0].axvline(0.9, color='b', lw=2)
+    axDistLin[1].axvline(0.8, color='b', lw=2)
+    axDistLin[1].axvline(0.9, color='b', lw=2)
+    plt.tight_layout()
+
+    figDistLin.savefig('distanceM67.linear.png')
