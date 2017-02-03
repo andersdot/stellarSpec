@@ -310,7 +310,7 @@ def plotXD2d(ax, raveTwins, raveStar, raveCutMatched, chisqApass, mean, cov, nga
     ax[2].set_ylabel('Fe/H')
     plt.tight_layout()
 
-def tgasDistance(ndist=200):
+def tgasDistance(ndist=1024):
     #read in Adrian's distances from sampling the posterior
     nfiles = 16
     dist = None #np.zeros(len(tgasMatched), ndist)
@@ -330,7 +330,7 @@ def observationsCutMatched(maxlogg=5., minlogg=4.2, mintemp=4500., SNthreshold=1
     tgasApass = fits.getdata('tgas-matched-apass-dr9.fits')
     tgasWise = fits.getdata('tgas-matched-wise.fits')
     tgas2mass = fits.getdata('tgas-matched-2mass.fits')
-    distances = tgasDistance()
+    distances = tgasDistance(ndist=1024)
     medianDist = np.median(distances, axis=1)
     #cut out low logg and temperatures outside well populated area
     nonNans = ~np.isnan(tgasRave['TEFF']) & ~np.isnan(tgasRave['LOGG']) & ~np.isnan(tgasRave['FE_H'])
