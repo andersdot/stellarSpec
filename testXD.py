@@ -179,9 +179,10 @@ def dustCorrection(magnitude, EBV, band):
 
 if __name__ == '__main__':
 
+    survey = '2MASS'
     np.random.seed(2)
     thresholdSN = 0.001
-    ngauss = 1024
+    ngauss = 128
     nstar = '1.2M'
     Nsamples = 120000
     nPosteriorPoints = 10000
@@ -200,10 +201,10 @@ if __name__ == '__main__':
         cutMatchedArrays  = np.load(dataFilename)
         tgasCutMatched    = cutMatchedArrays['tgasCutMatched']
         apassCutMatched   = cutMatchedArrays['apassCutMatched']
-        raveCutMatched    = cutMatchedArrays['raveCutMatched']
+        #raveCutMatched    = cutMatchedArrays['raveCutMatched']
         twoMassCutMatched = cutMatchedArrays['twoMassCutMatched']
-        wiseCutMatched    = cutMatchedArrays['wiseCutMatched']
-        distCutMatched    = cutMatchedArrays['distCutMatched']
+        #wiseCutMatched    = cutMatchedArrays['wiseCutMatched']
+        #distCutMatched    = cutMatchedArrays['distCutMatched']
     except IOError:
         maxlogg = 20
         minlogg = 1
@@ -213,6 +214,7 @@ if __name__ == '__main__':
 
 
     indicesM67 = m67indices(tgasCutMatched, plot=False, db=0.5, dl=0.5)
+
 
 
     if survey == 'APASS':
@@ -229,27 +231,27 @@ if __name__ == '__main__':
         xlabel = 'J-K$_s$'
         ylabel = r'M$_\mathrm{J}$'
 
-    bandDictionary = {'B':{key:'bmag', errKey:'e_bmag', array:'apassCutMatched'},
-                      'V':{key:'vmag', errKey:'e_vmag', array:'apassCutMatched'},
-                      'J':{key:'j_mag', errKey:'j_cmsig', array:'twoMassCutMatched'}
-                      'K':{key:'k_mag', errKey:'k_cmsig', array:'twoMassCutMatched'}
-                      'G':{key:'phot_g_mean_mag', array:'tgasCutMatched'}}
+    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':apassCutMatched},
+                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':apassCutMatched},
+                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMassCutMatched},
+                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMassCutMatched},
+                      'G':{'key':'phot_g_mean_mag', 'array':tgasCutMatched}}
 
 
     if useDust:
         bayesDust = st.dust(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, np.median(distCutMatched, axis=1)*units.pc)
-        mag1DustCorrected   = dustCorrection(bandDictionary[mag1][array]  [bandDictionary[mag1][key]], bayesDust, mag1) 
-        mag2DustCorrected   = dustCorrection(bandDictionary[mag2][array]  [bandDictionary[mag2][key]], bayesDust, mag2)
-        absMagDustCorrected = dustCorrection(bandDictionary[absmag][array][bandDictionary[absmag][key]], bayesDust, absmag)
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], bayesDust, mag1) 
+        mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']], bayesDust, mag2)
+        absMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']], bayesDust, absmag)
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+        #need to define color_err and absMagKinda_err when including dust correction 
         color = mag1DustCorrected - mag2DustCorrected
     else:
-        color = bandDictionary[mag1][array][bandDictionary[mag1][key]] - 
-                bandDictionary[mag2][array][bandDictionary[mag2][key]]
-    color_err = np.sqrt(bandDictionary[mag1][array][bandDictionary[mag1][err_key]]**2. - bandDictionary[mag2][array][bandDictionary[mag2][err_key]]**2.)
-
-    absMagKinda = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag][array][bandDictionary[absmag][key]])
-    absMagKinda_err = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag][array][bandDictionary[absmag][errkey]])
+        color = bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] - \
+                bandDictionary[mag2]['array'][bandDictionary[mag2]['key']]
+        color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. - bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
+        absMagKinda = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+        absMagKinda_err = tgasCutMatched['parallax']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
                                                                                      
     data1 = color
     data2 = absMagKinda
@@ -266,9 +268,18 @@ if __name__ == '__main__':
 
     parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
     sigMax = 1.086/thresholdSN
-    lowPhotErrorcut = (apassCutMatched[bandDictionary[mag1][array][bandDictionary[mag1][err_key]]] < sigMax) & (apassCutMatched[bandDictionary[mag2][array][bandDictionary[mag2][err_key]]] < sigMax)
+    lowPhotErrorcut = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] < sigMax) & \
+                      (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] < sigMax)
 
-    indices = parallaxSNcut & lowPhotErrorcut
+    if survey == '2MASS':
+        nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
+                        bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
+                       (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
+
+        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor
+
+    else:
+        indices = parallaxSNcut & lowPhotErrorcut
 
     
     figDist, axDist = plt.subplots(2, 2, figsize=(15, 15))
@@ -346,15 +357,14 @@ if __name__ == '__main__':
             if k == 0:
                 axDist[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
                 axDist[3].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+
         normalization = np.sum(allAmps)
-        print 'the summed amplitudes are :', np.sum(allAmps)
-        #if normalization != np.sum(allAmps):
-        #    pdb.set_trace()
         summedPosterior[k,:] = summedPosterior[k,:]/normalization
+
         normalization_parallaxPosterior = scipy.integrate.cumtrapz(summedPosterior[k,:]*10.**(0.2*apparentMagnitude), xparallaxMAS)[-1]
         normalization_distancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 1./xparallaxMAS[positive])[-1]
-
         normalization_logdistancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), np.log10(1./xparallaxMAS[positive]))[-1]
+
         print 'the sum of parallax PDF is: ',normalization_parallaxPosterior
         print 'the sum of distance PDF is :', normalization_distancePosterior
         print 'the sum of log distance PDF is :', normalization_logdistancePosterior

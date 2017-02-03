@@ -50,8 +50,14 @@ def plot_val_curve(param_range, train_mean, train_std, test_mean,
     if log: plt.xscale('log', basex=2)
     plt.savefig('val_curve.png')
 
-def fixAbsMag(x):
-    return 5.*np.log10(10.*x)
+
+def absMagKinda2absMag(absMagKinda):
+    """                                                                                                                                                                                                                                     
+    convert my funny units of parallax[mas]*10**(0.2*apparent magnitude[mag]) to an absolute magnitude [mag]                                                                                                                                
+    """
+    absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds                                                                                                                                             
+    return 5.*np.log10(10.*absMagKinda_in_arcseconds)
+
 
 def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None):
     setup_text_plots(fontsize=16, usetex=True)
@@ -78,7 +84,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax4 = fig.add_subplot(224)
     for i in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
-        ax4.plot(points[0, :], drawEllipse.fixAbsMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
+        ax4.plot(points[0, :], drawEllipse.absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
         #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
         #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
