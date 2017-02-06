@@ -334,8 +334,8 @@ def observationsCutMatched(SNthreshold=1., filename='cutMatchedArrays.npz'):
     medianDist = np.median(distances, axis=1)
     #cut out low logg and temperatures outside well populated area
     nonNans = ~np.isnan(tgasRave['TEFF']) & ~np.isnan(tgasRave['LOGG']) & ~np.isnan(tgasRave['FE_H'])
-    dwarfs = (tgasRave['LOGG'] < maxlogg) & (tgasRave['LOGG'] > minlogg) & (tgasRave['TEFF'] > mintemp)
-    tgasRave = tgasRave[nonNans & dwarfs]
+    #dwarfs = (tgasRave['LOGG'] < maxlogg) & (tgasRave['LOGG'] > minlogg) & (tgasRave['TEFF'] > mintemp)
+    tgasRave = tgasRave[nonNans] # & dwarfs]
 
     #various cuts to select sample
     magSN = SNthreshold
