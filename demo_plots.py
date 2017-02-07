@@ -52,10 +52,10 @@ def plot_val_curve(param_range, train_mean, train_std, test_mean,
 
 
 def absMagKinda2absMag(absMagKinda):
-    """                                                                                                                                                                                                                                     
-    convert my funny units of parallax[mas]*10**(0.2*apparent magnitude[mag]) to an absolute magnitude [mag]                                                                                                                                
     """
-    absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds                                                                                                                                             
+    convert my funny units of parallax[mas]*10**(0.2*apparent magnitude[mag]) to an absolute magnitude [mag]
+    """
+    absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds
     return 5.*np.log10(10.*absMagKinda_in_arcseconds)
 
 
@@ -84,7 +84,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax4 = fig.add_subplot(224)
     for i in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
-        ax4.plot(points[0, :], drawEllipse.absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
+        ax4.plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
         #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
         #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
@@ -95,7 +95,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
-        ax[i].set_xlim(-1, 3)
+        ax[i].set_xlim(-0.5, 1.5)
         ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
         #ax[i].xaxis.set_major_locator(plt.MultipleLocator([-1, 0, 1]))
