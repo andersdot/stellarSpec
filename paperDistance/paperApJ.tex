@@ -1,75 +1,49 @@
 %% This is emulateapj reformatting of the AASTEX sample document
 %%
 \documentclass[iop]{emulateapj}
-
-\newcommand{\vdag}{(v)^\dagger}
 \newcommand{\myemail}{landerson@simonsfoundation.org}
 
-%% You can insert a short comment on the title page using the command below.
-
 \slugcomment{Stars are kinda cool again.}
-
-%% If you wish, you may supply running head information, although
-%% this information may be modified by the editorial offices.
-%% The left head contains a list of authors,
-%% usually a maximum of three (otherwise use et al.).  The right
-%% head is a modified title of up to roughly 44 characters.
-%% Running heads will not print in the manuscript style.
 
 \shorttitle{Measuring Mo' Betta Distances}
 \shortauthors{Anderson et al}
 
-%% This is the end of the preamble.  Indicate the beginning of the
-%% paper itself with \begin{document}.
+\newcommand{\acronym}[1]{{\small{#1}}}
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\tgas}{\project{\acronym{TGAS}}}
+\newcommand{\tmass}{\project{\acronym{2MASS}}}
+\newcommand{\gaia}{\project{Gaia}}
 
 \begin{document}
-
-%% LaTeX will automatically break titles if they run longer than
-%% one line. However, you may use \\ to force a line break if
-%% you desire.
 
 \title{Mo' Betta Gaia Distance Measurements, \\
     Using Gaia + APASS photometry}
 
-%% Use \author, \affil, and the \and command to format
-%% author and affiliation information.
-%% Note that \email has replaced the old \authoremail command
-%% from AASTeX v4.0. You can use \email to mark an email address
-%% anywhere in the paper, not just in the front matter.
-%% As in the title, use \\ to force line breaks.
-
-\author{Lauren Anderson and David Hogg\altaffilmark{1}}
-\affil{Center for Computational Astrophysics}
-
-\author{Boris Leistedt}
-\affil{NYU}
-
-\author{Adrian Price-Whelan}
-\affil{Princeton}
-
-\and
-
-\author{Andrew Casey}
-\affil{Somewhere in the UK}
-
-\altaffiltext{1}{NYU}
+\author{Lauren Anderson\altaffilmark{1},
+        David W. Hogg\altaffilmark{1, 2, 3, 4},
+        Boris Leistedt\altaffilmark{2},
+        Adrian Price-Whelan\altaffilmark{5}}
+\altaffiltext[1]{Center for Computational Astrophysics, Flatiron Institute}
+\altaffiltext[2]{Center for Cosmology and Particle Physics, Department of Physics, New York University}
+\altaffiltext[3]{Center for Data Science, New York University}
+\altaffiltext[4]{Max-Planck-Institut f\"ur Astronomie}
+\altaffiltext[5]{Princeton University Observatory, Princeton University}
 
 \begin{abstract}
-The Gaia TGAS Catalog contains more than 2 millions parallax measurements.
-Safe conversion of a noisy parallax into a posterior belief over distances requires inference with a prior.
+The \gaia\ \tgas\ \project{Catalog} contains more than 2 million parallax measurements.
+Conversion of a noisy parallax measurement into a posterior belief over distances requires inference with a prior.
 Usually this prior represents some kind of belief about the Milky Way.
-However, there is multi-band photometry for the TGAS stars from imaging surveys.
-This imaging is incredibly informative about stellar distances, as is clear from physical models of stars, and also just from looking at the data themselves.
-Here we use color information on TGAS stars from [2MASS or APASS] to build a noise-deconvolved empirical prior distribution of stars in color-magnitude space.
+However, there is multi-band photometry for the \tgas\ stars from imaging surveys;
+this imaging is incredibly informative about stellar distances.
+Here we use color information on TGAS stars from \tmass\ to build a noise-deconvolved empirical prior distribution of stars in color-magnitude space.
 This data-driven model contains no knowledge of the physics of stellar interiors or photospheres, nor of the Milky Way, but rather derives its precision from its generative model of noisy parallax measurements and an assumption of stationarity.
 We use the Extreme Deconvolution (XD) algorithm, which is an Empirical Bayes approximation to a full hierarchical model of the true parallax and photometry of every star.
 The algorithm is run not in absolute-magnitude space but in a transformed space where the measurement uncertainty is closer to Gaussian.
 The XD optimized prior is used to perform parallax and distance inferences for every star, yielding a precise stellar distance estimate and uncertainty (and full posterior) for every star.
 The method is capitalizing on statistical shrinkage.
-Our posterior parallax estimates are more precise than the Gaia catalog outputs by a factor of [XXX] for the median TGAS star; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
-We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible at all in the TGAS parallax estimates, but appears clearly in our posterior parallax estimates.
-All our results, including a posterior parallax and distance sampling for [ZZZ] TGAS stars, are available in companion electronic tables.
-
+Our posterior parallax estimates are more precise than the Gaia catalog outputs by a factor of [XXX] for the median \tgas\ star; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
+We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible at all in the \tgas\ parallax estimates, but appears clearly in our posterior parallax estimates.
+All our results, including a posterior parallax and distance sampling for [ZZZ] \tgas\ stars, are available in companion electronic tables.
 \end{abstract}
 
 
@@ -116,8 +90,9 @@ Number of gaussians in XD, and the w parameter
 
 
 
-\acknowledgments
-
+\acknowledgments It is a pleasure to thank Andy Casey (Monash) and the
+attendees at the Stars Group Meeting at the CCA for comments and
+input.
 
 \appendix
 

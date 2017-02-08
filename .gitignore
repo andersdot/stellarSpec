@@ -1,3 +1,11 @@
+*~
+*.aux
+*.bbl
+*.blg
+*.bib
+*.log
+paperApJ.pdf
+
 # images #
 ##################
 *.png
