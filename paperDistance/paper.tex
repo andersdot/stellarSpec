@@ -13,8 +13,9 @@
 \newcommand{\tgas}{\project{\acronym{TGAS}}}
 \newcommand{\tmass}{\project{\acronym{2MASS}}}
 \newcommand{\gaia}{\project{Gaia}}
+\newcommand{\xd}{\acronym{XD}}
 
-\begin{document}
+\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing
 
 \title{Mo' Betta Gaia Distance Measurements, \\
     Using Gaia + APASS photometry}
@@ -23,11 +24,11 @@
         David W. Hogg\altaffilmark{1, 2, 3, 4},
         Boris Leistedt\altaffilmark{2},
         Adrian Price-Whelan\altaffilmark{5}}
-\altaffiltext[1]{Center for Computational Astrophysics, Flatiron Institute}
-\altaffiltext[2]{Center for Cosmology and Particle Physics, Department of Physics, New York University}
-\altaffiltext[3]{Center for Data Science, New York University}
-\altaffiltext[4]{Max-Planck-Institut f\"ur Astronomie}
-\altaffiltext[5]{Princeton University Observatory, Princeton University}
+\altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute}
+\altaffiltext{2}{Center for Cosmology and Particle Physics, Department of Physics, New York University}
+\altaffiltext{3}{Center for Data Science, New York University}
+\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie}
+\altaffiltext{5}{Princeton University Observatory, Princeton University}
 
 \begin{abstract}
 The \gaia\ \tgas\ \project{Catalog} contains more than 2 million parallax measurements.
@@ -35,20 +36,30 @@ Conversion of a noisy parallax measurement into a posterior belief over distance
 Usually this prior represents some kind of belief about the Milky Way.
 However, there is multi-band photometry for the \tgas\ stars from imaging surveys;
 this imaging is incredibly informative about stellar distances.
-Here we use color information on TGAS stars from \tmass\ to build a noise-deconvolved empirical prior distribution of stars in color-magnitude space.
+Here we use color information on \tgas\ stars from \tmass\ to build a noise-deconvolved empirical prior distribution of stars in color--magnitude space.
 This data-driven model contains no knowledge of the physics of stellar interiors or photospheres, nor of the Milky Way, but rather derives its precision from its generative model of noisy parallax measurements and an assumption of stationarity.
-We use the Extreme Deconvolution (XD) algorithm, which is an Empirical Bayes approximation to a full hierarchical model of the true parallax and photometry of every star.
+We use the Extreme Deconvolution (\xd) algorithm, which is an Empirical Bayes approximation to a full hierarchical model of the true parallax and photometry of every star.
 The algorithm is run not in absolute-magnitude space but in a transformed space where the measurement uncertainty is closer to Gaussian.
-The XD optimized prior is used to perform parallax and distance inferences for every star, yielding a precise stellar distance estimate and uncertainty (and full posterior) for every star.
+The \xd-optimized prior is used to perform parallax and distance inferences for every star, yielding a precise stellar distance estimate and uncertainty (and full posterior) for every star.
 The method is capitalizing on statistical shrinkage.
 Our posterior parallax estimates are more precise than the Gaia catalog outputs by a factor of [XXX] for the median \tgas\ star; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
 We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible at all in the \tgas\ parallax estimates, but appears clearly in our posterior parallax estimates.
 All our results, including a posterior parallax and distance sampling for [ZZZ] \tgas\ stars, are available in companion electronic tables.
 \end{abstract}
 
-
-\keywords{stars}
-
+\keywords{
+  catalogs
+  ---
+  Hertzsprung--Russell and C--M diagrams
+  ---
+  methods: statistical
+  ---
+  parallaxes
+  ---
+  stars: distances
+  ---
+  stars: statistics
+}
 
 \section{Introduction}
 
