@@ -1,5 +1,12 @@
-%% This is emulateapj reformatting of the AASTEX sample document
-%%
+% This project is part of the stellarTwins project.
+% Copyright 2017 the authors.
+
+% # To-do list
+% - zeroth draft the introduction
+% - zeroth draft the method section
+% - zeroth draft the assumptions list
+% - reformat single-column
+
 \documentclass[iop]{emulateapj}
 \newcommand{\myemail}{landerson@simonsfoundation.org}
 
@@ -24,10 +31,10 @@
         David W. Hogg\altaffilmark{1, 2, 3, 4},
         Boris Leistedt\altaffilmark{2},
         Adrian Price-Whelan\altaffilmark{5}}
-\altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute}
+\altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute, Simons Foundation, New York City}
 \altaffiltext{2}{Center for Cosmology and Particle Physics, Department of Physics, New York University}
 \altaffiltext{3}{Center for Data Science, New York University}
-\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie}
+\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, Heidelberg}
 \altaffiltext{5}{Princeton University Observatory, Princeton University}
 
 \begin{abstract}
@@ -63,7 +70,26 @@ All our results, including a posterior parallax and distance sampling for [ZZZ] 
 
 \section{Introduction}
 
-Given the likelihood measurements of the parallax to local stars from Gaia, and using prior information for the distances to these stars built from the data themselves, we make more precise measurements of the distances to local stars in Gaia than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus which therefore informs the individual measurements that they are drawn from a tighter distribution. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models.
+The \gaia\ Mission will deliver more than a billion stellar distances.
+Only a small fraction (but large number) of these distance
+measurements will be purely astrometric:
+\gaia\ uses astrometric parallax to determine the distances of the closer
+stars, and calibrate spectrophotometric models.
+These spectrophotometric models, in turn, along with \gaia's on-board
+low-resolution $B_p\,R_p$ spectrophotometry, are used to provide
+distance estimates to more distant stars.
+The full stack required for these distance inferences is complex.
+It involves modeling not just stars, but also the dust in the Milky Way,
+and the response of the telescope itself.
+
+With projects like \project{The Cannon} (DWH CITE) and \project{Avast}
+(DWH CITE), we are exploring the extent to which our predictive models of
+stars could be purely data-driven or statistical.
+That is, under what circumstances could the data themselves deliver
+more precise or more accurate models than any theoretical or
+physics-based model?
+
+[DWH: NEEDS WORK] Given the likelihood measurements of the parallax to local stars from Gaia, and using prior information for the distances to these stars built from the data themselves, we make more precise measurements of the distances to local stars in Gaia than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus which therefore informs the individual measurements that they are drawn from a tighter distribution. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models.
 
 \section{Data}
 
