@@ -7,13 +7,50 @@
 % - zeroth draft the assumptions list
 % - reformat single-column
 
-\documentclass[iop]{emulateapj}
-\newcommand{\myemail}{landerson@simonsfoundation.org}
+\documentclass[12pt, preprint]{aastex6}
+\hypersetup{colorlinks = false}
 
-\slugcomment{Stars are kinda cool again.}
-
-\shorttitle{Measuring Mo' Betta Distances}
-\shortauthors{Anderson et al}
+%% Begin DWH mods
+\setlength{\voffset}{0in}
+\setlength{\hoffset}{0in}
+\setlength{\textwidth}{6in}
+\setlength{\textheight}{9in}
+\setlength{\headheight}{0ex}
+\setlength{\footnotesep}{0in}
+\setlength{\topmargin}{-\headsep}
+\setlength{\oddsidemargin}{0.25in}
+\setlength{\evensidemargin}{0.25in}
+\linespread{1.09}
+\setlength{\parindent}{1.2\baselineskip}
+\makeatletter % you know you are living your life wrong when you need to do this
+\long\def\frontmatter@title@above{
+\vspace*{-\headsep}\vspace*{\headheight}
+\noindent\footnotesize
+{\noindent\footnotesize\textsc{\@journalinfo}}\par
+{\noindent\scriptsize Preprint typeset using \LaTeX\ style AASTeX6
+with modifications by DWH.
+}\par\vspace*{-\baselineskip}\vspace*{0.625in}
+}%
+\long\def\frontmatter@abstractheading{%
+\makeaffils
+  \vspace*{-\baselineskip}\vspace*{1.5pt}
+  \vspace*{0.13189in}
+ \begingroup
+  \centering
+  \abstractname
+  \vskip 1mm
+  \par
+ \endgroup
+ \everypar{\rightskip=0.0in\leftskip=\rightskip}\par
+}%
+\def\frontmatter@keys@format{\vspace*{0.5mm}%
+  \settowidth{\keys@width}{\normalsize\@keys@name}%
+  \rightskip=0.0in\leftskip=\rightskip\parindent=0pt%
+    \hangindent=\keys@width\hangafter=1\normalsize\raggedright}%
+\def\twodigits#1{\ifnum#1<10 0\fi\the#1}
+\def\mydate{\leavevmode\hbox{\the\year-\twodigits\month-\twodigits\day}}
+\makeatother
+%% End DWH mods
 
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
@@ -22,13 +59,16 @@
 \newcommand{\gaia}{\project{Gaia}}
 \newcommand{\xd}{\acronym{XD}}
 
+\newcommand{\myemail}{landerson@simonsfoundation.org}
+\slugcomment{Draft manuscript not ready for distribution. \textbf{Copyright 2017 the authors.}}
+\shorttitle{Improving Gaia parallaxes}
+\shortauthors{Anderson, Hogg, Leistedt, Price-Whelan}
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing
 
-\title{Mo' Betta Gaia Distance Measurements, \\
-    Using Gaia + APASS photometry}
-
+\title{Improving \textsl{Gaia} parallaxes
+       with a data-driven model of the color--magnitude diagram}
 \author{Lauren Anderson\altaffilmark{1},
-        David W. Hogg\altaffilmark{1, 2, 3, 4},
+        David W. Hogg\altaffilmark{1,2,3,4},
         Boris Leistedt\altaffilmark{2},
         Adrian Price-Whelan\altaffilmark{5}}
 \altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute, Simons Foundation, New York City}
@@ -86,9 +126,9 @@ With projects like \project{The Cannon} (DWH CITE) and \project{Avast}
 (DWH CITE), we are exploring the extent to which our predictive models of
 stars could be purely data-driven or statistical.
 That is, under what circumstances could the data themselves deliver
-more precise or more accurate models than any theoretical or
+more precise or more accurate information than any theoretical or
 physics-based model?
-The answer to this question is extremely context dependent: It depends
+The answer to this question is extremely context-dependent: It depends
 on what data are available, how much data are available, and what
 questions are being answered.
 In general, data-driven models contain fewer assumptions than
