@@ -144,7 +144,23 @@ data-driven model of the \gaia\ data could in principle deliver very
 precise distances, without any input of the physics of stellar
 evolution, interiors, or photospheres...[DWH CONTENT]
 
-[DWH: NEEDS WORK] Given the likelihood measurements of the parallax to local stars from Gaia, and using prior information for the distances to these stars built from the data themselves, we make more precise measurements of the distances to local stars in Gaia than the parallax measurements alone. The prior, which is very similar to a color-magnitude diagram of stars, is informative because stars fall on a locus within this space. By deconvolving the set of observed points with their uncertainties we tighten this locus which therefore informs the individual measurements that they are drawn from a tighter distribution. We build this prior using Extreme Deconvolution. Extreme Deconvolution is a gaussian mixture model of data, specifically data that have heteroscedastic uncertainties, a quality that gaussin mixture models alone cannot take into account. This prior does not include any assumptions about the physical distribution of stars within the galaxy, nor does it include any stellar models.
+For our data-driven model of the color--magnitude diagram (CMD), we use
+an Empirical-Bayes approach known as Extreme Deconvolution (DWH CITE).
+This method deconvolves heteroskedastic data to derive an estimate
+of the noise-free or low-noise distribution that \emph{would have}
+been observed with far better data.
+This method has been used in astrophysics
+previously to model the velocity distribution of stars in the Solar
+Neighborhood (DWH CITE BOTH) and to perform quasar target selection
+in Sloan Digital Sky Survey data (DWH CITE BOTH).
+Its advantage over other deconvolution methods is that it takes as input,
+and handles in a principled way, heteroskedastic data.
+Its principle disadvantage for the present purposes is that it requires
+or implies a strictly Gaussian noise model.
+In the below, this requires us to transform the CMD to a space in which
+the noise is approximately Gaussian.
+
+The [use of the XD output as prior...DWH]
 
 \section{Assumptions and methods}
 
