@@ -354,7 +354,9 @@ def observationsCutMatched(SNthreshold=1., filename='cutMatchedArrays.npz'):
 
     lowPhotError = (tgasApass['e_bmag'] < sigMax) & (tgasApass['e_vmag'] < sigMax) & (tgasApass['e_gmag'] < sigMax) & (tgasApass['e_rmag'] < sigMax) & (tgasApass['e_imag'] < sigMax)
 
-    lowPhotError_IR = (tgas2mass['j_cmsig'] < sigMax) & (tgas2mass['h_cmsig'] < sigMax) & (tgas2mass['k_cmsig'] < sigMax)  & (tgasWise['w1sigmpro'] < sigMax) & (tgasWise['w2sigmpro'] < sigMax) & (tgasWise['w3sigmpro'] < sigMax)
+    #lowPhotError_IR = (tgas2mass['j_cmsig'] < sigMax) & (tgas2mass['h_cmsig'] < sigMax) & (tgas2mass['k_cmsig'] < sigMax)  & (tgasWise['w1sigmpro'] < sigMax) & (tgasWise['w2sigmpro'] < sigMax) & (tgasWise['w3sigmpro'] < sigMax)
+
+    lowPhotError_IR = (tgas2mass['j_cmsig'] < sigMax) & (tgas2mass['k_cmsig'] < sigMax)
 
     noDust = (medianDist < maxDist) & (np.abs(tgas['b']) > galacticLatMin)
     apassMatch = tgasApass['matched']
@@ -365,7 +367,7 @@ def observationsCutMatched(SNthreshold=1., filename='cutMatchedArrays.npz'):
     hasDust = medianDist >= minDist
     raveMatch = np.in1d(tgas['source_id'], tgasRave['source_id'])
     if galacticLatMax: inDisk = np.abs(tgas['b'] <= galacticLatMax)
-    matched = goodDistance & noNans & posErrors & lowPhotError #& apassMatch
+    matched = goodDistance & lowPhotError_IR #& apassMatch
 
 
     tgasMatched = tgas[matched]
