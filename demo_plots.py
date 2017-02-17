@@ -52,10 +52,10 @@ def plot_val_curve(param_range, train_mean, train_std, test_mean,
 
 
 def absMagKinda2absMag(absMagKinda):
-    """                                                                                                                                                                                                                                     
-    convert my funny units of parallax[mas]*10**(0.2*apparent magnitude[mag]) to an absolute magnitude [mag]                                                                                                                                
     """
-    absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds                                                                                                                                             
+    convert my funny units of parallax[mas]*10**(0.2*apparent magnitude[mag]) to an absolute magnitude [mag]
+    """
+    absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds
     return 5.*np.log10(10.*absMagKinda_in_arcseconds)
 
 
@@ -95,7 +95,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
-        ax[i].set_xlim(-1, 3)
+        ax[i].set_xlim(-0.5, 1.5)
         ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
         #ax[i].xaxis.set_major_locator(plt.MultipleLocator([-1, 0, 1]))
