@@ -567,7 +567,7 @@ if __name__ == '__main__':
     #calculate parallax-ish posterior for each star
     nstars = len(tgasCutMatched)
     summedPosterior = np.zeros((nstars, nPosteriorPoints))
-
+    distance = np.zeros((nstars, nPosteriorPoints))
     for i, index in enumerate(np.where(indices)[0]):
         if np.mod(i, 1000) == 0.0: print i
         meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
@@ -581,5 +581,6 @@ if __name__ == '__main__':
         positive = xparallaxMAS > 0.
         allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
 
-        summedPosterior[i, :] = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
-    np.save('posteriorDistanceTgas', summedPosterior)
+        summedPosterior[i, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
+        distance[i, :] = 1./xparallaxMAS
+    np.savez('posteriorDistanceTgas', posterior=summedPosterior, distance=distance)
