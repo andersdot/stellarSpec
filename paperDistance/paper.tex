@@ -160,7 +160,34 @@ or implies a strictly Gaussian noise model.
 In the below, this requires us to transform the CMD to a space in which
 the noise is approximately Gaussian.
 
-The [use of the XD output as prior...DWH]
+The novel use of XD here is to treat its output---the deconvolved CMD---as
+a prior for use in inference of individual-star distances.
+These inferences, one per star, provide much more precise parallax, distance,
+or absolute magnitude estimates than we get from each star's primary 
+\tgas\ parallax measurement alone.
+That is, we are using the XD model to de-noise the \gaia\ parallax
+measurements.
+Technically, since XD produces a maximum-marginalized-likelihood estimator
+of the deconvolved distribution,
+its use as a prior is only approximately valid; it constitutes using the
+data twice.
+(It wouldn't be using the data twice---that is, it would be valid from a
+probabilistic perspective---if we performed a full hierarchical Bayesian
+inference.)
+However, since the data set is large, the XD approximation is not bad; it is
+sometimes known as the ``empirical Bayes'' method, and is well studied (DWH REFS).
+
+This project is fundamentally a demonstration of concept:
+We are only using the ``small'' (relative to the expected final \gaia\ data set)
+\tgas\ Catalog.
+We are performing only an approximation to full Bayesian hierarchical inference.
+We have to use photometry that is ground-based, rather than the full-precision,
+space-based photometry that the \gaia\ Mission will deliver.
+However, as we show below, we get very good results.
+It is promising that we will be able to obtain similar or even better results
+in later \gaia\ data releases, and eventually put distances on $>10^9$
+\gaia\ stars using photometric distance methodologies but without any
+commitment to---or even use of---physical models of stars.
 
 \section{Assumptions and methods}
 
