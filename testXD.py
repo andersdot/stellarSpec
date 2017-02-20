@@ -520,16 +520,18 @@ if __name__ == '__main__':
     sigMax = 1.086/thresholdSN
     lowPhotErrorcut = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] < sigMax) & \
                       (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] < sigMax)
+    nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
+                   (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
 
     if survey == '2MASS':
         nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
                         bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
                        (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
 
-        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor
+        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor & nonzeroError
 
     else:
-        indices = parallaxSNcut & lowPhotErrorcut
+        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError
 
 
     try:
@@ -566,9 +568,18 @@ if __name__ == '__main__':
     nstars = len(tgasCutMatched)
     summedPosterior = np.zeros((nstars, nPosteriorPoints))
 
-    for index in range(nstars):
+    for i, index in enumerate(np.where(indices)[0]):
+        if np.mod(i, 1000) == 0.0: print i
         meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
-        apparentMagnitude = tgasCutMatched['phot_g_mean_mag'][index]
+        dimension = 0
+        windowFactor = 5. #the number of sigma to sample in mas for plotting
+        minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
+        maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
-        allMeans, allAmps, allCovs, summedPosterior[index,:] = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
-    np.save('posteriorTgas', summedPosterior)
+
+        positive = xparallaxMAS > 0.
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
+
+        summedPosterior[i, :] = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+    np.save('posteriorDistanceTgas', summedPosterior)
