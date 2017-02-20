@@ -141,11 +141,7 @@ def multiplyGaussians(a, A, b, B):
     C = np.linalg.inv(Ainv + Binv)
     Cinv = np.linalg.inv(C)
     d = len(a)
-    #print 'C is: ', C, 'A is: ', A, 'Ainv is: ', Ainv, 'B is: ', B, 'Binv is: ', Binv
-    #print 'the first term is : mean - ', a, ' first part - ', np.dot(C, Ainv), ' whole thing -', np.dot(np.dot(C,Ainv), a)
-    #print 'the second term is: mean - ', b, ' first part - ', np.dot(C, Binv), ' whole thing -', np.dot(np.dot(C,Binv), b)
     c = np.dot(np.dot(C,Ainv),a) + np.dot(np.dot(C,Binv),b)
-    #print 'the new mean is :', c
 
     exponent = -0.5*(np.dot(np.dot(np.transpose(a),Ainv),a) + \
                      np.dot(np.dot(np.transpose(b),Binv),b) - \
@@ -166,10 +162,13 @@ def plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoi
 
 
 def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1):
+    """
+    calculate the posterior of data likelihood mean, cov with prior xdgmm
+    """
     allMeans = np.zeros((xdgmm.n_components, ndim))
     allAmps = np.zeros(xdgmm.n_components)
     allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
-    summpedPosterior = np.zeros(len(x))
+    summedPosterior = np.zeros(len(x))
     individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
     for gg in range(xdgmm.n_components):
         #print mean2[dimension], cov2[dimension], xdgmm.mu[gg], xdgmm.V[gg]
@@ -178,48 +177,142 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1):
         allMeans[gg] = newMean
         allAmps[gg] = newAmp
         allCovs[gg] = newCov
-        
+
         summedPosterior += st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
         individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
     summedPosterior = summedPosterior/np.sum(allAmps)
     return allMeans, allAmps, allCovs, summedPosterior
 
-def posterior2d(mean, amp, cov, xbins, ybins, nperGauss=100000., plot=False):
+def posterior2d(means, amps, covs, xbins, ybins, nperGauss=100000., plot=False):
+    """
+    sample each individual posterior from xd to generate full posterior in 2d
+    """
     previousIndex = 0
     magicNumber = -99999.
-    nsamples = np.int(np.rint(np.sum(nperGauss*allAmps/np.max(allAmps))))
+    nsamples = np.int(np.rint(np.sum(nperGauss*amps/np.max(amps))))
     samplesX = np.zeros(nsamples) + magicNumber
     samplesY = np.zeros(nsamples) + magicNumber
-    
+
     for gg in range(xdgmm.n_components):
-        nextIndex = np.int(np.rint(nperGauss*allAmps[gg]/np.max(allAmps)))
+        nextIndex = np.int(np.rint(nperGauss*amps[gg]/np.max(amps)))
         if plot: figAll, axAll = plt.subplots()
         if nextIndex > 0:
-            samplesAll = np.random.multivariate_normal(allMeans[gg], allCovs[gg], nextIndex)
+            samplesAll = np.random.multivariate_normal(means[gg], covs[gg], nextIndex)
             samplesX[previousIndex:previousIndex+nextIndex] = samplesAll[:,0]
             samplesY[previousIndex:previousIndex+nextIndex] = samplesAll[:,1]
 
             if plot:
                 figOne, axOne = plt.subplots()
                 axOne.hist(absMagKinda2Parallax(samplesAll[:,1], apparentMagnitude), bins=100, histtype='step')
-                axOne.set_title('The relative amplitude is ' + str(allAmps[gg]/np.max(allAmps)))
+                axOne.set_title('The relative amplitude is ' + str(amps[gg]/np.max(amps)))
                 axAll.hist(absMagKinda2Parallax(samplesAll[:,1], apparentMagnitude), bins=absMagKinda2Parallax(ybins, apparentMagnitude), histtype='step')
                 figOne.savefig('example.' + str(k) + '.eachSample.' + str(gg) + '.png')
-        if plot: 
+        if plot:
             figAll.savefig('example' + str(k) + '.eachSample.png')
 
         previousIndex = nextIndex
 
     samplesX = samplesX[samplesX != magicNumber]
     samplesY = samplesY[samplesY != magicNumber]
-    
+
     #print samplesX, samplesY, np.min(samplesX), np.max(samplesX), np.min(samplesY), np.max(samplesY)
+
     Z, xedges, yedges = np.histogram2d(samplesX, absMagKinda2absMag(samplesY), bins=[xbins, ybins], normed=True)
-    return xedges, yedges, Z
+    return xedges, yedges, Z, samplesY
 
-def distanceTest(tgasCutMatched, nPosteriorPoints):
-    indicesM67 = m67indices(tgasCutMatched, plot=False, db=0.5, dl=0.5)    
+def plotPosteriorEachStar(meanPost, covPost, ampPost, summedPosterior, meanLike, covLike, xdgmm, xparallaxMAS, xabsMagKinda, apparentMagnitude, X=None, Y=None, Z=None, plot2D=False, samplesY=None, axAll=None):
+    """
+    plot the posterior of each star into example.png and feed it axAll to put it on another plot
+    """
 
+    ylabel_posterior_logd = r'P(log d | y, $\sigma_{y}$)'
+    ylabel_posterior_d = r'P(d | y, $\sigma_{y}$)'
+    ylabel_posterior_parallax = r'P($\varpi | y, \sigma_{y}$)'
+    ylabel_likelihood_d = r'Likelihood P(y | d, $\sigma_{y}$)'
+    ylabel_likelihood_logd = r'Likelihood P(y | log d, $\sigma_{y}$)'
+
+    fig, ax = plt.subplots(1, 4, figsize=(17,7))
+    positive = xparallaxMAS > 0.
+    for gg in range(xdgmm.n_components):
+        if plot2D:
+            #plot the contours of the full posterior in 2D
+            ax[0].contour(X, Y, Z, cmap=plt.get_cmap('Greys'), linewidths=4)
+            ax[0].scatter(X, Y, lw=0, color='black', alpha=0.01, s=1)
+            axAll[3].contour(X, Y, Z, cmap=plt.get_cmap('Greys'), linewidths=4)
+        else:
+            #plot each individual gaussian of the posterior weighted by its amplitdue
+            points = drawEllipse.plotvector(meanPost[gg], covPost[gg])
+            ax[0].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=ampPost[gg]/np.max(ampPost), lw=0.5)
+            if axAll is not None: axAll[3].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=ampPost[gg]/np.max(ampPost), lw=0.5)
+
+        #plot the prior
+        points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+        ax[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+
+    #plot the 2D likelihood
+    pointsData = drawEllipse.plotvector(meanLike, covLike)
+    ax[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', lw=2)
+    if axAll is not None:
+        axAll[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', lw=2)
+        axAll[3].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', alpha=0.5, lw=2)
+
+    #plot the posterior in parallax space
+    parallaxLikelihood = st.gaussian(meanLike[1], np.sqrt(covLike[1,1]), xabsMagKinda)
+    parallaxPosterior = summedPosterior*10.**(0.2*apparentMagnitude)
+    ampRatio = np.max(parallaxPosterior)/np.max(parallaxLikelihood)
+    ax[1].plot(xparallaxMAS, parallaxPosterior, 'k', lw=2)
+    ax[1].plot(xparallaxMAS, parallaxLikelihood*ampRatio, 'g', lw=2)
+    if axAll is not None:
+        axAll[1].plot(xparallaxMAS, parallaxLikelihood*ampRatio, 'g', lw=2, alpha=0.5)
+        axAll[4].plot(xparallaxMAS, parallaxPosterior, 'k', lw=2, alpha=0.5)
+
+    #plot historgram of y samples vs true distribution to check my sampling is correct
+    if plot2D: ax[1].hist(absMagKinda2Parallax(samplesY, apparentMagnitude), color='black', bins=100, histtype='step', normed=True)
+
+    #plot the posteriorin distance space
+    distancePosterior = summedPosterior[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+    parallaxLikelihood_positive = st.gaussian(meanLike[1], np.sqrt(covLike[1,1]), xabsMagKinda)[positive]
+    ampRatio = np.max(distancePosterior)/np.max(parallaxLikelihood_positive)
+    ax[2].plot(1./xparallaxMAS[positive], distancePosterior, 'k', lw=2)
+    ax[2].plot(1./xparallaxMAS[positive], parallaxLikelihood_positive*ampRatio, 'g', lw=2)
+
+
+    #plot the posterior in log distance space
+    logdistancePosterior = summedPosterior[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1))
+    ampRatio = np.max(logdistancePosterior)/np.max(parallaxLikelihood_positive)
+    ax[3].plot(np.log10(1./xparallaxMAS[positive]), logdistancePosterior, 'k', lw=2)
+    ax[3].plot(np.log10(1./xparallaxMAS[positive]), parallaxLikelihood_positive*ampRatio, 'g', lw=2, label='likelihood')
+    if axAll is not None:
+        axAll[2].plot(np.log10(1./xparallaxMAS[positive]), parallaxLikelihood_positive*ampRatio, 'g', lw=2, alpha=0.5)
+        axAll[5].plot(np.log10(1./xparallaxMAS[positive]), logdistancePosterior, 'k', lw=2, alpha=0.5)
+
+    ax[0].set_xlim(xlim)
+    ax[0].set_ylim(ylim)
+    ax[0].set_xlabel(xlabel, fontsize=18)
+    ax[0].set_ylabel(ylabel, fontsize=18)
+
+    ax[1].set_xlabel('Parallax [mas]', fontsize=18)
+    ax[1].set_xlim(-1, 6)
+    ax[1].set_ylabel(ylabel_posterior_parallax)
+
+    #ax[2].set_xscale('log')
+    ax[2].set_xlim(0.01, 3)
+    ax[2].set_xlabel('Distance [kpc]', fontsize=18)
+    ax[2].set_ylabel(ylabel_posterior_d)
+
+    ax[3].set_xlim(np.log10(0.3), np.log10(3))
+    ax[3].set_xlabel('log Distance [kpc]', fontsize=18)
+    ax[3].set_ylabel(ylabel_posterior_logd)
+    plt.legend()
+    plt.tight_layout()
+    fig.savefig('example.png')
+
+
+def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False):
+    """
+    test posterior accuracy using distances to cluster M67
+    """
+    indicesM67 = m67indices(tgasCutMatched, plot=False, db=0.5, dl=0.5)
 
     #all the plot stuff
     figDist, axDist = plt.subplots(2, 3, figsize=(20, 15))
@@ -233,25 +326,23 @@ def distanceTest(tgasCutMatched, nPosteriorPoints):
     #set up the bins for the 2d posterior
     delta = 0.01
     xbins = np.arange(xlim[0], xlim[1], delta)
-    ybins = np.arange(ylim[0], ylim[1], delta)
+    ybins = np.arange(ylim[1], ylim[0], delta)
     x = 0.5*(xbins[1:] + xbins[:-1])
     y = 0.5*(ybins[1:] + ybins[:-1])
     X, Y = np.meshgrid(x, y, indexing='ij')
 
+
     #the array for the projected posterior
     summedPosterior = np.zeros((np.sum(indicesM67), nPosteriorPoints))
 
-    #for 2D, the maximum number of samples to take from each gaussian 
+    #for 2D, the maximum number of samples to take from each gaussian
     nperGauss = 100000.
 
+    #loop through stars in the cluster
+    for k, index in enumerate(np.where(indicesM67)[0]): #zip([16], [np.where(indicesM67)[0][16]]): #
 
-    for k, index in zip([16], [np.where(indicesM67)[0][16]]): #enumerate(np.where(indicesM67)[0]):
-        #for debugging, save the individual posteriors
-
-        
         #plotting for each star in the cluster
-        figPost, axPost = plt.subplots(1, 4, figsize=(17,7))
-        windowFactor = 5. #the number of sigma to sample in mas for plotting 
+        windowFactor = 5. #the number of sigma to sample in mas for plotting
         minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
         maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
@@ -261,29 +352,28 @@ def distanceTest(tgasCutMatched, nPosteriorPoints):
         positive = xparallaxMAS > 0.
 
         dimension = 0
-        mean2, cov2 = matrixize(data1[index], data2[index], err1[index], err2[index])
+        meanData, covData = matrixize(data1[index], data2[index], err1[index], err2[index])
         ndim = 2
 
         #calculate the posterior, a gaussian for each xdgmm component
-        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, mean2[dimension], cov2[dimension], xabsMagKinda)
+        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda)
 
         #for 2D visual of posterior, sample all the xdgmm component gaussians into 2d historgram
-        xedges, yedges, Z = posterior2d(allMeans, allAmps, allCovs, xbins, ybins, nperGauss=nperGauss)
+        if plot2DPost: xedges, yedges, Z, samplesY = posterior2d(allMeans, allAmps, allCov, xbins, ybins, nperGauss=nperGauss)
+        else:
+            X = Y = Z = samplesY = None
+        #plot the posterior of each star in example.png and feed it the ax for all the stars to accumualte into one plot
+        plotPosteriorEachStar(allMeans, allCov, allAmps, summedPosterior[k,:], meanData[dimension], covData[dimension], xdgmm, xparallaxMAS, xabsMagKinda, apparentMagnitude, X=X, Y=Y, Z=Z, samplesY=samplesY, axAll=axDist, plot2D=plot2DPost)
+        os.rename('example.png', 'example.' + str(k) + '.png')
 
-        for gg in range(xdgmm.n_components):
-            points = drawEllipse.plotvector(allMeans[gg], allCovs[gg])
-            #axPost[0].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
-            #axDist[3].plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k', alpha=allAmps[gg]/np.max(allAmps), lw=0.5)
-            points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-            axPost[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-            if k == 0:
+        #plot prior on plot of all stars but only first loop
+        if k == 0:
+            for gg in range(xdgmm.n_components):
+                points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
                 axDist[0].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
                 axDist[3].plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
-        #print X, Y, Z, np.shape(X), np.shape(Y), np.shape(Z), np.min(Z), np.max(Z)
-        axDist[3].contour(X, Y, Z, cmap=plt.get_cmap('Greys'), linewidths=4)
-        axPost[0].contour(X, Y, Z, cmap=plt.get_cmap('Greys'), linewidths=4)
-        axPost[0].scatter(X, Y, lw=0, color='black', alpha=0.01, s=1)
+        #check that things seem right
         normalization_parallaxPosterior = scipy.integrate.cumtrapz(summedPosterior[k,:]*10.**(0.2*apparentMagnitude), xparallaxMAS)[-1]
         normalization_distancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude), 1./xparallaxMAS[positive])[-1]
         normalization_logdistancePosterior = scipy.integrate.cumtrapz(summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1)), np.log10(1./xparallaxMAS[positive]))[-1]
@@ -292,58 +382,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints):
         #print 'the sum of distance PDF is :', normalization_distancePosterior
         #print 'the sum of log distance PDF is :', normalization_logdistancePosterior
 
-        pointsData = drawEllipse.plotvector(mean2[dimension], cov2[dimension])
-
-        axPost[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', lw=2)
-        axDist[0].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', lw=2)
-        axDist[3].plot(pointsData[0, :], absMagKinda2absMag(pointsData[1,:]), 'g', alpha=0.5, lw=2)
-
-        parallaxLikelihood = st.gaussian(data2[index], err2[index], xabsMagKinda)
-        parallaxPosterior = summedPosterior[k,:]*10.**(0.2*apparentMagnitude)
-        ampRatio = np.max(parallaxPosterior)/np.max(parallaxLikelihood)
-        axPost[1].plot(xparallaxMAS, parallaxPosterior, 'k', lw=2)
-        axPost[1].plot(xparallaxMAS, parallaxLikelihood*ampRatio, 'g', lw=2)
-        axPost[1].hist(absMagKinda2Parallax(samplesY, apparentMagnitude), color='black', bins=100, histtype='step', normed=True)
-        axDist[1].plot(xparallaxMAS, parallaxLikelihood*ampRatio, 'g', lw=2, alpha=0.5)
-        axDist[4].plot(xparallaxMAS, parallaxPosterior, 'k', lw=2, alpha=0.5)
-
-        distancePosterior = summedPosterior[k,:][positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
-        parallaxLikelihood_positive = st.gaussian(data2[index], err2[index], xabsMagKinda)[positive]
-        ampRatio = np.max(distancePosterior)/np.max(parallaxLikelihood_positive)
-        axPost[2].plot(1./xparallaxMAS[positive], distancePosterior, 'k', lw=2)
-        axPost[2].plot(1./xparallaxMAS[positive], parallaxLikelihood_positive*ampRatio, 'g', lw=2)
-        axDistLin[0].plot(1./xparallaxMAS[positive], parallaxLikelihood_positive*ampRatio, 'g', lw=2, alpha=0.5)
-        axDistLin[1].plot(1./xparallaxMAS[positive], distancePosterior, 'k', lw=2, alpha=0.5)
-
-        logdistancePosterior = summedPosterior[k,:][positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1))
-        ampRatio = np.max(logdistancePosterior)/np.max(parallaxLikelihood_positive)
-        axPost[3].plot(np.log10(1./xparallaxMAS[positive]), logdistancePosterior, 'k', lw=2)
-        axPost[3].plot(np.log10(1./xparallaxMAS[positive]), parallaxLikelihood_positive*ampRatio, 'g', lw=2, label='likelihood')
-        axDist[2].plot(np.log10(1./xparallaxMAS[positive]), parallaxLikelihood_positive*ampRatio, 'g', lw=2, alpha=0.5)
-        axDist[5].plot(np.log10(1./xparallaxMAS[positive]), logdistancePosterior, 'k', lw=2, alpha=0.5)
-
-
-        axPost[0].set_xlim(xlim)
-        axPost[0].set_ylim(ylim)
-        axPost[0].set_xlabel(xlabel, fontsize=18)
-        axPost[0].set_ylabel(ylabel, fontsize=18)
-
-        axPost[1].set_xlabel('Parallax [mas]', fontsize=18)
-        axPost[1].set_xlim(-1, 6)
-        axPost[1].set_ylabel(ylabel_posterior_parallax)
-
-        #axPost[2].set_xscale('log')
-        axPost[2].set_xlim(0.01, 3)
-        axPost[2].set_xlabel('Distance [kpc]', fontsize=18)
-        axPost[2].set_ylabel(ylabel_posterior_d)
-
-        axPost[3].set_xlim(np.log10(0.3), np.log10(3))
-        axPost[3].set_xlabel('log Distance [kpc]', fontsize=18)
-        axPost[3].set_ylabel(ylabel_posterior_logd)
-        plt.legend()
-        plt.tight_layout()
-        figPost.savefig('example.' + str(k) + '.png')
-        np.save('summedPosteriorM67', summedPosterior)
+    np.save('summedPosteriorM67', summedPosterior)
 
 
     axDist[0].set_xlabel(xlabel, fontsize=18)
@@ -382,7 +421,6 @@ def distanceTest(tgasCutMatched, nPosteriorPoints):
     axDist[2].set_xlim(np.log10(0.1),np.log10(3))
     axDist[5].set_xlim(np.log10(0.1),np.log10(3))
 
-
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
@@ -404,11 +442,12 @@ if __name__ == '__main__':
     survey = '2MASS'
     np.random.seed(2)
     thresholdSN = 0.001
-    ngauss = 1024
+    ngauss = 128
     nstar = '1.2M'
     Nsamples = 120000
     nPosteriorPoints = 10000
     projectedDimension = 1
+    ndim = 2
 
     dataFilename = 'cutMatchedArrays.tgasApassSN0.npz'
     xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.fit'
@@ -500,12 +539,13 @@ if __name__ == '__main__':
             X, Xerr = subset(data1[indices], data2[indices], err1[indices], err2[indices], nsamples=1024)
         else:
             X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
-
         xdgmm = XDGMM(method='Bovy')
         xdgmm.n_components = ngauss
         xdgmm = xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilename)
-    sample = xdgmm.sample(Nsamples)
+
+
+    #plot XD prior
     figPrior, axPrior = plt.subplots()
     for gg in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
@@ -513,9 +553,22 @@ if __name__ == '__main__':
         axPrior.invert_yaxis()
     figPrior.savefig('prior.png')
 
-
+    #plot 2x2 visual of prior w/ samples
+    sample = xdgmm.sample(Nsamples)
     dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
-
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
 
+    #check it's working by inferring distances to M67
+    #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
+
+    #calculate parallax-ish posterior for each star
+    nstars = len(tgasCutMatched)
+    summedPosterior = np.zeros((nstars, nPosteriorPoints))
+
+    for index in range(nstars):
+        meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+        apparentMagnitude = tgasCutMatched['phot_g_mean_mag'][index]
+        xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+        allMeans, allAmps, allCovs, summedPosterior[index,:] = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
+    np.save('posteriorTgas', summedPosterior)
