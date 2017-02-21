@@ -233,17 +233,24 @@ Crossvalidation
 We use stars cross matched in the TGAS and APASS set of observations. We require there are no NaNs in any APASS photometric band, as well as every band having positive errors. We check that the match between APASS and TGAS is good using extreme APASS-WISE colors. We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from sampling of posterior Gaia distances from Adrain. There is minimal dust to the matched stars. To build our model here we use the Gaia G band magnitude, parallax and APASS B-V color.
 
 \section{Discussion}
-Apass HR Diagram looks very different from Rave HR Diagram, MS stars are incorrectly being labeled as giants
+What have we achieved and why is it important?
 
-Long discussion of dust
+Come back to the assumptions. What happens if we change or violate them?
 
-Number of gaussians in XD, and the w parameter
+Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
+
+Long discussion of dust.
+
+Some discussion of possible failure modes. Including very rare kinds of stars.
+
+Number of gaussians in XD, and the w parameter. That we set them heuristically.
 
 
-
-\acknowledgments It is a pleasure to thank Andy Casey (Monash) and the
-attendees at the Stars Group Meeting at the CCA for comments and
-input.
+\acknowledgments It is a pleasure to thank
+  Jo Bovy (Toronto),
+  Andy Casey (Monash),
+and the attendees at the Stars Group Meeting at the Flatiron Institute
+Center for Computational Astrophysics for comments and input.
 
 This project was developed in part at the 2016 \acronym{NYC} Gaia Sprint, hosted
 by the Center for Computational Astrophysics at the Simons Foundation
