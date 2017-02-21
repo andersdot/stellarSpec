@@ -161,7 +161,7 @@ so it requires relatively high technology to build this data-driven model
 using all the data available, fairly and responsibly.
 
 Here we build and use just such a data-driven model.
-In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\ 
+In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\
 photometry, to make a model of the noise-free (or low-noise)
 color--magnitude diagram (CMD) of stars.
 We use
@@ -183,7 +183,7 @@ the noise is approximately Gaussian.
 The novel use of XD here is to treat its output---the deconvolved CMD---as
 a prior for use in inference of individual-star distances.
 These inferences, one per star, provide much more precise parallax, distance,
-or absolute magnitude estimates than we get from each star's primary 
+or absolute magnitude estimates than we get from each star's primary
 \tgas\ parallax measurement alone.
 That is, we are using the XD model to de-noise the \gaia\ parallax
 measurements.
@@ -231,6 +231,15 @@ Crossvalidation
 \section{Data and results}
 
 We use stars cross matched in the TGAS and APASS set of observations. We require there are no NaNs in any APASS photometric band, as well as every band having positive errors. We check that the match between APASS and TGAS is good using extreme APASS-WISE colors. We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from sampling of posterior Gaia distances from Adrain. There is minimal dust to the matched stars. To build our model here we use the Gaia G band magnitude, parallax and APASS B-V color.
+
+\subsection{Dust}
+
+Dust corrections are non trivial for stars with poor signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giants, which tend to have the lowest signal to noise, and can therefore have dust corrections $\sim 1-2$ magnitudes. To apply a dust correction to the 2MASS photometry, we first generate our prior using XD on the observed, attenuated photometry. Using this raw prior we infer the distances to all the stars in our prior more precisely, increasing our signal to noise for each star and therefore minimize severe distances and their associated severe dust corrections. With more precise distance posteriors, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. For each distance we take the median of the samples of the dust model. We apply each dust correction to our 2MASS photometry given by Equation \ref{eq:dust} where $K_{\lambda}$ = [3.626, 2.742, 3.303, 2.285, 1.698] for bands [B, V, g, r, i] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution.
+
+\begin{equation}
+\label{eq:dust}
+m_{\mathrm{band, corrected}} = m_{\mathrm{band}} - K_{\lambda} \times E(B-V)
+\end{equation}
 
 \section{Discussion}
 What have we achieved and why is it important?
