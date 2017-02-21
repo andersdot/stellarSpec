@@ -142,9 +142,29 @@ distant stars.
 Here we deliver a demonstration-of-concept project that shows that a
 data-driven model of the \gaia\ data could in principle deliver very
 precise distances, without any input of the physics of stellar
-evolution, interiors, or photospheres...[DWH CONTENT]
+evolution, interiors, or photospheres.
+Most stellar models used to generate photometric distances or photometric
+parallaxes have been physical models.
+Because there are small issues with physical models of stars, leading to small
+color and luminosity differences with the data, these models produce distance
+estimates that are biased.
+Besides, they build a long list of physical assumptions---assumptions about
+how stars work and how to model them numerically---into the distance estimates.
+That is, it is impossible (when using physical models)
+to deliver distance estimates that involve minimal in assumptions.
 
-For our data-driven model of the color--magnitude diagram (CMD), we use
+However, the use of physical models for distance estimation is not necessary.
+Because there are stars at all luminosities with good parallax information,
+it is possible to build a stellar photometric model from the data themselves.
+Different stars are observed at different levels of parallax precision,
+so it requires relatively high technology to build this data-driven model
+using all the data available, fairly and responsibly.
+
+Here we build and use just such a data-driven model.
+In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\ 
+photometry, to make a model of the noise-free (or low-noise)
+color--magnitude diagram (CMD) of stars.
+We use
 an Empirical-Bayes approach known as Extreme Deconvolution (DWH CITE).
 This method deconvolves heteroskedastic data to derive an estimate
 of the noise-free or low-noise distribution that \emph{would have}
@@ -246,8 +266,8 @@ made use of the \acronym{NASA} Astrophysics Data System.
 \section{Appendix material}
 
 
-\begin{thebibliography}{}
-\end{thebibliography}
+%\begin{thebibliography}{}
+%\end{thebibliography}
 
 \clearpage
 
