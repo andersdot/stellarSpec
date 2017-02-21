@@ -424,8 +424,56 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
+def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512):
+    dustFile = 'dustCorrection_' + dataFilename
 
-def dustCorrection(magnitude, EBV, band):
+    try:
+        data = np.load(dustFile + '.npz')
+        dustEBV = data['ebv']
+        sourceID = data['sourceID']
+    except IOError:
+        print 'calculating dust corrections, this may take awhile'
+
+        nstars = len(tgasCutMatched)
+        max_samples = 2
+        sourceID = np.zeros(nstars, dtype='>i8')
+        dustEBV = np.zeros(nstars)
+
+        for i, index in enumerate(np.where(indices)[0]):
+            if np.mod(i, 1000) == 0.0:
+                print i
+                np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
+
+            #calculate parallax-ish posterior for each star
+            meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+            dimension = 0
+            windowFactor = 5. #the number of sigma to sample in mas for plotting
+            minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
+            maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+            apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
+            xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+
+            positive = xparallaxMAS > 0.
+            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
+
+            #normalize prior pdf
+            posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+            distance = 1./xparallaxMAS[positive]
+
+            #sample the PDF nDistanceSamples
+            sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
+
+            #find the distance at the 5% quantile
+            distanceQuantile = np.percentile(sampleDistance, quantile*100.)
+
+            l = tgasCutMatched['l'][index]*units.deg
+            b = tgasCutMatched['b'][index]*units.deg
+            dustEBV[i] = st.dust(l, b, distanceQuantile*units.kpc, max_samples=max_samples, mode='median')
+            sourceID[i] = tgasCutMatched['source_id'][index]
+        np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
+    return dustEBV, sourceID
+
+def dustCorrection(mag, EBV, band):
     """
     using Finkbeiner's dust model, correct the magnitude for dust extinction
     """
@@ -436,6 +484,58 @@ def dustCorrection(magnitude, EBV, band):
                  'r': 2.285,
                  'i': 1.698}
     return mag - dustCoeff[band]*EBV
+
+def cdf(x, y):
+    return scipy.integrate.cumtrapz(x, y)
+
+def samples(x, pdf, N, plot=False):
+    randomNumbers = np.random.random(N)
+    cdf = scipy.integrate.cumtrapz(pdf, x)[:, None]
+    difference = np.abs(cdf - randomNumbers)
+    indices = np.where(difference == np.min(difference, axis=0))
+    distSamples = x[indices[0]]
+
+    if plot:
+        fig, ax = plt.subplots()
+        ax.plot(x, pdf)
+        ax.plot(x[1:], cdf)
+        ax.hist(distSamples, bins=100, normed=True, histtype='step')
+        fig.savefig('samples.png')
+    return distSamples
+
+def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=2, dimension=1, projectedDimension=1):
+    nstars = len(tgasCutMatched)
+    summedPosterior = np.zeros((nstars, nPosteriorPoints))
+    distancePosterior = np.zeros((nstars, nPosteriorPoints))
+    colorDustCorrected = np.zeros(nstars)
+    absMagDustCorrected = np.zeros(nstars)
+
+    for i, index in enumerate(np.where(indices)[0]):
+        if np.mod(i, 1000) == 0.0:
+            print i
+            np.savez('posteriorDistanceTgas', posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
+
+
+        meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+        dimension = 0
+        windowFactor = 5. #the number of sigma to sample in mas for plotting
+        minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
+        maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
+        xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+
+        positive = xparallaxMAS > 0.
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=projectedDimension)
+
+        posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+        distance = 1./xparallaxMAS[positive]
+
+        summedPosterior[i, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
+        distancePosterior[i, :] = 1./xparallaxMAS
+        sourceID[i] = tgasCutMatched['source_id'][index]
+
+    np.savez('posteriorDistanceTgas', posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
+    return summedPosterior, distancePosterior, sourceID
 
 if __name__ == '__main__':
 
@@ -448,10 +548,11 @@ if __name__ == '__main__':
     nPosteriorPoints = 10000
     projectedDimension = 1
     ndim = 2
-
-    dataFilename = 'cutMatchedArrays.tgasApassSN0.npz'
+    #dataFilename = 'cutMatchedArrays.SN0.001.npz'
+    #dataFilename = 'cutMatchedArrays.tgasApassSN0.npz'
+    dataFilename = 'cutMatchedArrays.1_20_100_4.npz'
     xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.fit'
-
+    xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.dustCorrected.fit'
     useDust = False
     optimize = False
     subset = False
@@ -469,7 +570,6 @@ if __name__ == '__main__':
     except IOError:
         tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(SNthreshold=thresholdSN, filename=dataFilename)
     print 'Number of Matched stars is: ', len(tgasCutMatched)
-
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -561,26 +661,27 @@ if __name__ == '__main__':
                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
 
+    dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512)
+
+    assert np.sum(tgasCutMatched['sourceID'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
+
+    for i, index in enumerate(np.where(indices)[0]):
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][index], dustEBV[i], mag1)
+        mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][index], dustEBV[i], mag2)
+        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index], dustEBV[i], absmag)
+        absMagDustCorrected = tgasCutMatched['parallax_error']*10.**(0.2*apparentMagDustCorrected)
+        #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+        #need to define color_err and absMagKinda_err when including dust correction
+        colorDustCorrected = mag1DustCorrected - mag2DustCorrected
+        data1 = colorDustCorrected
+        data2 = absMagDustCorrected
+        X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
+        xdgmm.fit(X, Xerr)
+        xdgmm.save_model(xdgmmFilenameDust)
+
+
     #check it's working by inferring distances to M67
     #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
-    nstars = len(tgasCutMatched)
-    summedPosterior = np.zeros((nstars, nPosteriorPoints))
-    distance = np.zeros((nstars, nPosteriorPoints))
-    for i, index in enumerate(np.where(indices)[0]):
-        if np.mod(i, 1000) == 0.0: print i
-        meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
-        dimension = 0
-        windowFactor = 5. #the number of sigma to sample in mas for plotting
-        minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-        maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
-        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
-        xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
-
-        positive = xparallaxMAS > 0.
-        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
-
-        summedPosterior[i, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
-        distance[i, :] = 1./xparallaxMAS
-    np.savez('posteriorDistanceTgas', posterior=summedPosterior, distance=distance)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, dimension=dimension, projectedDimension=projectedDimension)

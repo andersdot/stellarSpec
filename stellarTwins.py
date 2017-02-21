@@ -412,9 +412,9 @@ def distanceModulus(distCutMatched):
     varMuMatched = np.mean((muMatched - meanMuMatched[:,None]) ** 2, axis=1)
     return meanMuMatched, varMuMatched
 
-def dust(l, b, distance, plot=False):
+def dust(l, b, distance, plot=False, max_samples=2, mode='median'):
     sfd = SFDQuery()
-    bayes = BayestarQuery(max_samples=2)
+    bayes = BayestarQuery(max_samples=max_samples)
     c = SkyCoord(l, b,
             distance = distance,
             frame='galactic')
@@ -422,11 +422,11 @@ def dust(l, b, distance, plot=False):
     cNoDist = SkyCoord(l, b,
             frame='galactic')
 
-    bayesDust = bayes(c, mode='median')
-    bayesDustNoDist = bayes(cNoDist, mode='median')
+    bayesDust = bayes(c, mode=mode)
+    bayesDustNoDist = bayes(cNoDist, mode=mode)
 
     #!!!!! Do something else than setting it equal to 0 !!!!!
-    bayesDust[np.isnan(bayesDust)] = 0.0
+    #if len(bayesDust) > 1: bayesDust[np.isnan(bayesDust)] = 0.0
 
     if plot:
         fig, ax = plt.subplots(3, figsize=(5, 7.5))
