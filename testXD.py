@@ -482,7 +482,11 @@ def dustCorrection(mag, EBV, band):
                  'V': 2.742,
                  'g': 3.303,
                  'r': 2.285,
-                 'i': 1.698}
+                 'i': 1.698,
+                 'J': 0.709,
+                 'H': 0.449,
+                 'K': 0.302}
+                 
     return mag - dustCoeff[band]*EBV
 
 def cdf(x, y):
