@@ -208,6 +208,24 @@ a related project (CITE BORIS), in which we use a
 somewhat less flexible model for the CMD, but in which we take a much more principled
 approach to the inference.
 
+On a different tack, there has been some discussion in the literature
+about how to use a parallax responsibly to infer a distance (CITE TRI+CBJ).
+These papers use the \gaia\ measurement to construct a parallax likelihood,
+and combine this with a distance prior.
+While this is sensible and correct, all present methods proposed along
+these lines build in informative (and known-to-be-wrong) assumptions
+about the line-of-sight distance distribution to \gaia\ stars.
+That is, they build in strong and informative assumptions about the Milky
+Way.
+The methodology presented in this paper makes exceedingly weak assumptions
+about the Milky Way, and similarly weak assumptions about the properties of
+stars.
+The strongest new assumption made in this work is that for every star
+in \tgas, there are other, photometrically (and bolometrically)
+similar stars.
+That is a much weaker assumption than has been made in other Bayesian
+distance estimations.
+
 This project is fundamentally a demonstration of concept:
 We are only using the ``small'' (relative to the expected final \gaia\ data set)
 \tgas\ Catalog.
@@ -218,7 +236,7 @@ However, as we show below, we get very good results.
 It is promising that we will be able to obtain similar or even better results
 in later \gaia\ data releases, and eventually put distances on $>10^9$
 \gaia\ stars using photometric distance methodologies but without any
-commitment to---or even use of---physical models of stars.
+commitment to---or even use of---physical models of stars or the Milky Way.
 
 \section{Assumptions and methods}
 
