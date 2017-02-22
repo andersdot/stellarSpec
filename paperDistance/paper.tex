@@ -275,10 +275,28 @@ m_{\mathrm{band, corrected}} = m_{\mathrm{band}} - K_{\lambda} \times E(B-V)
 \section{Discussion}
 
 We have shown that it is possible to obtain photometric parallaxes for
-distant stars in the \gaia\ data without any use of physical stellar
-models.
-Although we have not performed principled Bayesian inference in this
-project, we have performed a statistically responsible deconvolution
+distant stars in the \gaia\ \tgas\ data without any use of physical stellar
+models, nor models of the Milky Way.
+We obtained these by building a data-driven model of the
+color--magnitude diagram (CMD) of the stars in the \tgas\ data set,
+and using it as a prior pdf for Bayesian interences.
+The posterior pdfs for distance that we obtain are, in general, much
+narrower than the likelihood functions delivered by the
+\gaia\ Mission, and therefore the distance estimates (or,
+equivalently, parallax estimates) are much more precise.
+It is not surprising that a Bayesian inference provides more
+precise inferences than the likelihood function alone; Bayesian
+inferences bring in new information that decrease variance (but
+often introduce bias).
+We have shown thatm, in addition to pure precision improvements, at
+least some aspects of \emph{accuracy} have been improved as well, by
+showing that the posterior distance estimates to stars in stellar
+clusters are much more clustered than likelihood-based distance
+estimates.
+
+Although we have not performed principled hierarchical Bayesian inference in this
+project, we built our prior for each star's distance by
+performing a statistically responsible deconvolution
 of the \gaia\ \tgas\ data that is justifiable under a clear set of
 assumptions.
 This deconvolution makes use of a reasonable noise model and an
@@ -291,8 +309,8 @@ all the data, not just the data with the highest signal-to-noise or
 largest parallaxes.
 That is, the model for the CMD we have built is representative for
 the \tgas\ Catalog.
-Inasmuch as that is true, we expect the distance estimates to be
-weakly biased.
+Inasmuch as that is true, we expect any (sensible) distance estimates
+we generate from our distance posterior pdfs to be weakly biased.
 
 What would be different if we wanted a model not of the \tgas\ data,
 but a model appropriate for the full billion stars, or for a
