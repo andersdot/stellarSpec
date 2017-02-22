@@ -256,14 +256,31 @@ m_{\mathrm{band, corrected}} = m_{\mathrm{band}} - K_{\lambda} \times E(B-V)
 
 \section{Discussion}
 
-We have shown that it is possible to obtain photometric parallaxes for distant
-stars in the \gaia\ data without any use of physical stellar models.
-Although we have not performed principled Bayesian inference in this project,
-we have performed a statistically responsible deconvolution of the
-\gaia\ \tgas\ data that is justifiable under a clear set of assumptions.
-...DWH NOT DONE THIS PARAGRAPH
+We have shown that it is possible to obtain photometric parallaxes for
+distant stars in the \gaia\ data without any use of physical stellar
+models.
+Although we have not performed principled Bayesian inference in this
+project, we have performed a statistically responsible deconvolution
+of the \gaia\ \tgas\ data that is justifiable under a clear set of
+assumptions.
+This deconvolution makes use of a reasonable noise model and an
+assumption of stationarity to shrink the parallax uncertainties, and
+do so dramatically for the stars measured at lower signal-to-noise.
+Because the model we use (Extreme Deconvolution or XD) accounts for
+heteroskedastic noise, we were able to build our photometric parallax
+model---which is a model of the color--magnitude diagram (CMD)---using
+all the data, not just the data with the highest signal-to-noise or
+largest parallaxes.
+That is, the model for the CMD we have built is representative for
+the \tgas\ Catalog.
+Inasmuch as that is true, we expect the distance estimates to be
+weakly biased.
 
-What have we achieved and why is it important?
+What would be different if we wanted a model not of the \tgas\ data,
+but a model appropriate for the full billion stars, or for a
+volume-limited sample of stars?
+How could we convert our existing results?
+How would we do it properly in general?
 
 Come back to the assumptions. What happens if we change or violate them?
 
@@ -275,6 +292,9 @@ Some discussion of possible failure modes. Including very rare kinds of stars.
 
 Number of gaussians in XD, and the w parameter. That we set them heuristically.
 
+How this compares to other Bayesian attempts at inferring distances,
+like, eg, the Tri--Coryn papers. Favorably! And with \emph{fewer}
+assumptions, in fact!
 
 \acknowledgments It is a pleasure to thank
   Jo Bovy (Toronto),
