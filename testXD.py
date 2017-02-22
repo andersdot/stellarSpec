@@ -18,6 +18,7 @@ import drawEllipse
 from astropy.coordinates import SkyCoord
 import astropy.units as units
 import scipy.integrate
+import time
 
 def convert2gal(ra, dec):
     """
@@ -424,7 +425,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512):
+def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2):
     dustFile = 'dustCorrection_' + dataFilename
 
     try:
@@ -435,14 +436,19 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         print 'calculating dust corrections, this may take awhile'
 
         nstars = len(tgasCutMatched)
-        max_samples = 2
         sourceID = np.zeros(nstars, dtype='>i8')
-        dustEBV = np.zeros(nstars)
-
+        #dustEBV = np.zeros(nstars)
+        #dustEBV50 = np.zeros(nstars)
+        distanceQuantile = np.zeros(nstars)
+        distanceQuantile50 = np.zeros(nstars)
+        start = time.time()
         for i, index in enumerate(np.where(indices)[0]):
             if np.mod(i, 1000) == 0.0:
-                print i
-                np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
+                end = time.time()
+                print i, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
+                start = time.time()
+
+                #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
 
             #calculate parallax-ish posterior for each star
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
@@ -464,13 +470,18 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
             sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
 
             #find the distance at the 5% quantile
-            distanceQuantile = np.percentile(sampleDistance, quantile*100.)
+            distanceQuantile[i] = np.percentile(sampleDistance, quantile*100.)
+            distanceQuantile50[i] = np.percentile(sampleDistance, 0.5*100.)
+        np.savez('distanceQuantiles', distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
+        sourceID = tgasCutMatched['source_id'][indices]
+        l = tgasCutMatched['l'][indices]*units.deg
+        b = tgasCutMatched['b'][indices]*units.deg
+        start = time.time()
+        dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode='median')
+        end = time.time()
+        print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
 
-            l = tgasCutMatched['l'][index]*units.deg
-            b = tgasCutMatched['b'][index]*units.deg
-            dustEBV[i] = st.dust(l, b, distanceQuantile*units.kpc, max_samples=max_samples, mode='median')
-            sourceID[i] = tgasCutMatched['source_id'][index]
-        np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
+        np.savez('dustCorrection_' + dataFilename+'_alldistance', ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
     return dustEBV, sourceID
 
 def dustCorrection(mag, EBV, band):
@@ -486,7 +497,7 @@ def dustCorrection(mag, EBV, band):
                  'J': 0.709,
                  'H': 0.449,
                  'K': 0.302}
-                 
+
     return mag - dustCoeff[band]*EBV
 
 def cdf(x, y):
@@ -665,7 +676,7 @@ if __name__ == '__main__':
                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
 
-    dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512)
+    dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
 
     assert np.sum(tgasCutMatched['sourceID'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
