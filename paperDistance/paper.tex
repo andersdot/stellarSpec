@@ -130,28 +130,31 @@ more precise or more accurate information than any theoretical or
 physics-based model?
 The answer to this question is extremely context-dependent: It depends
 on what data are available, how much data are available, and what
-questions are being answered.
+questions are being asked.
 In general, data-driven models contain fewer assumptions than
 physics-driven models, but they are also usually less interpretable.
 However, the \gaia\ use case is ideal for thinking about purely statistical
 models of stars:
-The nearby stars are measured at very high signal-to-noise and can be
-used to anchor empirical models that can be applied to the more
-distant stars.
+The distance to a star is a simple latent variable, and the nearby
+stars constitute a high signal-to-noise ``training set''.
+These nearby stars can be used to anchor empirical models that can
+then be applied to the more distant stars.
 
 Here we deliver a demonstration-of-concept project that shows that a
 data-driven model of the \gaia\ data could in principle deliver very
-precise distances, without any input of the physics of stellar
+precise distances, without any input of the physics or numerical models of stellar
 evolution, interiors, or photospheres.
 Most stellar models used to generate photometric distances or photometric
-parallaxes have been physical models.
-Because there are small issues with physical models of stars, leading to small
-color and luminosity differences with the data, these models produce distance
-estimates that are biased.
-Besides, they build a long list of physical assumptions---assumptions about
-how stars work and how to model them numerically---into the distance estimates.
-That is, it is impossible (when using physical models)
-to deliver distance estimates that involve minimal in assumptions.
+parallaxes have been physical models, based on gravity, fluid mechanics,
+radiative transfer, nuclear reactions, and atomic and molecular transitions.
+Because there are small issues with each of these components, there are small
+color and luminosity differences with the data---the models are wrong in detail---and
+the physical models therefore produce distance estimates that are biased.
+Besides, they build a long list of physical assumptions (about
+nuclear reactions, convection, and thermal timescales, for example)
+into the distance estimates.
+That is, it is impossible, when using physical models,
+to deliver photometric distance estimates that involve minimal assumptions.
 
 However, the use of physical models for distance estimation is not necessary.
 Because there are stars at all luminosities with good parallax information,
@@ -159,6 +162,7 @@ it is possible to build a stellar photometric model from the data themselves.
 Different stars are observed at different levels of parallax precision,
 so it requires relatively high technology to build this data-driven model
 using all the data available, fairly and responsibly.
+We have this technology!
 
 Here we build and use just such a data-driven model.
 In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\
@@ -220,6 +224,8 @@ commitment to---or even use of---physical models of stars.
 
 We build a prior for the distance measurement of Gaia stars using the Gaia measured parallaxes plus APASS photometry to build a color-magnitude-like diagram that serves as the prior for distance measurements of Gaia stars. Instead of making assumptions about the physical distributions of stars in the galaxy, or using stellar models for the modeled HR diagram of stars, we build a prior from the data themselves.
 
+LA: Insert itemized or enumerated list of assumptions here. DWH will
+typeset it to look okay! Be exhaustive and then we will edit down.
 
 magSN = parallaxSN = 16 (excluding systematic parallax error in tgas)
 train gaussian means, mus, Vs on progressively lower SN dataset
