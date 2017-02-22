@@ -191,11 +191,18 @@ Technically, since XD produces a maximum-marginalized-likelihood estimator
 of the deconvolved distribution,
 its use as a prior is only approximately valid; it constitutes using the
 data twice.
-(It wouldn't be using the data twice---that is, it would be valid from a
-probabilistic perspective---if we performed a full hierarchical Bayesian
-inference.)
 However, since the data set is large, the XD approximation is not bad; it is
 sometimes known as the ``empirical Bayes'' method, and is well studied (DWH REFS).
+
+It wouldn't be using the data twice---that is, it would be valid from a
+probabilistic perspective---if we performed a full hierarchical Bayesian
+inference.
+Exploration of that possibility, and its computational tractability,
+is among our long-term goals and motivations.
+Along those lines, this paper can be seen as a companion to
+a related project (CITE BORIS), in which we use a
+somewhat less flexible model for the CMD, but in which we take a much more principled
+approach to the inference.
 
 This project is fundamentally a demonstration of concept:
 We are only using the ``small'' (relative to the expected final \gaia\ data set)
