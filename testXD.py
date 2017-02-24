@@ -436,7 +436,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         print 'calculating dust corrections, this may take awhile'
         try:
             data = np.load('distanceQuantiles'+dataFilename)
-            distanceQuntile = data['distanceQuntile']
+            distanceQuntile = data['distanceQuantile']
             distanceQuantile50 = data['distanceQuantile50']
         except IOError:
             nstars = len(tgasCutMatched)
