@@ -483,7 +483,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode='median')
         nan = np.isnan(dustEBV)
-        dustNan = st.dust(l, b, None, model='sfd')
+        dustNan = st.dust(l[nan], b[nan], None, model='sfd')
         dustEBV[nan] = dustNan
         dustEBV50[nan] = dustNan
         end = time.time()
