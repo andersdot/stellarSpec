@@ -680,19 +680,18 @@ if __name__ == '__main__':
 
     assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
-    for i, index in enumerate(np.where(indices)[0]):
-        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][index], dustEBV[i], mag1)
-        mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][index], dustEBV[i], mag2)
-        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index], dustEBV[i], absmag)
-        absMagDustCorrected = tgasCutMatched['parallax_error']*10.**(0.2*apparentMagDustCorrected)
-        #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
-        #need to define color_err and absMagKinda_err when including dust correction
-        colorDustCorrected = mag1DustCorrected - mag2DustCorrected
-        data1 = colorDustCorrected
-        data2 = absMagDustCorrected
-        X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
-        xdgmm.fit(X, Xerr)
-        xdgmm.save_model(xdgmmFilenameDust)
+    mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
+    mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
+    apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
+    absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+    #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+    #need to define color_err and absMagKinda_err when including dust correction
+    colorDustCorrected = mag1DustCorrected - mag2DustCorrected
+    data1 = colorDustCorrected
+    data2 = absMagDustCorrected
+    X, Xerr = matrixize(data1, data2, err1, err2)
+    xdgmm.fit(X, Xerr)
+    xdgmm.save_model(xdgmmFilenameDust)
 
 
     #check it's working by inferring distances to M67
