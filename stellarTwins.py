@@ -412,18 +412,23 @@ def distanceModulus(distCutMatched):
     varMuMatched = np.mean((muMatched - meanMuMatched[:,None]) ** 2, axis=1)
     return meanMuMatched, varMuMatched
 
-def dust(l, b, distance, plot=False, max_samples=2, mode='median'):
-    sfd = SFDQuery()
-    bayes = BayestarQuery(max_samples=max_samples)
-    c = SkyCoord(l, b,
-            distance = distance,
-            frame='galactic')
+def dust(l, b, distance, plot=False, max_samples=2, mode='median', model='bayes'):
+    if model == 'sfd':
+        c = SkyCoord(l, b,
+                frame='galactic')
+        sfd = SFDQuery()
+        dust = sfd(c)
 
-    cNoDist = SkyCoord(l, b,
-            frame='galactic')
+    if model == 'bayes':
+        c = SkyCoord(l, b,
+                distance = distance,
+                frame='galactic')
+        bayes = BayestarQuery(max_samples=max_samples)
+        dust = bayes(c, mode=mode)
 
-    bayesDust = bayes(c, mode=mode)
-    bayesDustNoDist = bayes(cNoDist, mode=mode)
+    #cNoDist = SkyCoord(l, b,
+    #        frame='galactic')
+    #bayesDustNoDist = bayes(cNoDist, mode=mode)
 
     #!!!!! Do something else than setting it equal to 0 !!!!!
     #if len(bayesDust) > 1: bayesDust[np.isnan(bayesDust)] = 0.0
@@ -443,7 +448,7 @@ def dust(l, b, distance, plot=False, max_samples=2, mode='median'):
         plt.hist(magsMatched['bmag'], bins=bins, histtype='step')
         plt.hist(magsMatched['bmag'] - B_RedCoeff*bayesDust, bins=bins, histtype='step')
         plt.tight_layout()
-    return bayesDust
+    return dust
 
 def dustTightenMS(B_V_dust, M_V_dust, B_V, M_V):
     #check dust tightens main sequence

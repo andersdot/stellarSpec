@@ -434,52 +434,60 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         sourceID = data['sourceID']
     except IOError:
         print 'calculating dust corrections, this may take awhile'
-
-        nstars = len(tgasCutMatched)
-        sourceID = np.zeros(nstars, dtype='>i8')
-        #dustEBV = np.zeros(nstars)
-        #dustEBV50 = np.zeros(nstars)
-        distanceQuantile = np.zeros(nstars)
-        distanceQuantile50 = np.zeros(nstars)
-        start = time.time()
-        for i, index in enumerate(np.where(indices)[0]):
-            if np.mod(i, 1000) == 0.0:
-                end = time.time()
-                print i, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
-                start = time.time()
+        try:
+            data = np.load('distanceQuantiles'+dataFilename)
+            distanceQuntile = data['distanceQuntile']
+            distanceQuantile50 = data['distanceQuantile50']
+        except IOError:
+            nstars = len(tgasCutMatched)
+            sourceID = np.zeros(nstars, dtype='>i8')
+            #dustEBV = np.zeros(nstars)
+            #dustEBV50 = np.zeros(nstars)
+            distanceQuantile = np.zeros(nstars)
+            distanceQuantile50 = np.zeros(nstars)
+            start = time.time()
+            for i, index in enumerate(np.where(indices)[0]):
+                if np.mod(i, 1000) == 0.0:
+                    end = time.time()
+                    print i, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
+                    start = time.time()
 
                 #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
 
-            #calculate parallax-ish posterior for each star
-            meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
-            dimension = 0
-            windowFactor = 5. #the number of sigma to sample in mas for plotting
-            minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-            maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
-            apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
-            xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+                #calculate parallax-ish posterior for each star
+                meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+                dimension = 0
+                windowFactor = 5. #the number of sigma to sample in mas for plotting
+                minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
+                maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+                apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
+                xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
-            positive = xparallaxMAS > 0.
-            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
+                positive = xparallaxMAS > 0.
+                allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
 
-            #normalize prior pdf
-            posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
-            distance = 1./xparallaxMAS[positive]
+                #normalize prior pdf
+                posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+                distance = 1./xparallaxMAS[positive]
 
-            #sample the PDF nDistanceSamples
-            sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
+                #sample the PDF nDistanceSamples
+                sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
 
-            #find the distance at the 5% quantile
-            distanceQuantile[i] = np.percentile(sampleDistance, quantile*100.)
-            distanceQuantile50[i] = np.percentile(sampleDistance, 0.5*100.)
-        np.savez('distanceQuantiles', distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
+                #find the distance at the 5% quantile
+                distanceQuantile[i] = np.percentile(sampleDistance, quantile*100.)
+                distanceQuantile50[i] = np.percentile(sampleDistance, 0.5*100.)
+            np.savez('distanceQuantiles'+dataFilename, distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
         sourceID = tgasCutMatched['source_id'][indices]
         l = tgasCutMatched['l'][indices]*units.deg
         b = tgasCutMatched['b'][indices]*units.deg
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode='median')
+        nan = np.isnan(dustEBV)
+        dustNan = st.dust(l, b, None, model='sfd')
+        dustEBV[nan] = dustNan
+        dustEBV50[nan] = dustNan
         end = time.time()
-        print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
+        #print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
 
         np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
     return dustEBV, sourceID
