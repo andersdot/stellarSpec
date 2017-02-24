@@ -481,7 +481,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         end = time.time()
         print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
 
-        np.savez('dustCorrection_' + dataFilename+'_alldistance', ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
+        np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
     return dustEBV, sourceID
 
 def dustCorrection(mag, EBV, band):
@@ -678,7 +678,7 @@ if __name__ == '__main__':
 
     dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
 
-    assert np.sum(tgasCutMatched['sourceID'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
+    assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
     for i, index in enumerate(np.where(indices)[0]):
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][index], dustEBV[i], mag1)
