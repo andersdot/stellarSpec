@@ -314,6 +314,22 @@ the \tgas\ Catalog.
 Inasmuch as that is true, we expect any (sensible) distance estimates
 we generate from our distance posterior pdfs to be weakly biased.
 
+The Empirical Bayesian methodology is a good approximation to full
+hierarchical inference in the limit of large numbers of data points.
+That is, when no individual star is carrying a lot of weight in the
+model of the \cmd.
+With its millions of stars, the \tgas\ Catalog may appear to safely
+live in this limit.
+However, because there are parts of the \cmd\ that are poorly populated,
+even in \tgas, the Empirical Bayes approximation may be bad for some
+color ranges.
+In particular, there appear to be essentially no white dwarf stars,
+and other classes (like hot main-sequence stars) have few to no exemplars
+in the data set at high signal-to-noise (in parallax).
+For all these reasons, we do think that this approximation is not perfectly
+safe, and it is a goal to explore full hierarchical modeling in the coming
+years (and see, for example, CITE BORIS).
+
 What would be different if we wanted a model not of the \tgas\ data,
 but a model appropriate for the full billion stars, or for a
 volume-limited sample of stars?
