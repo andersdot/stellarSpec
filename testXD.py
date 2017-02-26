@@ -654,50 +654,58 @@ if __name__ == '__main__':
     else:
         indices = parallaxSNcut & lowPhotErrorcut & nonzeroError
 
-
     try:
-        xdgmm = XDGMM(filename=xdgmmFilename)
+        xdgmm = XDGMM(filename=xdgmmFilenameDust)
+        print 'dust corrected XD read in'
     except IOError:
-        if subset:
-            X, Xerr = subset(data1[indices], data2[indices], err1[indices], err2[indices], nsamples=1024)
-        else:
-            X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
-        xdgmm = XDGMM(method='Bovy')
-        xdgmm.n_components = ngauss
-        xdgmm = xdgmm.fit(X, Xerr)
-        xdgmm.save_model(xdgmmFilename)
+        try:
+            xdgmm = XDGMM(filename=xdgmmFilename)
+            print 'non corrected XD read in'
+        except IOError:
+            if subset:
+                X, Xerr = subset(data1[indices], data2[indices], err1[indices], err2[indices], nsamples=1024)
+            else:
+                X, Xerr = matrixize(data1[indices], data2[indices], err1[indices], err2[indices])
+            xdgmm = XDGMM(method='Bovy')
+            xdgmm.n_components = ngauss
+            xdgmm = xdgmm.fit(X, Xerr)
+            xdgmm.save_model(xdgmmFilename)
 
 
-    #plot XD prior
-    figPrior, axPrior = plt.subplots()
-    for gg in range(xdgmm.n_components):
-        points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-        axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-        axPrior.invert_yaxis()
-    figPrior.savefig('prior.png')
+        #plot XD prior
+        figPrior, axPrior = plt.subplots()
+        for gg in range(xdgmm.n_components):
+            points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+            axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+            axPrior.invert_yaxis()
+        figPrior.savefig('prior.png')
 
-    #plot 2x2 visual of prior w/ samples
+        #plot 2x2 visual of prior w/ samples
+        sample = xdgmm.sample(Nsamples)
+        dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
+                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
+        os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
+
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+
+        assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
+
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
+        mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
+        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
+        absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+        #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+        #need to define color_err and absMagKinda_err when including dust correction
+        colorDustCorrected = mag1DustCorrected - mag2DustCorrected
+        data1 = colorDustCorrected
+        data2 = absMagDustCorrected
+        X, Xerr = matrixize(data1, data2, err1, err2)
+        xdgmm.fit(X, Xerr)
+        xdgmm.save_model(xdgmmFilenameDust)
     sample = xdgmm.sample(Nsamples)
     dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
-                   sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
-    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.png')
-
-    dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
-
-    assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
-
-    mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
-    mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
-    apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
-    absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
-    #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
-    #need to define color_err and absMagKinda_err when including dust correction
-    colorDustCorrected = mag1DustCorrected - mag2DustCorrected
-    data1 = colorDustCorrected
-    data2 = absMagDustCorrected
-    X, Xerr = matrixize(data1, data2, err1, err2)
-    xdgmm.fit(X, Xerr)
-    xdgmm.save_model(xdgmmFilenameDust)
+                sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
+    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.dustCorrected.png')
 
 
     #check it's working by inferring distances to M67
