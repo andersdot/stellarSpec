@@ -117,7 +117,7 @@ def matrixize(data1, data2, err1, err2):
     Xerr = np.zeros(X.shape + X.shape[-1:])
     diag = np.arange(X.shape[-1])
     Xerr[:, diag, diag] = np.vstack([err1**2., err2**2.]).T
-    return X[0], Xerr[0]
+    return X, Xerr
 
 def optimize(X, Xerr, param_name='n_components', param_range=np.array([256, 512, 1024, 2048, 4096, 8182])):
     """
@@ -353,6 +353,8 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
         positive = xparallaxMAS > 0.
 
         meanData, covData = matrixize(data1[index], data2[index], err1[index], err2[index])
+        meanData = meanData[0]
+        covData = covData[0]
         ndim = 2
 
         #calculate the posterior, a gaussian for each xdgmm component
@@ -455,6 +457,8 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
 
                 #calculate parallax-ish posterior for each star
                 meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+                meanData = meanData[0]
+                covData = covData[0]
                 windowFactor = 5. #the number of sigma to sample in mas for plotting
                 minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
                 maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
@@ -539,6 +543,8 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
 
 
         meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+        meanData = meanData[0]
+        covData = covData[0]
         windowFactor = 5. #the number of sigma to sample in mas for plotting
         minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
         maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
@@ -692,14 +698,15 @@ if __name__ == '__main__':
 
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
-        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
-        absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]
+        apparentMagDustCorrected = dustCorrection(apparentMagnitude, dustEBV, absmag)
+        absMagKindaDustCorrected = tgasCutMatched['parallax'][indices]*10.**(0.2*apparentMagDustCorrected)
         dustCorrectedArraysGenerated = True
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
         #need to define color_err and absMagKinda_err when including dust correction
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
         data1 = colorDustCorrected
-        data2 = absMagDustCorrected
+        data2 = absMagKindaDustCorrected
         X, Xerr = matrixize(data1, data2, err1, err2)
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
@@ -707,14 +714,16 @@ if __name__ == '__main__':
         dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
-        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
-        absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+        apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]
+        apparentMagDustCorrected = dustCorrection(apparentMagnitude, dustEBV, absmag)
+        absMagKindaDustCorrected = tgasCutMatched['parallax'][indices]*10.**(0.2*apparentMagDustCorrected)
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
         #need to define color_err and absMagKinda_err when including dust correction
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
 
+        pdb.set_trace()
     sample = xdgmm.sample(Nsamples)
-    dp.plot_sample(colorDustCorrected, absMagDustCorrected, colorDustCorrected, absMagDustCorrected,
+    dp.plot_sample(colorDustCorrected, absMagKinda2absMag(absMagKindaDustCorrected), colorDustCorrected, absMagKinda2absMag(absMagKindaDustCorrected),
                 sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
     os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.dustCorrected.png')
 
@@ -724,4 +733,4 @@ if __name__ == '__main__':
 
     #calculate parallax-ish posterior for each star
 
-    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
