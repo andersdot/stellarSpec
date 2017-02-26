@@ -2,6 +2,7 @@
 % Copyright 2017 the authors.
 
 % # To-do list
+% - We need a standard name for the \tgas--\tmass\ Intersection.
 % - zeroth draft the introduction
 % - zeroth draft the method section
 % - zeroth draft the assumptions list
@@ -52,6 +53,7 @@ with modifications by DWH.
 \makeatother
 %% End DWH mods
 
+\newcommand{\foreign}[1]{\textsl{#1}}
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\tgas}{\project{\acronym{TGAS}}}
@@ -278,7 +280,15 @@ m_{\mathrm{band, corrected}} = m_{\mathrm{band}} - K_{\lambda} \times E(B-V)
 We have shown that it is possible to obtain photometric parallaxes for
 distant stars in the \gaia\ \tgas\ data without any use of physical stellar
 models, nor models of the Milky Way.
-We obtained these by building a data-driven model of the
+That is, the geometric parallaxes can calibrate a set of photometric
+models that are purely statistical---a model of the data rather than
+a model of stars \foreign{per se}.
+This opens up the possibility of completing the goals of the \gaia\ Mission
+without building in unnecessary assumptions about the mechanical properties
+of stars or the Galaxy.
+
+We obtained the photometric parallaxes in this project
+by building a data-driven model of the
 color--magnitude diagram (\cmd) of the stars in the \tgas\ data set,
 and using it as a prior pdf for Bayesian interences.
 The posterior pdfs for distance that we obtain are, in general, much
@@ -330,11 +340,29 @@ For all these reasons, we do think that this approximation is not perfectly
 safe, and it is a goal to explore full hierarchical modeling in the coming
 years (and see, for example, CITE BORIS).
 
-What would be different if we wanted a model not of the \tgas\ data,
-but a model appropriate for the full billion stars, or for a
-volume-limited sample of stars?
-How could we convert our existing results?
-How would we do it properly in general?
+In some sense, the biggest limitation of the data-driven \cmd\ model
+created in this project is that we made no use of any kind of \tgas\ selection
+function or completeness estimate or inverse-selection-volume corrections.
+That is, the model is a model of the \tgas\ Catalog
+(or really the \tgas--\tmass\ intersection), not of the stars in
+the Milky Way, nor any volume-limited subsample of the Milky Way.
+Importantly, because we used \emph{all} of the stars in the \tgas--\tmass\
+intersection, the model \emph{is} representive of the full catalog,
+even the distant parts, where all the parallaxes are measured at low
+signal-to-noise.
+This is in contrast to techniques that might build the model from only
+the high signal-to-noise sources; such a model would be biased towards
+stellar types and compositions found locally, lower-luminosity stars,
+and stars which happened to get good parallaxes.
+However, our use of the entire \tgas--\tmass\ intersection without
+any selection function restricts the use of our \cmd\ model as a prior
+to inferences within that same \tgas--\tmass\ intersection.
+For example, it would be biasing to use this same prior to infer
+distances for the full billion-star catalog released in \gaia\ DR1
+alongside \tgas, or for stars fainter or brighter or bluer than those
+included in the \tgas--\tmass\ intersection.
+
+Note the dangers of using the stars from our output in hierarchical inferences!
 
 Come back to the assumptions. What happens if we change or violate them?
 
