@@ -703,16 +703,6 @@ if __name__ == '__main__':
         X, Xerr = matrixize(data1, data2, err1, err2)
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
-    sample = xdgmm.sample(Nsamples)
-    dp.plot_sample(data1[indices], absMagKinda2absMag(data2[indices]), data1[indices], absMagKinda2absMag(data2[indices]),
-                sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
-    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.dustCorrected.png')
-
-
-    #check it's working by inferring distances to M67
-    #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
-
-    #calculate parallax-ish posterior for each star
     if not dustCorrectedArraysGenerated:
         dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
@@ -722,5 +712,16 @@ if __name__ == '__main__':
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
         #need to define color_err and absMagKinda_err when including dust correction
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
+
+    sample = xdgmm.sample(Nsamples)
+    dp.plot_sample(colorDustCorrected, absMagDustCorrected, colorDustCorrected, absMagDustCorrected,
+                sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
+    os.rename('plot_sample.png', 'plot_sample_ngauss'+str(ngauss)+'.SN'+str(thresholdSN) + '.2Mass.dustCorrected.png')
+
+
+    #check it's working by inferring distances to M67
+    #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
+
+    #calculate parallax-ish posterior for each star
 
     summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
