@@ -117,7 +117,7 @@ def matrixize(data1, data2, err1, err2):
     Xerr = np.zeros(X.shape + X.shape[-1:])
     diag = np.arange(X.shape[-1])
     Xerr[:, diag, diag] = np.vstack([err1**2., err2**2.]).T
-    return X, Xerr
+    return X[0], Xerr[0]
 
 def optimize(X, Xerr, param_name='n_components', param_range=np.array([256, 512, 1024, 2048, 4096, 8182])):
     """
@@ -352,19 +352,18 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
         #for distances, only want positive parallaxes
         positive = xparallaxMAS > 0.
 
-        dimension = 0
         meanData, covData = matrixize(data1[index], data2[index], err1[index], err2[index])
         ndim = 2
 
         #calculate the posterior, a gaussian for each xdgmm component
-        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda)
+        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda)
 
         #for 2D visual of posterior, sample all the xdgmm component gaussians into 2d historgram
         if plot2DPost: xedges, yedges, Z, samplesY = posterior2d(allMeans, allAmps, allCov, xbins, ybins, nperGauss=nperGauss)
         else:
             X = Y = Z = samplesY = None
         #plot the posterior of each star in example.png and feed it the ax for all the stars to accumualte into one plot
-        plotPosteriorEachStar(allMeans, allCov, allAmps, summedPosterior[k,:], meanData[dimension], covData[dimension], xdgmm, xparallaxMAS, xabsMagKinda, apparentMagnitude, X=X, Y=Y, Z=Z, samplesY=samplesY, axAll=axDist, plot2D=plot2DPost)
+        plotPosteriorEachStar(allMeans, allCov, allAmps, summedPosterior[k,:], meanData, covData, xdgmm, xparallaxMAS, xabsMagKinda, apparentMagnitude, X=X, Y=Y, Z=Z, samplesY=samplesY, axAll=axDist, plot2D=plot2DPost)
         os.rename('example.png', 'example.' + str(k) + '.png')
 
         #plot prior on plot of all stars but only first loop
@@ -456,7 +455,6 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
 
                 #calculate parallax-ish posterior for each star
                 meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
-                dimension = 0
                 windowFactor = 5. #the number of sigma to sample in mas for plotting
                 minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
                 maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
@@ -464,7 +462,8 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
                 xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
                 positive = xparallaxMAS > 0.
-                allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=1)
+
+                allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
 
                 #normalize prior pdf
                 posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
@@ -526,7 +525,7 @@ def samples(x, pdf, N, plot=False):
         fig.savefig('samples.png')
     return distSamples
 
-def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=2, dimension=1, projectedDimension=1):
+def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=2, projectedDimension=1):
     nstars = len(tgasCutMatched)
     summedPosterior = np.zeros((nstars, nPosteriorPoints))
     distancePosterior = np.zeros((nstars, nPosteriorPoints))
@@ -540,7 +539,6 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
 
 
         meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
-        dimension = 0
         windowFactor = 5. #the number of sigma to sample in mas for plotting
         minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
         maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
@@ -548,7 +546,7 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
         positive = xparallaxMAS > 0.
-        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData[dimension], covData[dimension], xabsMagKinda, projectedDimension=projectedDimension)
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=projectedDimension)
 
         posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
         distance = 1./xparallaxMAS[positive]
@@ -706,4 +704,4 @@ if __name__ == '__main__':
     #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
-    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, dimension=dimension, projectedDimension=projectedDimension)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
