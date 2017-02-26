@@ -578,7 +578,7 @@ if __name__ == '__main__':
     optimize = False
     subset = False
     timing = False
-
+    dustCorrectedArraysGenerated = False
 
     try:
         cutMatchedArrays  = np.load(dataFilename)
@@ -694,6 +694,7 @@ if __name__ == '__main__':
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
         apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
         absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+        dustCorrectedArraysGenerated = True
         #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
         #need to define color_err and absMagKinda_err when including dust correction
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
@@ -712,4 +713,14 @@ if __name__ == '__main__':
     #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
+    if not dustCorrectedArraysGenerated:
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+        mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
+        mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
+        apparentMagDustCorrected = dustCorrection(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices], dustEBV, absmag)
+        absMagDustCorrected = tgasCutMatched['parallax_error'][indices]*10.**(0.2*apparentMagDustCorrected)
+        #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+        #need to define color_err and absMagKinda_err when including dust correction
+        colorDustCorrected = mag1DustCorrected - mag2DustCorrected
+
     summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
