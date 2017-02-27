@@ -693,7 +693,7 @@ if __name__ == '__main__':
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.png')
 
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample')
 
         assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
@@ -712,7 +712,7 @@ if __name__ == '__main__':
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
     if not dustCorrectedArraysGenerated:
-        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample')
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]
