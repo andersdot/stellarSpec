@@ -494,6 +494,10 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
 
         np.savez(dustFile, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
     if plot:
+        data = np.load(distanceFile)
+        distanceQuantile = data['distanceQuantile']
+        distanceQuantile50 = data['distanceQuantile50']
+
         figDust, axDust = plt.subplots(2)
         from matplotlib.colors import LogNorm
         axDust[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
