@@ -426,7 +426,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2):
+def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median'):
     dustFile = 'dustCorrection_' + str(ngauss) + '_' + dataFilename
     distanceFile = 'distanceQuantiles_' + str(ngauss) + '_' +dataFilename
     try:
@@ -484,7 +484,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         l = tgasCutMatched['l']*units.deg
         b = tgasCutMatched['b']*units.deg
         start = time.time()
-        dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode='median')
+        dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode=mode)
         nan = np.isnan(dustEBV)
         dustNan = st.dust(l[nan], b[nan], None, model='sfd')
         dustEBV[nan] = dustNan
@@ -493,6 +493,21 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         #print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
 
         np.savez(dustFile, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
+    if plot:
+        figDust, axDust = plt.subplots(2)
+        from matplotlib.colors import LogNorm
+        ax[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
+        ax[1].hist2d( np.log10(distanceQuantile50), np.log10(dustEBV50), bins=100, norm=LogNorm())
+        ax[0].colorbar()
+        ax[1].colorbar()
+        ax[0].set_title('Dust for 0.05 quantile distance')
+        ax[1].set_title('Dust for 0.5 quantile distance')
+        ax[0].set_xlabel('log Distance [kpc]')
+        ax[1].set_xlabel('log Distance [kpc]')
+        ax[0].set_ylabel('E(B-V)')
+        ax[1].set_ylabel('E(B-V)')
+        figDust.save('ebvDistribution.png')
+
     return dustEBV, sourceID
 
 def dustCorrection(mag, EBV, band):
@@ -693,7 +708,7 @@ if __name__ == '__main__':
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.png')
 
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample')
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample', plot=True)
 
         assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
@@ -712,7 +727,7 @@ if __name__ == '__main__':
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
     if not dustCorrectedArraysGenerated:
-        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample')
+        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample', plot=True)
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]
@@ -722,7 +737,7 @@ if __name__ == '__main__':
         #need to define color_err and absMagKinda_err when including dust correction
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
 
-        pdb.set_trace()
+
     sample = xdgmm.sample(Nsamples)
     dp.plot_sample(colorDustCorrected, absMagKinda2absMag(absMagKindaDustCorrected), colorDustCorrected, absMagKinda2absMag(absMagKindaDustCorrected),
                 sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
