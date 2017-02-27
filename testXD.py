@@ -427,8 +427,8 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     figDist.savefig('distancesM67.png')
 
 def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2):
-    dustFile = 'dustCorrection_' + ngauss + '_' + dataFilename
-    distanceFile = 'distanceQuantiles_' + ngauss + '_' +dataFilename
+    dustFile = 'dustCorrection_' + str(ngauss) + '_' + dataFilename
+    distanceFile = 'distanceQuantiles_' + str(ngauss) + '_' +dataFilename
     try:
         data = np.load(dustFile)
         dustEBV = data['ebv']
@@ -535,7 +535,7 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
     distancePosterior = np.zeros((nstars, nPosteriorPoints))
     colorDustCorrected = np.zeros(nstars)
     absMagDustCorrected = np.zeros(nstars)
-    posteriorFile = 'posteriorDistanceTgas_' + ngauss + '_' + dataFilename
+    posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename
 
     for i, index in enumerate(np.where(indices)[0]):
         if np.mod(i, 1000) == 0.0:
