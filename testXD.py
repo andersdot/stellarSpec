@@ -496,16 +496,16 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
     if plot:
         figDust, axDust = plt.subplots(2)
         from matplotlib.colors import LogNorm
-        ax[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
-        ax[1].hist2d( np.log10(distanceQuantile50), np.log10(dustEBV50), bins=100, norm=LogNorm())
-        ax[0].colorbar()
-        ax[1].colorbar()
-        ax[0].set_title('Dust for 0.05 quantile distance')
-        ax[1].set_title('Dust for 0.5 quantile distance')
-        ax[0].set_xlabel('log Distance [kpc]')
-        ax[1].set_xlabel('log Distance [kpc]')
-        ax[0].set_ylabel('E(B-V)')
-        ax[1].set_ylabel('E(B-V)')
+        axDust[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
+        axDust[1].hist2d( np.log10(distanceQuantile50), np.log10(dustEBV50), bins=100, norm=LogNorm())
+        axDust[0].colorbar()
+        axDust[1].colorbar()
+        #axDust[0].set_title('Dust for 0.05 quantile distance')
+        #axDust[1].set_title('Dust for 0.5 quantile distance')
+        axDust[0].set_xlabel('log Distance [kpc]')
+        axDust[1].set_xlabel('log Distance [kpc]')
+        axDust[0].set_ylabel('E(B-V) 5% quantile')
+        axDust[1].set_ylabel('E(B-V) 50% quantile')
         figDust.save('ebvDistribution.png')
 
     return dustEBV, sourceID
