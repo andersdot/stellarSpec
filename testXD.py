@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
 
 def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2):
     dustFile = 'dustCorrection_' + ngauss + '_' + dataFilename
-    distanceFile = 'distanceQuantiles_'ngauss + '_' +dataFilename
+    distanceFile = 'distanceQuantiles_' + ngauss + '_' +dataFilename
     try:
         data = np.load(dustFile)
         dustEBV = data['ebv']
