@@ -511,7 +511,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         axDust[1].set_xlabel('log Distance [kpc]')
         axDust[0].set_ylabel('E(B-V) 5% quantile')
         axDust[1].set_ylabel('E(B-V) 50% quantile')
-        figDust.save('ebvDistribution.png')
+        figDust.savefig('ebvDistribution.png')
 
     return dustEBV, sourceID
 
