@@ -436,7 +436,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
     except IOError:
         print 'calculating dust corrections, this may take awhile'
         try:
-            data = np.load('distanceQuantiles'+dataFilename)
+            data = np.load('distanceQuantiles_'+dataFilename)
             distanceQuantile = data['distanceQuantile']
             distanceQuantile50 = data['distanceQuantile50']
         except IOError:
@@ -479,7 +479,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
                 #find the distance at the 5% quantile
                 distanceQuantile[i] = np.percentile(sampleDistance, quantile*100.)
                 distanceQuantile50[i] = np.percentile(sampleDistance, 0.5*100.)
-            np.savez('distanceQuantiles'+dataFilename, distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
+            np.savez('distanceQuantiles_'+dataFilename, distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
         sourceID = tgasCutMatched['source_id'][indices]
         l = tgasCutMatched['l'][indices]*units.deg
         b = tgasCutMatched['b'][indices]*units.deg
@@ -572,7 +572,7 @@ if __name__ == '__main__':
     ngauss = 128
     nstar = '1.2M'
     Nsamples = 120000
-    nPosteriorPoints = 10000
+    nPosteriorPoints = 1000
     projectedDimension = 1
     ndim = 2
     #dataFilename = 'cutMatchedArrays.SN0.001.npz'
