@@ -577,9 +577,10 @@ if __name__ == '__main__':
     ndim = 2
     #dataFilename = 'cutMatchedArrays.SN0.001.npz'
     #dataFilename = 'cutMatchedArrays.tgasApassSN0.npz'
-    dataFilename = 'cutMatchedArrays.1_20_100_4.npz'
-    xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.fit'
-    xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+nstar+ '.SN' + str(thresholdSN) + '.2MASS.dustCorrected.fit'
+    #dataFilename = 'cutMatchedArrays.1_20_100_4.npz'
+    dataFilename = 'cutMatchedArrays.SN0.001.npz'
+    xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.fit'
+    xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.fit'
     useDust = False
     optimize = False
     subset = False
