@@ -432,6 +432,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
     try:
         data = np.load(dustFile)
         dustEBV = data['ebv']
+        dustEBV50 = data['ebv50']
         sourceID = data['sourceID']
     except IOError:
         print 'calculating dust corrections, this may take awhile'
