@@ -503,8 +503,8 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         from matplotlib.colors import LogNorm
         axDust[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
         axDust[1].hist2d( np.log10(distanceQuantile50), np.log10(dustEBV50), bins=100, norm=LogNorm())
-        axDust[0].colorbar()
-        axDust[1].colorbar()
+        figDust.colorbar()
+
         #axDust[0].set_title('Dust for 0.05 quantile distance')
         #axDust[1].set_title('Dust for 0.5 quantile distance')
         axDust[0].set_xlabel('log Distance [kpc]')
