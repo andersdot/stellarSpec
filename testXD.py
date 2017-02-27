@@ -708,7 +708,7 @@ if __name__ == '__main__':
         colorDustCorrected = mag1DustCorrected - mag2DustCorrected
         data1 = colorDustCorrected
         data2 = absMagKindaDustCorrected
-        X, Xerr = matrixize(data1, data2, err1, err2)
+        X, Xerr = matrixize(data1, data2, err1[indices], err2[indices])
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
     if not dustCorrectedArraysGenerated:
