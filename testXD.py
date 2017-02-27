@@ -535,7 +535,7 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
     distancePosterior = np.zeros((nstars, nPosteriorPoints))
     colorDustCorrected = np.zeros(nstars)
     absMagDustCorrected = np.zeros(nstars)
-    posteriorFile = 'posteriorDistanceTgas_' + ngauss + '_' + dataFilename
+    posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename
     nstars = len(tgasCutMatched)
     for index in range(nstars):
         if np.mod(index, 1000) == 0.0:
