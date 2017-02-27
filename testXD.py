@@ -447,10 +447,10 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
             distanceQuantile = np.zeros(nstars)
             distanceQuantile50 = np.zeros(nstars)
             start = time.time()
-            for i, index in enumerate(np.where(indices)[0]):
-                if np.mod(i, 1000) == 0.0:
+            for index in range(nstars):
+                if np.mod(index, 1000) == 0.0:
                     end = time.time()
-                    print i, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
+                    print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
                     start = time.time()
 
                 #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
@@ -477,12 +477,12 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
                 sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
 
                 #find the distance at the 5% quantile
-                distanceQuantile[i] = np.percentile(sampleDistance, quantile*100.)
-                distanceQuantile50[i] = np.percentile(sampleDistance, 0.5*100.)
+                distanceQuantile[index] = np.percentile(sampleDistance, quantile*100.)
+                distanceQuantile50[index] = np.percentile(sampleDistance, 0.5*100.)
             np.savez(distanceFile, distanceQuantile=distanceQuantile, distanceQuantile50=distanceQuantile50)
-        sourceID = tgasCutMatched['source_id'][indices]
-        l = tgasCutMatched['l'][indices]*units.deg
-        b = tgasCutMatched['b'][indices]*units.deg
+        sourceID = tgasCutMatched['source_id']
+        l = tgasCutMatched['l']*units.deg
+        b = tgasCutMatched['b']*units.deg
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode='median')
         nan = np.isnan(dustEBV)
@@ -536,10 +536,10 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
     colorDustCorrected = np.zeros(nstars)
     absMagDustCorrected = np.zeros(nstars)
     posteriorFile = 'posteriorDistanceTgas_' + ngauss + '_' + dataFilename
-
-    for i, index in enumerate(np.where(indices)[0]):
-        if np.mod(i, 1000) == 0.0:
-            print i
+    nstars = len(tgasCutMatched)
+    for index in range(nstars):
+        if np.mod(index, 1000) == 0.0:
+            print index
             np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
 
 
@@ -558,10 +558,9 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
         posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
         distance = 1./xparallaxMAS[positive]
 
-        summedPosterior[i, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
-        distancePosterior[i, :] = 1./xparallaxMAS
-        sourceID[i] = tgasCutMatched['source_id'][index]
-
+        summedPosterior[index, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
+        distancePosterior[index, :] = 1./xparallaxMAS
+    sourceID = tgasCutMatched['source_id']
     np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
     return summedPosterior, distancePosterior, sourceID
 
@@ -694,7 +693,7 @@ if __name__ == '__main__':
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.png')
 
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
 
         assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
@@ -713,7 +712,7 @@ if __name__ == '__main__':
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
     if not dustCorrectedArraysGenerated:
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
+        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=None)
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]
@@ -735,4 +734,4 @@ if __name__ == '__main__':
 
     #calculate parallax-ish posterior for each star
 
-    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched[indices], nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension)
