@@ -20,6 +20,7 @@ import astropy.units as units
 import scipy.integrate
 import time
 from matplotlib.colors import LogNorm
+from dustmaps.bayestar import BayestarQuery
 
 def convert2gal(ra, dec):
     """
@@ -487,6 +488,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         b = tgasCutMatched['b']*units.deg
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode=mode)
+        """
         for model in ['marshall', 'iphas', 'chen']:
             nan = np.isnan(dustEBV)
             firstGo =  np.sum(nan)
@@ -496,15 +498,13 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
             nan = np.isnan(dustEBV)
             secondGo = np.sum(nan)
             print model, ' filled in ', str(firstGo - secondGo), ' still ', str(secondGo), ' Nans'
-
-        """
         dustEBVNan, dustEBV50Nan = st.dust([l[nan],l[nan]], [b[nan],b[nan]], [distanceQuantile[nan]*units.kpc, distanceQuantile50[nan]*units.kpc], model='iphas', mode=mode)
         dustEBV[nan] = dustEBVNan
         dustEBV50[nan] = dustEBV50Nan
         nan = np.isnan(dustEBV)
         thirdGo = np.sum(nan)
         print 'iphas filled in ', str(secondGo - thirdGo), ' still ', str(thirdGo), ' Nans'
-        """
+
 
         dustNan = st.dust(l[nan], b[nan], None, model='sfd')
         figSFD, axSFD = plt.subplots()
@@ -515,10 +515,12 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         figSFD.savefig('dustsfd.png')
         dustEBV[nan] = dustNan
         dustEBV50[nan] = dustNan
+        """
         end = time.time()
         #print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
-
-        np.savez(dustFile, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50)
+        print 'calculating dust took ', str(end - start), ' seconds'
+        assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
+        np.savez(dustFile, ebv=dustEBV, sourceID=sourceID, ebv50=dustEBV50, releasedIndices = nan)
     if plot:
         data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
@@ -710,15 +712,21 @@ if __name__ == '__main__':
     nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
                    (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
 
+    bayes = BayestarQuery()
+    dust = bayes(SkyCoord(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, frame='galactic'), mode='median')
+    nanDust = np.isnan(dust)
+
     if survey == '2MASS':
         nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
                         bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
                        (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
 
-        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor & nonzeroError
+        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor & nonzeroError & ~nanDust
 
     else:
-        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError
+        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError & ~nanDust
+
+    print 'N stars matching all criteria: ', str(np.sum(indices))
 
     try:
         xdgmm = XDGMM(filename=xdgmmFilenameDust)
