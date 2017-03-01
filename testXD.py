@@ -19,6 +19,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as units
 import scipy.integrate
 import time
+from matplotlib.colors import LogNorm
 
 def convert2gal(ra, dec):
     """
@@ -486,8 +487,32 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         b = tgasCutMatched['b']*units.deg
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode=mode)
+        for model in ['marshall', 'iphas', 'chen']:
+            nan = np.isnan(dustEBV)
+            firstGo =  np.sum(nan)
+            dustEBVNan, dustEBV50Nan = st.dust([l[nan],l[nan]], [b[nan],b[nan]], [distanceQuantile[nan]*units.kpc, distanceQuantile50[nan]*units.kpc], model=model, mode=mode)
+            dustEBV[nan] = dustEBVNan
+            dustEBV50[nan] = dustEBV50Nan
+            nan = np.isnan(dustEBV)
+            secondGo = np.sum(nan)
+            print model, ' filled in ', str(firstGo - secondGo), ' still ', str(secondGo), ' Nans'
+
+        """
+        dustEBVNan, dustEBV50Nan = st.dust([l[nan],l[nan]], [b[nan],b[nan]], [distanceQuantile[nan]*units.kpc, distanceQuantile50[nan]*units.kpc], model='iphas', mode=mode)
+        dustEBV[nan] = dustEBVNan
+        dustEBV50[nan] = dustEBV50Nan
         nan = np.isnan(dustEBV)
+        thirdGo = np.sum(nan)
+        print 'iphas filled in ', str(secondGo - thirdGo), ' still ', str(thirdGo), ' Nans'
+        """
+
         dustNan = st.dust(l[nan], b[nan], None, model='sfd')
+        figSFD, axSFD = plt.subplots()
+        nonzero = dustNan > 0.
+        axSFD.hist2d(color[indices][nan][nonzero], np.log10(dustNan[nonzero]), bins=100, norm=LogNorm(), cmap='Greys')
+        axSFD.set_xlabel('J-K')
+        axSFD.set_ylabel('log E(B-V)')
+        figSFD.savefig('dustsfd.png')
         dustEBV[nan] = dustNan
         dustEBV50[nan] = dustNan
         end = time.time()
@@ -498,20 +523,34 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
         data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
         distanceQuantile50 = data['distanceQuantile50']
+        figHist, axHist = plt.subplots(2, figsize=(7, 10))
+        figDust, axDust = plt.subplots(2, figsize=(7, 10))
 
-        figDust, axDust = plt.subplots(2)
-        from matplotlib.colors import LogNorm
-        axDust[0].hist2d(np.log10(distanceQuantile), np.log10(dustEBV), bins=100, norm=LogNorm())
-        axDust[1].hist2d( np.log10(distanceQuantile50), np.log10(dustEBV50), bins=100, norm=LogNorm())
-        #figDust.colorbar()
+
+        dustEBV[dustEBV==0.0] = 1e-5
+        dustEBV50[dustEBV50==0.0] = 1e-5
+        axDust[0].hist2d(color[indices], np.log10(dustEBV), bins=100, norm=LogNorm(), cmap='Greys')
+        axDust[1].hist2d(color[indices], np.log10(dustEBV50), bins=100, norm=LogNorm(), cmap='Greys')
+        axHist[0].hist(color[indices], bins=100, histtype='step', log=True, label='5% quantile', lw=2)
+        axHist[0].hist(color[indices], bins=100, histtype='step', log=True, label='50% quantile', lw=2)
+        axHist[1].hist(np.log10(dustEBV), bins=100, histtype='step', log=True, label='5% quantile', lw=2)
+        axHist[1].hist(np.log10(dustEBV50), bins=100, histtype='step', log=True, label='50% quantile', lw=2)
+        plt.legend()
+
+
+        #figDust.colorbar()d
 
         #axDust[0].set_title('Dust for 0.05 quantile distance')
         #axDust[1].set_title('Dust for 0.5 quantile distance')
-        axDust[0].set_xlabel('log Distance [kpc]')
-        axDust[1].set_xlabel('log Distance [kpc]')
-        axDust[0].set_ylabel('E(B-V) 5% quantile')
-        axDust[1].set_ylabel('E(B-V) 50% quantile')
-        figDust.savefig('ebvDistribution.png')
+        axDust[0].set_xlabel('J-K 5% quantile')
+        axHist[0].set_xlabel('J - K')
+        axDust[1].set_xlabel('J-K 50% quantile')
+        axDust[0].set_ylabel('log E(B-V)')
+        axDust[1].set_ylabel('log E(B-V)')
+        axHist[1].set_xlabel('log E(B-V)')
+
+        figHist.savefig('ebvDistribution1D.png')
+        figDust.savefig('ebvDistribution2D.png')
 
     return dustEBV, sourceID
 
@@ -558,9 +597,9 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
     posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename
     nstars = len(tgasCutMatched)
     for index in range(nstars):
-        if np.mod(index, 1000) == 0.0:
+        if np.mod(index, 10000) == 0.0:
             print index
-            np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
+            np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior)
 
 
         meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
@@ -713,7 +752,7 @@ if __name__ == '__main__':
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.png')
 
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample', plot=True)
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True)
 
         assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
@@ -732,7 +771,7 @@ if __name__ == '__main__':
         xdgmm.fit(X, Xerr)
         xdgmm.save_model(xdgmmFilenameDust)
     if not dustCorrectedArraysGenerated:
-        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='random_sample', plot=True)
+        dustEBV, sourceID  = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True)
         mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']][indices], dustEBV, mag1)
         mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']][indices], dustEBV, mag2)
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][indices]

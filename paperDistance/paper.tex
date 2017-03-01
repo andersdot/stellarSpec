@@ -62,6 +62,8 @@ with modifications by DWH.
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
+\usepackage{amsmath}
+
 \newcommand{\myemail}{landerson@simonsfoundation.org}
 \slugcomment{Draft manuscript not ready for distribution. \textbf{Copyright 2017 the authors.}}
 \shorttitle{Improving Gaia parallaxes}
@@ -256,8 +258,38 @@ train gaussian means, mus, Vs on progressively lower SN dataset
 P(\theta|\textbf{E}, \textbf{I}) = P(\theta ) \frac{P(\textbf{E} |\theta,\textbf{I})}{P(\textbf{E})},
 \end{equation}
 
-
 where $\theta$ is the model parameters that generate the evidence $\textbf{E}$, and P($\theta$) is the prior knowledge of the model, and $P(\textbf{E} |\theta,\textbf{I})$ is the likelihood of the evidence, given the model and some other prior assumptions. Our evidence is the parallaxes and G band magnitudes from Gaia, and the B and V band magnitudes from APASS. We build the prior from this evidence using extreme deconvolution
+
+The data are a transformation of the dust corrected absolute magnitude, and the dust corrected colors.
+
+\begin{equation}
+\label{eq:data}
+\begin{aligned}
+\mathrm{data vector} \;\;\;\; &\vec{y} = [10^{0.2M_{J,n}}, J_n - K_n] \;  n \in \mathrm{stars} \\
+\mathrm{with \; absolute \; magnitude} \;\;\;\; &M_{J,n} = J_n - DM_n - Q_JE(B-V)_n \\
+& DM_n = -5\mathrm{log_{10}}\frac{1}{\varpi} \\
+\mathrm{and \; color} \;\;\;\; &J_n - K_n = J_n - K_n - Q_{JK}E(B-V)_n
+
+\end{aligned}
+\end{equation}
+
+We fit the data using XD which maximizes the likelihood
+
+\begin{equation}
+\label{eq:xdlikelihood}
+P(\vec{y}|\alpha, I)
+\end{equation}
+
+with the output mixture of gaussians 
+
+\begin{equation}
+\label{eq:xd}
+\begin{aligned}
+\alpha = &\left\{\mathrm{amp}_k, \mu_k, V_k\right\}_{k=1}^K \; k \in \mathrm{Gaussians} \\
+I = &\left\{\left\{\sigma^2_n\right\}_{n=1}^N, \mathrm{assumptions}\right\}
+\end{aligned}
+\end{equation}
+
 
 
 Crossvalidation

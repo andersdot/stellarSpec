@@ -12,6 +12,9 @@ from matplotlib.patches import Ellipse
 import pdb
 from dustmaps.sfd import SFDQuery
 from dustmaps.bayestar import BayestarQuery
+from dustmaps.iphas import IPHASQuery
+from dustmaps.marshall import MarshallQuery
+from dustmaps.chen2014 import Chen2014Query
 from astropy.coordinates import SkyCoord
 import astropy.units as units
 from scipy.integrate import cumtrapz
@@ -425,7 +428,26 @@ def dust(l, b, distance, plot=False, max_samples=2, mode='median', model='bayes'
                 frame='galactic')
         bayes = BayestarQuery(max_samples=max_samples)
         dust = bayes(c, mode=mode)
+    if model == 'iphas':
+        c = SkyCoord(l, b,
+                distance = distance,
+                frame='galactic')
+        iphas = IPHASQuery()
+        dust = iphas(c, mode=mode)
 
+    if model == 'marshall':
+        c = SkyCoord(l, b,
+                distance = distance,
+                frame='galactic')
+        marshall = MarshallQuery()
+        dust = marshall(c)
+
+    if model == 'chen':
+        c = SkyCoord(l, b,
+                distance = distance,
+                frame='galactic')
+        chen = Chen2014Query()
+        dust = chen(c)
     #cNoDist = SkyCoord(l, b,
     #        frame='galactic')
     #bayesDustNoDist = bayes(cNoDist, mode=mode)
