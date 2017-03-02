@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median'):
+def dustCorrectionPrior(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, dataFilename, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median'):
     dustFile = 'dustCorrection_' + str(ngauss) + '_' + dataFilename
     distanceFile = 'distanceQuantiles_' + str(ngauss) + '_' +dataFilename
     try:
@@ -451,9 +451,9 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
             distanceQuantile50 = np.zeros(nstars)
             start = time.time()
             for index in range(nstars):
-                if np.mod(index, 1000) == 0.0:
+                if np.mod(index, 10000) == 0.0:
                     end = time.time()
-                    print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*(nstars/1000.))
+                    print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*((nstars-index)/10000.))
                     start = time.time()
 
                 #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
@@ -469,9 +469,7 @@ def dustCorrectionPrior(tgasCutMatched, dataFilename, quantile=0.05, nDistanceSa
                 xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
                 positive = xparallaxMAS > 0.
-
                 allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
-
                 #normalize prior pdf
                 posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
                 distance = 1./xparallaxMAS[positive]
@@ -630,7 +628,7 @@ if __name__ == '__main__':
     survey = '2MASS'
     np.random.seed(2)
     thresholdSN = 0.001
-    ngauss = 16
+    ngauss = 128
     nstar = '1.2M'
     Nsamples = 120000
     nPosteriorPoints = 1000
@@ -712,9 +710,9 @@ if __name__ == '__main__':
     nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
                    (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
 
-    bayes = BayestarQuery()
+    bayes = BayestarQuery(max_samples=1)
     dust = bayes(SkyCoord(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, frame='galactic'), mode='median')
-    nanDust = np.isnan(dust)
+    nanDust = np.isnan(dust[:,0])
 
     if survey == '2MASS':
         nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
@@ -760,7 +758,7 @@ if __name__ == '__main__':
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=err1[indices], yerr=absMagKinda2absMag(err2[indices]), xlabel=xlabel, ylabel=ylabel)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.png')
 
-        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True)
+        dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched[indices], color[indices], color_err[indices], absMagKinda[indices], absMagKinda_err[indices], dataFilename, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True)
 
         assert np.sum(tgasCutMatched['source_id'][indices] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
