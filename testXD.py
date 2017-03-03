@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def dustCorrectionPrior(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
+def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
 
     try:
         data = np.load(dustFile)
@@ -485,34 +485,6 @@ def dustCorrectionPrior(tgasCutMatched, color, color_err, absMagKinda, absMagKin
         b = tgasCutMatched['b']*units.deg
         start = time.time()
         dustEBV, dustEBV50 = st.dust([l,l], [b,b], [distanceQuantile*units.kpc, distanceQuantile50*units.kpc], mode=mode)
-        """
-        for model in ['marshall', 'iphas', 'chen']:
-            nan = np.isnan(dustEBV)
-            firstGo =  np.sum(nan)
-            dustEBVNan, dustEBV50Nan = st.dust([l[nan],l[nan]], [b[nan],b[nan]], [distanceQuantile[nan]*units.kpc, distanceQuantile50[nan]*units.kpc], model=model, mode=mode)
-            dustEBV[nan] = dustEBVNan
-            dustEBV50[nan] = dustEBV50Nan
-            nan = np.isnan(dustEBV)
-            secondGo = np.sum(nan)
-            print model, ' filled in ', str(firstGo - secondGo), ' still ', str(secondGo), ' Nans'
-        dustEBVNan, dustEBV50Nan = st.dust([l[nan],l[nan]], [b[nan],b[nan]], [distanceQuantile[nan]*units.kpc, distanceQuantile50[nan]*units.kpc], model='iphas', mode=mode)
-        dustEBV[nan] = dustEBVNan
-        dustEBV50[nan] = dustEBV50Nan
-        nan = np.isnan(dustEBV)
-        thirdGo = np.sum(nan)
-        print 'iphas filled in ', str(secondGo - thirdGo), ' still ', str(thirdGo), ' Nans'
-
-
-        dustNan = st.dust(l[nan], b[nan], None, model='sfd')
-        figSFD, axSFD = plt.subplots()
-        nonzero = dustNan > 0.
-        axSFD.hist2d(color[indices][nan][nonzero], np.log10(dustNan[nonzero]), bins=100, norm=LogNorm(), cmap='Greys')
-        axSFD.set_xlabel('J-K')
-        axSFD.set_ylabel('log E(B-V)')
-        figSFD.savefig('dustsfd.png')
-        dustEBV[nan] = dustNan
-        dustEBV50[nan] = dustNan
-        """
         end = time.time()
         #print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
         print 'calculating dust took ', str(end - start), ' seconds'
@@ -624,7 +596,7 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
 
 def correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, dustFile='dustCorrection', distanceFile = 'distanceQuantiles', xdgmmFilenameDust='xdgmm.dust'):
 
-    dustEBV, sourceID = dustCorrectionPrior(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True, distanceFile=distanceFile, dustFile=dustFile)
+    dustEBV, sourceID = dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True, distanceFile=distanceFile, dustFile=dustFile)
 
     #make sure the dust array and tgas arrays are ordered the same
     assert np.sum(tgasCutMatched['source_id'] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
@@ -639,11 +611,9 @@ def correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
     #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
     #need to define color_err and absMagKinda_err when including dust correction
     colorDustCorrected = mag1DustCorrected - mag2DustCorrected
-    data1 = colorDustCorrected
-    data2 = absMagKindaDustCorrected
 
     #regenerate prior
-    X, Xerr = matrixize(data1, data2, err1, err2)
+    X, Xerr = matrixize(colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err)
     xdgmm.fit(X, Xerr)
     xdgmm.save_model(xdgmmFilenameDust)
 
@@ -760,6 +730,7 @@ if __name__ == '__main__':
     data2 = absMagKinda
     err1 = color_err
     err2 = absMagKinda_err
+
     xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.secondTime.fit'
 
     try:
@@ -804,6 +775,7 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.png')
 
         #correct to the prior for dust again
+        #this will require calculating the distances to each star first 
         xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.secondTime.fit'
         distanceFile = 'distanceQuantiles_secondTime' + str(ngauss) + '_' +dataFilename
         dustFile = 'dustCorrection_secondTime' + str(ngauss) + '_' + dataFilename
