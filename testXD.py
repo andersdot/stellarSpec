@@ -525,7 +525,7 @@ def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
 
     return dustEBV, sourceID
 
-def dustCorrection(mag, EBV, band):
+def dustCorrect(mag, EBV, band):
     """
     using Finkbeiner's dust model, correct the magnitude for dust extinction
     """
@@ -602,10 +602,10 @@ def correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
     assert np.sum(tgasCutMatched['source_id'] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
     #apply dust correction to data
-    mag1DustCorrected   = dustCorrection(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], dustEBV, mag1)
-    mag2DustCorrected   = dustCorrection(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']], dustEBV, mag2)
+    mag1DustCorrected   = dustCorrect(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], dustEBV, mag1)
+    mag2DustCorrected   = dustCorrect(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']], dustEBV, mag2)
     apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']]
-    apparentMagDustCorrected = dustCorrection(apparentMagnitude, dustEBV, absmag)
+    apparentMagDustCorrected = dustCorrect(apparentMagnitude, dustEBV, absmag)
     absMagKindaDustCorrected = tgasCutMatched['parallax']*10.**(0.2*apparentMagDustCorrected)
     dustCorrectedArraysGenerated = True
     #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
