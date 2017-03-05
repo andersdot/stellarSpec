@@ -775,12 +775,11 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.png')
 
         #correct to the prior for dust again
-        #this will require calculating the distances to each star first 
+        #this will require calculating the distances to each star first
         xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.secondTime.fit'
         distanceFile = 'distanceQuantiles_secondTime' + str(ngauss) + '_' +dataFilename
         dustFile = 'dustCorrection_secondTime' + str(ngauss) + '_' + dataFilename
-        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm,
-                                                            dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
+        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgasCutMatched, colorDustCorrected, color_err, absMagKindaDustCorrected, absMagKinda_err, xdgmm, dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.secondTime.png')
 
 
