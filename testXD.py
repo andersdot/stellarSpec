@@ -808,8 +808,8 @@ if __name__ == '__main__':
         #using distance, calculate dust
         try:
             data = np.load(dustFile)
-            dustEBVnew = data['dustEBV']
-            dustEBVMedianNew = data['dustEBVMedian']
+            dustEBVnew = data['ebv']
+            dustEBVMedianNew = data['ebv50']
         except IOError:
             sourceID = tgasCutMatched['source_id']
             l = tgasCutMatched['l']*units.deg
