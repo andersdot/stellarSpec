@@ -430,7 +430,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
 
 def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512):
     try:
-        data = np.load(distanceFile)
+        data = np.load(distanceFile+'.txt')
         distanceQuantile = data['distanceQuantile']
         distanceMedian = data['distanceMedian']
         print 'distance file is: ', distanceFile
@@ -469,6 +469,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
             #find the distance at the 5% quantile
             distanceQuantile[index] = np.percentile(sampleDistance, quantile*100.)
             distanceMedian[index] = np.percentile(sampleDistance, 0.5*100.)
+            pdb.set_trace()
         np.savez(distanceFile, distanceQuantile=distanceQuantile, distanceMedian=distanceMedian)
     return distanceQuantile, distanceMedian
 
