@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512):
     try:
         data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
@@ -751,7 +751,7 @@ if __name__ == '__main__':
         xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.fit'
         distanceFile  = 'distanceQuantiles.' + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
         dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
-        priorFile     = 'prior.'             + str(ngauss) + 'gauss. '+ iter + '.' + survey + '.' + dataFilename + '.png'
+        priorFile     = 'prior.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.png'
 
         color = colorArray(mag1, mag2, dustEBV, bandDictionary)
         absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
@@ -803,7 +803,7 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
-        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05)
+        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128)
 
         #using distance, calculate dust
         try:
