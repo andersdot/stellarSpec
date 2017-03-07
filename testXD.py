@@ -821,6 +821,7 @@ if __name__ == '__main__':
         dustDiffFig, dustDiffAx = plt.subplots(2)
 
         dustDiffAx[0].scatter(distance, dustEBVnew - dustEBV, lw=0, alpha=0.5, s=1)
+        b = tgasCutMatched['b']*units.deg
         dustDiffAx[1].scatter(b, dustEBVnew - dustEBV, lw=0, alpha=0.5, s=1)
         dustDiffAx[0].set_xlabel('5% Distance [kpc]')
         dustDiffAx[1].set_xlabel('Galactic Latitude [deg]')
