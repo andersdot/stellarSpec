@@ -428,9 +428,9 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000):
     try:
-        data = np.load(distanceFile+'.txt')
+        data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
         distanceMedian = data['distanceMedian']
         print 'distance file is: ', distanceFile
@@ -463,13 +463,12 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
             #normalize prior pdf
             posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
             distance = 1./xparallaxMAS[positive]
-            #sample the PDF nDistanceSamples
-            sampleDistance = samples(distance[::-1], posteriorDistance[::-1], nDistanceSamples, plot=False)
 
-            #find the distance at the 5% quantile
-            distanceQuantile[index] = np.percentile(sampleDistance, quantile*100.)
-            distanceMedian[index] = np.percentile(sampleDistance, 0.5*100.)
-            pdb.set_trace()
+            cdf = scipy.integrate.cumtrapz(posteriorDistance[::-1], x=distance[::-1])
+            cdfInv = scipy.interpolate.interp1d(cdf, distance[::-1][:-1])
+            distanceQuantile[index] = cdfInv(quantile)
+            distanceMedian[index] = cdfInv(0.5)
+
         np.savez(distanceFile, distanceQuantile=distanceQuantile, distanceMedian=distanceMedian)
     return distanceQuantile, distanceMedian
 
@@ -744,15 +743,23 @@ if __name__ == '__main__':
                       'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMassCutMatched},
                       'G':{'key':'phot_g_mean_mag', 'array':tgasCutMatched}}
 
+    #iteration = ['1st', '2nd', '3rd', '4th', '5th']
+    #previteration =  ['0th', '1st', '2nd', '3rd', '4th']
+    iteration = ['6th', '7th', '8th', '9th', '10th']
+    previteration = ['5th', '6th', '7th', '8th', '9th']
+    for iter, previter in zip(iteration, previteration):
 
-
-    dustEBV = np.zeros(np.sum(indices))
-    iteration = ['1st', '2nd', '3rd', '4th', '5th']
-    for iter in iteration:
         xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.fit'
         distanceFile  = 'distanceQuantiles.' + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
         dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
         priorFile     = 'prior.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.png'
+
+        if previter == '0th':
+            dustEBV = np.zeros(np.sum(indices))
+        else:
+            dustFilePrev = 'dustCorrection.'    + str(ngauss) + 'gauss.' + previter + '.' + survey + '.' + dataFilename
+            data = np.load(dustFilePrev)
+            dustEBV = data['ebv']
 
         color = colorArray(mag1, mag2, dustEBV, bandDictionary)
         absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
@@ -790,12 +797,12 @@ if __name__ == '__main__':
 
 
         #plot XD prior
-        figPrior, axPrior = plt.subplots()
-        for gg in range(xdgmm.n_components):
-            points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-            axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-            axPrior.invert_yaxis()
-        figPrior.savefig('prior.' + iter + '.png')
+        #figPrior, axPrior = plt.subplots()
+        #for gg in range(xdgmm.n_components):
+        #    points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+        #    axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+        #    axPrior.invert_yaxis()
+        #figPrior.savefig('prior.' + iter + '.png')
 
         #plot 2x2 visual of prior w/ samples
         sample = xdgmm.sample(Nsamples)
@@ -804,7 +811,7 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
-        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128)
+        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
 
         #using distance, calculate dust
         try:
@@ -818,17 +825,6 @@ if __name__ == '__main__':
             dustEBVnew, dustEBVMedianNew = st.dust([l,l], [b,b], [distance*units.kpc, distanceMedian*units.kpc], mode='median')
             assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
             np.savez(dustFile, ebv=dustEBVnew, sourceID=sourceID, ebvMedian=dustEBVMedianNew)
-
-        dustDiffFig, dustDiffAx = plt.subplots(2)
-
-        dustDiffAx[0].scatter(distance, dustEBVnew - dustEBV, lw=0, alpha=0.5, s=1)
-        b = tgasCutMatched['b']*units.deg
-        dustDiffAx[1].scatter(b, dustEBVnew - dustEBV, lw=0, alpha=0.5, s=1)
-        dustDiffAx[0].set_xlabel('5% Distance [kpc]')
-        dustDiffAx[1].set_xlabel('Galactic Latitude [deg]')
-        dustDiffAx[0].set_ylabel('$\Delta$ E(B-V) [current - previous]')
-        dustDiffFig.savefig('dustDiff.' + iter + '.png')
-
 
         #set new dust values
         dustEBV = dustEBVnew
