@@ -443,6 +443,8 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
         distanceQuantile = np.zeros(nstars)
         distanceMedian = np.zeros(nstars)
         start = time.time()
+
+        fig, ax = plt.subplots()
         for index in range(nstars):
             if np.mod(index, 10000) == 0.0:
                 end = time.time()
@@ -466,9 +468,18 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
 
             cdf = scipy.integrate.cumtrapz(posteriorDistance[::-1], x=distance[::-1])
             cdfInv = scipy.interpolate.interp1d(cdf, distance[::-1][:-1])
-            distanceQuantile[index] = cdfInv(quantile)
-            distanceMedian[index] = cdfInv(0.5)
 
+            try:
+                distanceQuantile[index] = cdfInv(quantile)
+                distanceMedian[index] = cdfInv(0.5)
+            except ValueError: 
+                print np.max(cdf)
+                plt.cla()
+                ax.plot(distance[1:], cdf)
+                ax.set_xlabel('distance')
+                ax.set_ylabel('cdf')
+                fig.savefig('cdfplots/cdf.' + str(index) + '.png')
+                #distanceMedian[index] = np.nan
         np.savez(distanceFile, distanceQuantile=distanceQuantile, distanceMedian=distanceMedian)
     return distanceQuantile, distanceMedian
 
