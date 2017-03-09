@@ -529,7 +529,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
                 ax.set_ylabel('cdf')
                 ax.legend()
                 ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
-                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter '.png')
+                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
             """
             try:
                 distanceQuantile[index] = cdfInv(quantile)
