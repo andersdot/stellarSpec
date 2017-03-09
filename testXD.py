@@ -9,7 +9,7 @@ import numpy as np
 import pdb
 import time
 from sklearn.model_selection import train_test_split
-
+from astropy.io import fits
 from xdgmm import XDGMM
 from sklearn.learning_curve import validation_curve
 from sklearn.cross_validation import ShuffleSplit
@@ -311,11 +311,11 @@ def plotPosteriorEachStar(meanPost, covPost, ampPost, summedPosterior, meanLike,
     fig.savefig('example.png')
 
 
-def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False):
+def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False):
     """
     test posterior accuracy using distances to cluster M67
     """
-    indicesM67 = m67indices(tgasCutMatched, plot=False, db=0.5, dl=0.5)
+    indicesM67 = m67indices(tgas, plot=False, db=0.5, dl=0.5)
 
     #all the plot stuff
     figDist, axDist = plt.subplots(2, 3, figsize=(20, 15))
@@ -346,8 +346,8 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
 
         #plotting for each star in the cluster
         windowFactor = 5. #the number of sigma to sample in mas for plotting
-        minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-        maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+        minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
+        maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st'):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st'):
     try:
         data = np.load(distanceFile)
         distance = data['distance']
@@ -451,14 +451,15 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
                 end = time.time()
                 print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*((nstars-index)/10000.))
                 start = time.time()
+            #if index == 4491: pdb.set_trace()
             #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
             #calculate parallax-ish posterior for each star
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
             meanData = meanData[0]
             covData = covData[0]
             #windowFactor = 5. #the number of sigma to sample in mas for plotting
-            #minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-            #maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+            #minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
+            #maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
             apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
             #xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
             #positive = xparallaxMAS > 0.
@@ -477,7 +478,9 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
             maxDist = logDistance[-1]
             P_minDist = posteriorLogDistance[0]
             P_maxDist = posteriorLogDistance[-1]
-
+            assert np.sum(np.isnan(posteriorLogDistance)) == 0., 'there are Nans in my posterior ' + str(index)
+            absMag = absMagKinda2absMag(absMagKinda[index])
+            if np.isnan(absMag): absMag = absMagKinda[index]
             #if the posterior lies well within the distance window then do the right thing
             if np.max(cdf) > 0.95:
                 distanceQuantile[index] = 10.**cdfInv(quantile)
@@ -488,7 +491,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
                     ax.set_xlabel('log distance [kpc]')
                     ax.set_ylabel('cdf')
                     ax.legend()
-                    ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
+                    ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
                     fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
             #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
             elif np.max(cdf) < quantile:
@@ -506,7 +509,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
                 ax.set_xlabel('log distance [kpc]')
                 ax.set_ylabel('cdf')
                 ax.legend()
-                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
+                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
                 fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.png')
 
             #if the posterior lies just on the edge, then if the pdf appears to be rising with distance set to quantile, else set to min distance
@@ -525,8 +528,8 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
                 ax.set_xlabel('log distance [kpc]')
                 ax.set_ylabel('cdf')
                 ax.legend()
-                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
-                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter '.png')
+                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
+                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
             """
             try:
                 distanceQuantile[index] = cdfInv(quantile)
@@ -543,7 +546,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
         np.savez(distanceFile, distance=distanceQuantile)
     return distanceQuantile
 
-def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
+def dustCorrection(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
 
     try:
         data = np.load(dustFile)
@@ -554,10 +557,10 @@ def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
     except IOError:
         print 'dust file does not exist: ', dustFile
         print 'calculating dust corrections, this may take awhile'
-        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, distanceFile=distanceFile, quantile=0.05)
-        sourceID = tgasCutMatched['source_id']
-        l = tgasCutMatched['l']*units.deg
-        b = tgasCutMatched['b']*units.deg
+        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, distanceFile=distanceFile, quantile=quantile)
+        sourceID = tgas['source_id']
+        l = tgas['l']*units.deg
+        b = tgas['b']*units.deg
         start = time.time()
         dustEBV = st.dust(l, b, distance*units.kpc, mode=mode)
         end = time.time()
@@ -634,14 +637,14 @@ def samples(x, pdf, N, plot=False):
         fig.savefig('samples.png')
     return distSamples
 
-def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=2, projectedDimension=1, posteriorFile = 'posteriorDistanceTgas'):
-    nstars = len(tgasCutMatched)
+def posteriorDistanceAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=2, projectedDimension=1, posteriorFile = 'posteriorDistanceTgas'):
+    nstars = len(tgas)
     summedPosterior = np.zeros((nstars, nPosteriorPoints))
     distancePosterior = np.zeros((nstars, nPosteriorPoints))
     colorDustCorrected = np.zeros(nstars)
     absMagDustCorrected = np.zeros(nstars)
 
-    nstars = len(tgasCutMatched)
+    nstars = len(tgas)
     for index in range(nstars):
         if np.mod(index, 10000) == 0.0:
             print index
@@ -652,8 +655,8 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
         meanData = meanData[0]
         covData = covData[0]
         windowFactor = 5. #the number of sigma to sample in mas for plotting
-        minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-        maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+        minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
+        maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
         apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
@@ -665,25 +668,25 @@ def posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, color, absMagKin
 
         summedPosterior[index, :] = summedPosteriorAbsmagKinda*xparallaxMAS**2.*10.**(0.2*apparentMagnitude)
         distancePosterior[index, :] = 1./xparallaxMAS
-    sourceID = tgasCutMatched['source_id']
+    sourceID = tgas['source_id']
     np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior, sourceID=sourceID)
     return summedPosterior, distancePosterior, sourceID
 
-def correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, dustFile='dustCorrection', distanceFile = 'distanceQuantiles', xdgmmFilename='xdgmm'):
+def correctForDust(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm, dustFile='dustCorrection', distanceFile = 'distanceQuantiles', xdgmmFilename='xdgmm'):
 
-    dustEBV, sourceID = dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True, distanceFile=distanceFile, dustFile=dustFile)
+    dustEBV, sourceID = dustCorrection(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=128, max_samples=1, mode='median', plot=True, distanceFile=distanceFile, dustFile=dustFile)
     print 'dust attenuations calculated'
     #make sure the dust array and tgas arrays are ordered the same
-    assert np.sum(tgasCutMatched['source_id'] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
+    assert np.sum(tgas['source_id'] - sourceID) == 0.0, 'dust and data arrays are sorted differently !!!'
 
     #apply dust correction to data
     mag1DustCorrected   = dustCorrect(bandDictionary[mag1]['array']  [bandDictionary[mag1]['key']], dustEBV, mag1)
     mag2DustCorrected   = dustCorrect(bandDictionary[mag2]['array']  [bandDictionary[mag2]['key']], dustEBV, mag2)
     apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']]
     apparentMagDustCorrected = dustCorrect(apparentMagnitude, dustEBV, absmag)
-    absMagKindaDustCorrected = tgasCutMatched['parallax']*10.**(0.2*apparentMagDustCorrected)
+    absMagKindaDustCorrected = tgas['parallax']*10.**(0.2*apparentMagDustCorrected)
     dustCorrectedArraysGenerated = True
-    #B_dustcorrected = dustCorrection(apassCutMatched['bmag'], bayesDust, 'B')
+    #B_dustcorrected = dustCorrection(Apass['bmag'], bayesDust, 'B')
     #need to define color_err and absMagKinda_err when including dust correction
     colorDustCorrected = mag1DustCorrected - mag2DustCorrected
 
@@ -716,16 +719,16 @@ def colorArray(mag1, mag2, dustEBV, bandDictionary):
 def absMagKindaArray(absmag, dustEBV, bandDictionary):
     apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']]
     apparentMagDustCorrected = dustCorrect(apparentMagnitude, dustEBV, absmag)
-    absMagKindaDustCorrected = tgasCutMatched['parallax']*10.**(0.2*apparentMagDustCorrected)
+    absMagKindaDustCorrected = tgas['parallax']*10.**(0.2*apparentMagDustCorrected)
     return absMagKindaDustCorrected
 
 if __name__ == '__main__':
 
     survey = '2MASS'        #survey to calculate prior with
     np.random.seed(2)
-    thresholdSN = 0.001     #threshold S/N
+    #thresholdSN = 0.001     #threshold S/N
     ngauss = 128            #number of gaussians in the XD
-
+    quantile = 0.05
 
     Nsamples = 120000       #number of samples of the XD to plot
     nPosteriorPoints = 1000 #number of elements in the posterior array
@@ -734,28 +737,14 @@ if __name__ == '__main__':
 
 
     dataFilename = 'cutMatchedArrays.SN0.001.npz'
-    xdgmmFilename = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.fit'
-    xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.fit'
-
+    tgas = fits.getdata("stacked_tgas.fits", 1)
+    #tgasRave = fits.getdata('tgas-rave.fits', 1)
+    Apass = fits.getdata('tgas-matched-apass-dr9.fits')
+    #tgasWise = fits.getdata('tgas-matched-wise.fits')
+    twoMass = fits.getdata('tgas-matched-2mass.fits')
 
     subset = False          #subsample the data to generate the XD prior
     dustCorrectedArraysGenerated = False
-
-
-    try:
-        cutMatchedArrays  = np.load(dataFilename)
-        tgasCutMatched    = cutMatchedArrays['tgasCutMatched']
-        apassCutMatched   = cutMatchedArrays['apassCutMatched']
-        #raveCutMatched    = cutMatchedArrays['raveCutMatched']
-        twoMassCutMatched = cutMatchedArrays['twoMassCutMatched']
-        #wiseCutMatched    = cutMatchedArrays['wiseCutMatched']
-        #distCutMatched    = cutMatchedArrays['distCutMatched']
-
-    except IOError:
-        tgasCutMatched, apassCutMatched, raveCutMatched, twoMassCutMatched, wiseCutMatched, distCutMatched = st.observationsCutMatched(SNthreshold=thresholdSN, filename=dataFilename)
-    print 'Number of Matched stars is: ', len(tgasCutMatched)
-
-
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -775,44 +764,52 @@ if __name__ == '__main__':
         xlim = [-0.25, 1.25]
         ylim = [6, -4]
 
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':apassCutMatched},
-                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':apassCutMatched},
-                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMassCutMatched},
-                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMassCutMatched},
-                      'G':{'key':'phot_g_mean_mag', 'array':tgasCutMatched}}
+    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':twoMass},
+                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
+                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
+                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
+                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
 
 
-    parallaxSNcut = tgasCutMatched['parallax']/tgasCutMatched['parallax_error'] >= thresholdSN
-    sigMax = 1.086/thresholdSN
-    lowPhotErrorcut = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] < sigMax) & \
-                      (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] < sigMax)
+    #parallaxSNcut = tgas['parallax']/tgas['parallax_error'] >= thresholdSN
+    #sigMax = 1.086/thresholdSN
+    #lowPhotErrorcut = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] < sigMax) & \
+    #                  (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] < sigMax)
     nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
                    (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
 
     bayes = BayestarQuery(max_samples=1)
-    dust = bayes(SkyCoord(tgasCutMatched['l']*units.deg, tgasCutMatched['b']*units.deg, frame='galactic'), mode='median')
+    dust = bayes(SkyCoord(tgas['l']*units.deg, tgas['b']*units.deg, frame='galactic'), mode='median')
     nanDust = np.isnan(dust[:,0])
+
+    nanPhotErr = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]) & \
+              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]) & \
+              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
+
+    nanPhot = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['key']]) & \
+              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['key']]) & \
+              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
     if survey == '2MASS':
         nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
                         bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
                        (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
 
-        indices = parallaxSNcut & lowPhotErrorcut & nonZeroColor & nonzeroError & ~nanDust
+        indices = twoMass['matched'] & nonzeroError & ~nanDust & nanPhot & nanPhotErr
 
     else:
         indices = parallaxSNcut & lowPhotErrorcut & nonzeroError & ~nanDust
 
     print 'N stars matching all criteria: ', str(np.sum(indices))
 
-    tgasCutMatched = tgasCutMatched[indices]
-    apassCutMatched = apassCutMatched[indices]
-    twoMassCutMatched = twoMassCutMatched[indices]
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':apassCutMatched},
-                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':apassCutMatched},
-                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMassCutMatched},
-                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMassCutMatched},
-                      'G':{'key':'phot_g_mean_mag', 'array':tgasCutMatched}}
+    tgas = tgas[indices]
+    Apass = Apass[indices]
+    twoMass = twoMass[indices]
+    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':Apass},
+                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
+                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
+                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
+                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th']
     previteration =  ['0th', '1st', '2nd', '3rd', '4th']
@@ -820,10 +817,10 @@ if __name__ == '__main__':
     #previteration = ['5th', '6th', '7th', '8th', '9th']
     for iter, previter in zip(iteration, previteration):
 
-        xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.fit'
-        distanceFile  = 'distanceQuantiles.' + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
-        dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename
-        priorFile     = 'prior.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.png'
+        xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
+        distanceFile  = 'distanceQuantiles.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+        dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+        priorFile     = 'prior.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.png'
 
         if previter == '0th':
             dustEBV = np.zeros(np.sum(indices))
@@ -836,7 +833,7 @@ if __name__ == '__main__':
         absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
 
         color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
-        absMagKinda_err = tgasCutMatched['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+        absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
         try:
 
@@ -882,16 +879,16 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
-        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
+        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile=distanceFile, quantile=quantile, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
 
         #using distance, calculate dust
         try:
             data = np.load(dustFile)
             dustEBVnew = data['ebv']
         except IOError:
-            sourceID = tgasCutMatched['source_id']
-            l = tgasCutMatched['l']*units.deg
-            b = tgasCutMatched['b']*units.deg
+            sourceID = tgas['source_id']
+            l = tgas['l']*units.deg
+            b = tgas['b']*units.deg
             dustEBVnew = st.dust(l, b, distance*units.kpc, mode='median')
             assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
             np.savez(dustFile, ebv=dustEBVnew, sourceID=sourceID)
@@ -906,7 +903,7 @@ if __name__ == '__main__':
         distanceFile = 'distanceQuantiles_' + str(ngauss) + '_' +dataFilename
         dustFile = 'dustCorrection_' + str(ngauss) + '_' + dataFilename
         print 'correcting for dust the first time'
-        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm,
+        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm,
                                                             dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.png')
 
@@ -916,12 +913,12 @@ if __name__ == '__main__':
         distanceFile = 'distanceQuantiles_secondTime' + str(ngauss) + '_' +dataFilename
         dustFile = 'dustCorrection_secondTime' + str(ngauss) + '_' + dataFilename
         print 'correcting for dust the second time'
-        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgasCutMatched, colorDustCorrected, color_err, absMagKindaDustCorrected, absMagKinda_err, xdgmm, dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
+        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgas, colorDustCorrected, color_err, absMagKindaDustCorrected, absMagKinda_err, xdgmm, dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
         os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.secondTime.png')
         """
 
     #check it's working by inferring distances to M67
-    #distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
+    #distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
-    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgasCutMatched, nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension, posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgas, nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension, posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename)
