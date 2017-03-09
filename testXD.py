@@ -428,7 +428,7 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, windowFactor=10.):
     try:
         data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
@@ -455,7 +455,6 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
             meanData = meanData[0]
             covData = covData[0]
-            windowFactor = 5. #the number of sigma to sample in mas for plotting
             minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
             maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
             apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
@@ -822,13 +821,13 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
-        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
+        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints, windowFactor=15.)
 
         #using distance, calculate dust
         try:
             data = np.load(dustFile)
             dustEBVnew = data['ebv']
-            dustEBVMedianNew = data['ebv50']
+            #dustEBVMedianNew = data['ebvMedian']
         except IOError:
             sourceID = tgasCutMatched['source_id']
             l = tgasCutMatched['l']*units.deg
