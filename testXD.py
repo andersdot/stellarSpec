@@ -428,6 +428,7 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
+
 def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st'):
     try:
         data = np.load(distanceFile)
@@ -457,9 +458,11 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
             meanData = meanData[0]
             covData = covData[0]
+
             #windowFactor = 5. #the number of sigma to sample in mas for plotting
             #minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
             #maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
+
             apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
             #xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
             #positive = xparallaxMAS > 0.
@@ -879,7 +882,9 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
+
         distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile=distanceFile, quantile=quantile, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
+
 
         #using distance, calculate dust
         try:
