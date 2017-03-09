@@ -440,7 +440,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
         sourceID = np.zeros(nstars, dtype='>i8')
         #dustEBV = np.zeros(nstars)
         #dustEBV50 = np.zeros(nstars)
-        distanceQuantile = np.zeros(nstars)
+        distance = np.zeros(nstars)
         start = time.time()
         logDistance = np.linspace(-2, 1, nPosteriorPoints)
         xparallaxMAS = 1./10.**logDistance
@@ -448,11 +448,14 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
 
         nMidMin = 0
         nMidPost = 0
-        nMidFlat = 0
+        nMidFlatMin = 0
+        nMidFlatMax = 0
         nSmallMin = 0
         nSmallMax = 0
-        nSmallFlat = 0
-
+        nSmallFlatMin = 0
+        nSmallFlatMax = 0
+        debug=False
+        plotPost = True
         if plotPost: fig, ax = plt.subplots()
         for index in range(nstars):
             if np.mod(index, 10000) == 0.0:
@@ -465,15 +468,22 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
             meanData = meanData[0]
             covData = covData[0]
-
-            #windowFactor = 5. #the number of sigma to sample in mas for plotting
-            #minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
-            #maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
-
             apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
-            #xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
-            #positive = xparallaxMAS > 0.
             xabsMagKinda = parallax2absMagKinda(xparallaxMAS, apparentMagnitude)
+
+            if debug:
+
+                windowFactor = 15. #the number of sigma to sample in mas for plotting
+                minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
+                maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
+                xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+                xabsMagKinda = xabsMagKinda[::-1]
+                xparallaxMAS = xparallaxMAS[::-1]
+                positive = xparallaxMAS > 0.
+                if np.sum(positive) == 0:
+                    print str(index) + ' has no positive distance values'
+                    continue
+                logDistance = np.log10(1./xparallaxMAS[positive])
             allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
             #normalize prior pdf
             #posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
@@ -481,20 +491,23 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
 
             #distanceIncreasing = distance[::-1]
             #posteriorIncreasingDistance = posteriorDistance[::-1]
-
+            #print minParallaxMAS, maxParallaxMAS, tgas['parallax'][index], tgas['parallax_error'][index]
+            #print len(posteriorLogDistance), len(logDistance), np.sum(np.isnan(posteriorLogDistance)), np.sum(np.isnan(logDistance))
             cdf = scipy.integrate.cumtrapz(posteriorLogDistance, x=logDistance)
             cdfInv = scipy.interpolate.interp1d(cdf, 0.5*(logDistance[1:] + logDistance[:-1]))
             minDist = logDistance[0]
             maxDist = logDistance[-1]
             P_minDist = posteriorLogDistance[0]
             P_maxDist = posteriorLogDistance[-1]
+            #print minParallaxMAS, maxParallaxMAS, minDist, maxDist, np.max(cdf)
+
             assert np.sum(np.isnan(posteriorLogDistance)) == 0., 'there are Nans in my posterior ' + str(index)
             absMag = absMagKinda2absMag(absMagKinda[index])
             if np.isnan(absMag): absMag = absMagKinda[index]
 
             #if the posterior lies well within the distance window then do the right thing
             if np.max(cdf) > 0.95:
-                distanceQuantile[index] = 10.**cdfInv(quantile)
+                distance[index] = 10.**cdfInv(quantile)
                 if np.mod(index, 10000) == 0.0:
                     label = 'posterior is good, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
                     if plotPost:
@@ -510,18 +523,24 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             elif np.max(cdf) < quantile:
                 #print 'The CDF did not reach above ', str(quantile), ' for ', str(index)
                 if P_minDist > P_maxDist: #pdf lies at small distances
-                    distanceQuantile[index] = 10.**minDist
-                    label = 'posterior small and outside range, set to min Dist for ', str(index)
+                    distance[index] = 10.**minDist
+                    label = 'posterior small in range, set to ' + '{0:.2f}'.format(float(distance[index]))
                     print label
                     nSmallMin += 1
                 if P_minDist < P_maxDist: #pdf lies at large distances
-                    distanceQuantile[index] = 10.**maxDist
-                    label = 'posterior outside range, set to max Dist'
+                    distance[index] = 10.**maxDist
+                    label = 'posterior small in range, set to ' + '{0:.2f}'.format(float(distance[index]))
                     nSmallMax += 1
                 if P_minDist == P_maxDist: #pdf is flat
-                    label = 'The posterior is flat with value '+ str(P_minDist)+', Dist = 0.0 for ', str(index)
+                    if tgas['parallax'][index] <= 0:
+                        distance[index] = 10.**maxDist
+                        nSmallFlatMax += 1
+                    else:
+                        distance[index] = 10.**minDist
+                        nSmallFlatMin += 1
+                    label = 'The posterior is flat with value '+ str(P_minDist)+', Dist = ' + '{0:.2f}'.format(float(distance[index]))
+
                     print label
-                    nSmallFlat += 1
                 if plotPost:
                     plt.cla()
                     ax.plot(logDistance[:-1], cdf, label=label, lw=2)
@@ -535,18 +554,26 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             else:
                 #print 'The max of the CDF is between ', str(quantile), ' and 0.95 for ', str(index)
                 if P_minDist > P_maxDist: #pdf not rising with distance
-                    distanceQuantile[index] = 10.**minDist
-                    label = 'posterior is mid and on edge, set to min dist for ', str(index)
+                    distance[index] = 10.**minDist
+                    label = 'posterior is mid in range, set to ' + '{0:.2f}'.format(float(distance[index]))
                     print label
                     nMidMin += 1
                 if P_minDist < P_maxDist: #pdf rising with distance
-                    distanceQuantile[index] = 10.**cdfInv(quantile)
-                    label = 'posterior is on edge, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                    distance[index] = 10.**cdfInv(quantile)
+                    label = 'posterior is mid in range, set to ' + '{0:.2f}'.format(float(distance[index]))
                     nMidPost += 1
                 if P_minDist == P_maxDist: #pdf is flat
-                    label= 'The posterior is flat with value ' + str(P_minDist)+', Dist=0.0 for ', str(index)
+                    label= 'The posterior is flat with value ' + str(P_minDist)+', Dist= ' + '{0:.2f}'.format(float(distance[index]))
                     print label
-                    nMidFlat += 1
+                    if tgas['parallax'][index] <= 0:
+                        distance[index] = 10.**maxDist
+                        nMidFlatMax += 1
+                    else:
+                        distance[index] = 10.**minDist
+                        nMidFlatMin += 1
+                    print label
+                    distance[index] = 10.**minDist
+
                 if plotPost:
                     plt.cla()
                     ax.plot(logDistance[:-1], cdf, label=label, lw=2)
@@ -557,7 +584,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                     fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
             """
             try:
-                distanceQuantile[index] = cdfInv(quantile)
+                distance[index] = cdfInv(quantile)
                 distanceMedian[index] = cdfInv(0.5)
             except ValueError:
                 print np.max(cdf)
@@ -570,13 +597,16 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             """
         print 'N mid posterior set to minDist: ', nMidMin
         print 'N mid posterior set to quantil Dist: ', nMidPost
-        print 'N mid posterior that are flat, dist = 0.0: ', nMidFlat
+        print 'N mid posterior that are flat, set to minDist: ', nMidFlatMin
+        print 'N mid posterior that are flat, set to maxDist: ', nMidFlatMax
         print 'N small posterior set to minDist: ', nSmallMin
         print 'N small posterior set to maxDist: ', nSmallMax
-        print 'N small posteriors that are flat, dist =0.0: ', nSmallFlat
+        print 'N small posteriors that are flat, set to minDist: ', nSmallFlatMin
+        print 'N small posteriors that are flat, set to maxDist: ', nSmallFlatMax
 
-        np.savez(distanceFile, distance=distanceQuantile)
-    return distanceQuantile
+
+        np.savez(distanceFile, distance=distance)
+    return distance
 
 def dustCorrection(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
 
