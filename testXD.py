@@ -491,6 +491,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             assert np.sum(np.isnan(posteriorLogDistance)) == 0., 'there are Nans in my posterior ' + str(index)
             absMag = absMagKinda2absMag(absMagKinda[index])
             if np.isnan(absMag): absMag = absMagKinda[index]
+
             #if the posterior lies well within the distance window then do the right thing
             if np.max(cdf) > 0.95:
                 distanceQuantile[index] = 10.**cdfInv(quantile)
@@ -504,19 +505,20 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                         ax.legend()
                         ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
                         fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
+
             #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
             elif np.max(cdf) < quantile:
                 #print 'The CDF did not reach above ', str(quantile), ' for ', str(index)
-                if P_minDist > P_maxDist:
+                if P_minDist > P_maxDist: #pdf lies at small distances
                     distanceQuantile[index] = 10.**minDist
                     label = 'posterior small and outside range, set to min Dist for ', str(index)
                     print label
                     nSmallMin += 1
-                if P_minDist < P_maxDist:
+                if P_minDist < P_maxDist: #pdf lies at large distances
                     distanceQuantile[index] = 10.**maxDist
                     label = 'posterior outside range, set to max Dist'
                     nSmallMax += 1
-                if P_minDist == P_maxDist:
+                if P_minDist == P_maxDist: #pdf is flat
                     label = 'The posterior is flat with value '+ str(P_minDist)+', Dist = 0.0 for ', str(index)
                     print label
                     nSmallFlat += 1
@@ -532,16 +534,16 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             #if the posterior lies just on the edge, then if the pdf appears to be rising with distance set to quantile, else set to min distance
             else:
                 #print 'The max of the CDF is between ', str(quantile), ' and 0.95 for ', str(index)
-                if P_minDist > P_maxDist:
+                if P_minDist > P_maxDist: #pdf not rising with distance
                     distanceQuantile[index] = 10.**minDist
                     label = 'posterior is mid and on edge, set to min dist for ', str(index)
-                    print label 
+                    print label
                     nMidMin += 1
-                if P_minDist < P_maxDist:
+                if P_minDist < P_maxDist: #pdf rising with distance
                     distanceQuantile[index] = 10.**cdfInv(quantile)
                     label = 'posterior is on edge, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
                     nMidPost += 1
-                if P_minDist == P_maxDist:
+                if P_minDist == P_maxDist: #pdf is flat
                     label= 'The posterior is flat with value ' + str(P_minDist)+', Dist=0.0 for ', str(index)
                     print label
                     nMidFlat += 1
@@ -568,7 +570,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             """
         print 'N mid posterior set to minDist: ', nMidMin
         print 'N mid posterior set to quantil Dist: ', nMidPost
-        print 'N mid posterior that are flat, dist = 0.0: ' nMidFlat
+        print 'N mid posterior that are flat, dist = 0.0: ', nMidFlat
         print 'N small posterior set to minDist: ', nSmallMin
         print 'N small posterior set to maxDist: ', nSmallMax
         print 'N small posteriors that are flat, dist =0.0: ', nSmallFlat
