@@ -428,11 +428,10 @@ def distanceTest(tgasCutMatched, nPosteriorPoints, data1, data2, err1, err2, xli
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npz', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st'):
     try:
         data = np.load(distanceFile)
-        distanceQuantile = data['distanceQuantile']
-        distanceMedian = data['distanceMedian']
+        distance = data['distance']
         print 'distance file is: ', distanceFile
     except IOError:
         print 'distance file does not exist: ', distanceFile
@@ -441,8 +440,10 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
         #dustEBV = np.zeros(nstars)
         #dustEBV50 = np.zeros(nstars)
         distanceQuantile = np.zeros(nstars)
-        distanceMedian = np.zeros(nstars)
         start = time.time()
+        logDistance = np.linspace(-2, 1, nPosteriorPoints)
+        xparallaxMAS = 1./10.**logDistance
+        positive = xparallaxMAS > 0.
 
         fig, ax = plt.subplots()
         for index in range(nstars):
@@ -455,33 +456,92 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatc
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
             meanData = meanData[0]
             covData = covData[0]
-            windowFactor = 5. #the number of sigma to sample in mas for plotting
-            minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
-            maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
+            #windowFactor = 5. #the number of sigma to sample in mas for plotting
+            #minParallaxMAS = tgasCutMatched['parallax'][index] - windowFactor*tgasCutMatched['parallax_error'][index]
+            #maxParallaxMAS = tgasCutMatched['parallax'][index] + windowFactor*tgasCutMatched['parallax_error'][index]
             apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
-            xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
-            positive = xparallaxMAS > 0.
+            #xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+            #positive = xparallaxMAS > 0.
+            xabsMagKinda = parallax2absMagKinda(xparallaxMAS, apparentMagnitude)
             allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
             #normalize prior pdf
-            posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
-            distance = 1./xparallaxMAS[positive]
+            #posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
+            posteriorLogDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1))
 
-            cdf = scipy.integrate.cumtrapz(posteriorDistance[::-1], x=distance[::-1])
-            cdfInv = scipy.interpolate.interp1d(cdf, distance[::-1][:-1])
+            #distanceIncreasing = distance[::-1]
+            #posteriorIncreasingDistance = posteriorDistance[::-1]
 
+            cdf = scipy.integrate.cumtrapz(posteriorLogDistance, x=logDistance)
+            cdfInv = scipy.interpolate.interp1d(cdf, 0.5*(logDistance[1:] + logDistance[:-1]))
+            minDist = logDistance[0]
+            maxDist = logDistance[-1]
+            P_minDist = posteriorLogDistance[0]
+            P_maxDist = posteriorLogDistance[-1]
+
+            #if the posterior lies well within the distance window then do the right thing
+            if np.max(cdf) > 0.95:
+                distanceQuantile[index] = 10.**cdfInv(quantile)
+                if np.mod(index, 10000) == 0.0:
+                    label = 'posterior is good, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                    plt.cla()
+                    ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                    ax.set_xlabel('log distance [kpc]')
+                    ax.set_ylabel('cdf')
+                    ax.legend()
+                    ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
+                    fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
+            #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
+            elif np.max(cdf) < quantile:
+                print 'The CDF did not reach above ', str(quantile), ' for ', str(index)
+                if P_minDist > P_maxDist:
+                    distanceQuantile[index] = 10.**minDist
+                    label = 'posterior outside range, set to min Dist'
+                if P_minDist < P_maxDist:
+                    distanceQuantile[index] = 10.**minDist
+                    label = 'posterior outside range, set to max Dist'
+                if P_minDist == P_maxDist:
+                    print 'The posterior is completely flat for ', str(index), ' with value ', str(P_minDist)
+                plt.cla()
+                ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                ax.set_xlabel('log distance [kpc]')
+                ax.set_ylabel('cdf')
+                ax.legend()
+                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
+                fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.png')
+
+            #if the posterior lies just on the edge, then if the pdf appears to be rising with distance set to quantile, else set to min distance
+            else:
+                print 'The max of the CDF is between ', str(quantile), ' and 0.95 for ', str(index)
+                if P_minDist > P_maxDist:
+                    distanceQuantile[index] = 10.**minDist
+                    label = 'posterior is on edge, set to min dist'
+                if P_minDist < P_maxDist:
+                    distanceQuantile[index] = 10.**cdfInv(quantile)
+                    label = 'posterior is on edge, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                if P_minDist == P_maxDist:
+                    print 'The posterior is completely flat for ', str(index), ' with value ', str(P_minDist)
+                plt.cla()
+                ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                ax.set_xlabel('log distance [kpc]')
+                ax.set_ylabel('cdf')
+                ax.legend()
+                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMagKinda2absMag(absMagKinda[index]))))
+                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter '.png')
+            """
             try:
                 distanceQuantile[index] = cdfInv(quantile)
                 distanceMedian[index] = cdfInv(0.5)
-            except ValueError: 
+            except ValueError:
                 print np.max(cdf)
                 plt.cla()
-                ax.plot(distance[1:], cdf)
+                ax.plot(distance[::-1][1:], cdf)
                 ax.set_xlabel('distance')
                 ax.set_ylabel('cdf')
                 fig.savefig('cdfplots/cdf.' + str(index) + '.png')
                 #distanceMedian[index] = np.nan
-        np.savez(distanceFile, distanceQuantile=distanceQuantile, distanceMedian=distanceMedian)
-    return distanceQuantile, distanceMedian
+            """
+        np.savez(distanceFile, distance=distanceQuantile)
+    return distanceQuantile
 
 def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_err, xdgmm, quantile=0.05, nDistanceSamples=512, max_samples = 2, plot=False, mode='median', dustFile='dustCorrection', distanceFile = 'distanceQuantiles'):
 
@@ -494,17 +554,17 @@ def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
     except IOError:
         print 'dust file does not exist: ', dustFile
         print 'calculating dust corrections, this may take awhile'
-        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, distanceFile=distanceFile, quantile=0.05)
+        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, distanceFile=distanceFile, quantile=0.05)
         sourceID = tgasCutMatched['source_id']
         l = tgasCutMatched['l']*units.deg
         b = tgasCutMatched['b']*units.deg
         start = time.time()
-        dustEBV, dustEBVMedian = st.dust([l,l], [b,b], [distance*units.kpc, distanceMedian*units.kpc], mode=mode)
+        dustEBV = st.dust(l, b, distance*units.kpc, mode=mode)
         end = time.time()
         #print 'dust sampling ', str(nDistanceSamples), ' took ',str(end-start), ' seconds for index ', str(i)
         print 'calculating dust took ', str(end - start), ' seconds'
         assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
-        np.savez(dustFile, ebv=dustEBV, sourceID=sourceID, ebvMedian=dustEBVMedian)
+        np.savez(dustFile, ebv=dustEBV, sourceID=sourceID)
     if plot:
         data = np.load(distanceFile)
         distanceQuantile = data['distanceQuantile']
@@ -516,7 +576,7 @@ def dustCorrection(tgasCutMatched, color, color_err, absMagKinda, absMagKinda_er
         dustEBV[dustEBV==0.0] = 1e-5
         dustEBV50[dustEBV50==0.0] = 1e-5
         axDust[0].hist2d(color, np.log10(dustEBV), bins=100, norm=LogNorm(), cmap='Greys')
-        axDust[1].hist2d(color, np.log10(dustEBVMedian), bins=100, norm=LogNorm(), cmap='Greys')
+        #axDust[1].hist2d(color, np.log10(dustEBVMedian), bins=100, norm=LogNorm(), cmap='Greys')
         axHist[0].hist(color, bins=100, histtype='step', log=True, label='5% quantile', lw=2)
         axHist[0].hist(color, bins=100, histtype='step', log=True, label='50% quantile', lw=2)
         axHist[1].hist(np.log10(dustEBV), bins=100, histtype='step', log=True, label='5% quantile', lw=2)
@@ -754,10 +814,10 @@ if __name__ == '__main__':
                       'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMassCutMatched},
                       'G':{'key':'phot_g_mean_mag', 'array':tgasCutMatched}}
 
-    #iteration = ['1st', '2nd', '3rd', '4th', '5th']
-    #previteration =  ['0th', '1st', '2nd', '3rd', '4th']
-    iteration = ['6th', '7th', '8th', '9th', '10th']
-    previteration = ['5th', '6th', '7th', '8th', '9th']
+    iteration = ['1st', '2nd', '3rd', '4th', '5th']
+    previteration =  ['0th', '1st', '2nd', '3rd', '4th']
+    #iteration = ['6th', '7th', '8th', '9th', '10th']
+    #previteration = ['5th', '6th', '7th', '8th', '9th']
     for iter, previter in zip(iteration, previteration):
 
         xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.' + iter + '.' + survey + '.' + dataFilename + '.fit'
@@ -822,20 +882,19 @@ if __name__ == '__main__':
         os.rename('plot_sample.png', priorFile)
 
         #using prior calculate distances
-        distance, distanceMedian = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
+        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgasCutMatched, xdgmm, distanceFile=distanceFile, quantile=0.05, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
 
         #using distance, calculate dust
         try:
             data = np.load(dustFile)
             dustEBVnew = data['ebv']
-            dustEBVMedianNew = data['ebv50']
         except IOError:
             sourceID = tgasCutMatched['source_id']
             l = tgasCutMatched['l']*units.deg
             b = tgasCutMatched['b']*units.deg
-            dustEBVnew, dustEBVMedianNew = st.dust([l,l], [b,b], [distance*units.kpc, distanceMedian*units.kpc], mode='median')
+            dustEBVnew = st.dust(l, b, distance*units.kpc, mode='median')
             assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
-            np.savez(dustFile, ebv=dustEBVnew, sourceID=sourceID, ebvMedian=dustEBVMedianNew)
+            np.savez(dustFile, ebv=dustEBVnew, sourceID=sourceID)
 
         #set new dust values
         dustEBV = dustEBVnew

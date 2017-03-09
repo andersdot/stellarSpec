@@ -4,7 +4,7 @@
 *.blg
 *.bib
 *.log
-paperApJ.pdf
+paper.pdf
 
 # images #
 ##################
@@ -17,6 +17,8 @@ paperApJ.pdf
 *.hdf5
 *.fits
 *.fit
+*.npz
+*.csv
 
 # Compiled source #
 ###################
@@ -26,6 +28,7 @@ paperApJ.pdf
 *.exe
 *.o
 *.so
+*.pyc
 
 # Packages #
 ############
