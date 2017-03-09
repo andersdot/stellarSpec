@@ -429,7 +429,7 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
     figDist.savefig('distancesM67.png')
 
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st'):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st', plotPost=False):
     try:
         data = np.load(distanceFile)
         distance = data['distance']
@@ -446,7 +446,14 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
         xparallaxMAS = 1./10.**logDistance
         positive = xparallaxMAS > 0.
 
-        fig, ax = plt.subplots()
+        nMidMin = 0
+        nMidPost = 0
+        nMidFlat = 0
+        nSmallMin = 0
+        nSmallMax = 0
+        nSmallFlat = 0
+
+        if plotPost: fig, ax = plt.subplots()
         for index in range(nstars):
             if np.mod(index, 10000) == 0.0:
                 end = time.time()
@@ -489,50 +496,63 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                 distanceQuantile[index] = 10.**cdfInv(quantile)
                 if np.mod(index, 10000) == 0.0:
                     label = 'posterior is good, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                    if plotPost:
+                        plt.cla()
+                        ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                        ax.set_xlabel('log distance [kpc]')
+                        ax.set_ylabel('cdf')
+                        ax.legend()
+                        ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
+                        fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
+            #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
+            elif np.max(cdf) < quantile:
+                #print 'The CDF did not reach above ', str(quantile), ' for ', str(index)
+                if P_minDist > P_maxDist:
+                    distanceQuantile[index] = 10.**minDist
+                    label = 'posterior small and outside range, set to min Dist for ', str(index)
+                    print label
+                    nSmallMin += 1
+                if P_minDist < P_maxDist:
+                    distanceQuantile[index] = 10.**maxDist
+                    label = 'posterior outside range, set to max Dist'
+                    nSmallMax += 1
+                if P_minDist == P_maxDist:
+                    label = 'The posterior is flat with value '+ str(P_minDist)+', Dist = 0.0 for ', str(index)
+                    print label
+                    nSmallFlat += 1
+                if plotPost:
                     plt.cla()
                     ax.plot(logDistance[:-1], cdf, label=label, lw=2)
                     ax.set_xlabel('log distance [kpc]')
                     ax.set_ylabel('cdf')
                     ax.legend()
                     ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                    fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
-            #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
-            elif np.max(cdf) < quantile:
-                print 'The CDF did not reach above ', str(quantile), ' for ', str(index)
-                if P_minDist > P_maxDist:
-                    distanceQuantile[index] = 10.**minDist
-                    label = 'posterior outside range, set to min Dist'
-                if P_minDist < P_maxDist:
-                    distanceQuantile[index] = 10.**minDist
-                    label = 'posterior outside range, set to max Dist'
-                if P_minDist == P_maxDist:
-                    print 'The posterior is completely flat for ', str(index), ' with value ', str(P_minDist)
-                plt.cla()
-                ax.plot(logDistance[:-1], cdf, label=label, lw=2)
-                ax.set_xlabel('log distance [kpc]')
-                ax.set_ylabel('cdf')
-                ax.legend()
-                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.png')
+                    fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.png')
 
             #if the posterior lies just on the edge, then if the pdf appears to be rising with distance set to quantile, else set to min distance
             else:
-                print 'The max of the CDF is between ', str(quantile), ' and 0.95 for ', str(index)
+                #print 'The max of the CDF is between ', str(quantile), ' and 0.95 for ', str(index)
                 if P_minDist > P_maxDist:
                     distanceQuantile[index] = 10.**minDist
-                    label = 'posterior is on edge, set to min dist'
+                    label = 'posterior is mid and on edge, set to min dist for ', str(index)
+                    print label 
+                    nMidMin += 1
                 if P_minDist < P_maxDist:
                     distanceQuantile[index] = 10.**cdfInv(quantile)
                     label = 'posterior is on edge, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                    nMidPost += 1
                 if P_minDist == P_maxDist:
-                    print 'The posterior is completely flat for ', str(index), ' with value ', str(P_minDist)
-                plt.cla()
-                ax.plot(logDistance[:-1], cdf, label=label, lw=2)
-                ax.set_xlabel('log distance [kpc]')
-                ax.set_ylabel('cdf')
-                ax.legend()
-                ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
+                    label= 'The posterior is flat with value ' + str(P_minDist)+', Dist=0.0 for ', str(index)
+                    print label
+                    nMidFlat += 1
+                if plotPost:
+                    plt.cla()
+                    ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                    ax.set_xlabel('log distance [kpc]')
+                    ax.set_ylabel('cdf')
+                    ax.legend()
+                    ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
+                    fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
             """
             try:
                 distanceQuantile[index] = cdfInv(quantile)
@@ -546,6 +566,13 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                 fig.savefig('cdfplots/cdf.' + str(index) + '.png')
                 #distanceMedian[index] = np.nan
             """
+        print 'N mid posterior set to minDist: ', nMidMin
+        print 'N mid posterior set to quantil Dist: ', nMidPost
+        print 'N mid posterior that are flat, dist = 0.0: ' nMidFlat
+        print 'N small posterior set to minDist: ', nSmallMin
+        print 'N small posterior set to maxDist: ', nSmallMax
+        print 'N small posteriors that are flat, dist =0.0: ', nSmallFlat
+
         np.savez(distanceFile, distance=distanceQuantile)
     return distanceQuantile
 
