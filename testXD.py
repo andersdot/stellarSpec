@@ -455,7 +455,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
         nSmallFlatMin = 0
         nSmallFlatMax = 0
         debug=False
-        plotPost = True
+        plotPost = False
         if plotPost: fig, ax = plt.subplots()
         for index in range(nstars):
             if np.mod(index, 10000) == 0.0:
