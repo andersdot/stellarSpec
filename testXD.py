@@ -798,7 +798,7 @@ if __name__ == '__main__':
     ndim = 2
 
 
-    dataFilename = 'cutMatchedArrays.SN0.001.npz'
+    dataFilename = 'All.npz'
     tgas = fits.getdata("stacked_tgas.fits", 1)
     #tgasRave = fits.getdata('tgas-rave.fits', 1)
     Apass = fits.getdata('tgas-matched-apass-dr9.fits')
@@ -807,6 +807,7 @@ if __name__ == '__main__':
 
     subset = False          #subsample the data to generate the XD prior
     dustCorrectedArraysGenerated = False
+    dustEBVnew = None
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -887,9 +888,11 @@ if __name__ == '__main__':
         if previter == '0th':
             dustEBV = np.zeros(np.sum(indices))
         else:
-            dustFilePrev = 'dustCorrection.'    + str(ngauss) + 'gauss.' + previter + '.' + survey + '.' + dataFilename
-            data = np.load(dustFilePrev)
-            dustEBV = data['ebv']
+            if not isinstance(dustEBV,np.ndarray):
+                dustFilePrev = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' +str(quantile) + '.' + previter + '.' + survey + '.' + dataFilename
+                data = np.load(dustFilePrev)
+                dustEBV = data['ebv']
+            assert np.sum(dustEBV) != 0.0, 'dust for iteration ' + str(iter) +  ' not read in properly'
 
         color = colorArray(mag1, mag2, dustEBV, bandDictionary)
         absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
@@ -903,7 +906,7 @@ if __name__ == '__main__':
             print 'dust corrected XD read in for iteration ', iter
 
         except IOError:
-
+            print 'generating XD for iteration ', iter , ' filename= ', xdgmmFilename
             if subset:
                 X, Xerr = subset(color, absMagKinda, color_err, absMagKinda_err, nsamples=1024)
             else:
@@ -948,38 +951,15 @@ if __name__ == '__main__':
         #using distance, calculate dust
         try:
             data = np.load(dustFile)
-            dustEBVnew = data['ebv']
+            dustEBV = data['ebv']
         except IOError:
             sourceID = tgas['source_id']
             l = tgas['l']*units.deg
             b = tgas['b']*units.deg
-            dustEBVnew = st.dust(l, b, distance*units.kpc, mode='median')
+            dustEBV = st.dust(l, b, distance*units.kpc, mode='median')
             assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
-            np.savez(dustFile, ebv=dustEBVnew, sourceID=sourceID)
+            np.savez(dustFile, ebv=dustEBV, sourceID=sourceID)
 
-        #set new dust values
-        dustEBV = dustEBVnew
-
-        """
-        #correct the prior for dust
-        #this will require calculating the distances to each star first
-        xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.fit'
-        distanceFile = 'distanceQuantiles_' + str(ngauss) + '_' +dataFilename
-        dustFile = 'dustCorrection_' + str(ngauss) + '_' + dataFilename
-        print 'correcting for dust the first time'
-        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm,
-                                                            dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
-        os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.png')
-
-        #correct to the prior for dust again
-        #this will require calculating the distances to each star first
-        xdgmmFilenameDust = 'xdgmm.'+ str(ngauss) + 'gauss.'+dataFilename+'.' + survey + '.dustCorrected.secondTime.fit'
-        distanceFile = 'distanceQuantiles_secondTime' + str(ngauss) + '_' +dataFilename
-        dustFile = 'dustCorrection_secondTime' + str(ngauss) + '_' + dataFilename
-        print 'correcting for dust the second time'
-        colorDustCorrected, absMagKindaDustCorrected, xdgmm = correctForDust(tgas, colorDustCorrected, color_err, absMagKindaDustCorrected, absMagKinda_err, xdgmm, dustFile=dustFile, distanceFile=distanceFile, xdgmmFilenameDust=xdgmmFilenameDust)
-        os.rename('plot_sample.png', 'prior.ngauss'+str(ngauss)+'.' + dataFilename + '.' + survey + '.dustCorrected.secondTime.png')
-        """
 
     #check it's working by inferring distances to M67
     #distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
