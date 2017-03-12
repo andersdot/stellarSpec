@@ -875,10 +875,9 @@ if __name__ == '__main__':
                       'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
                       'G':{'key':'phot_g_mean_mag', 'array':tgas}}
 
-    #iteration = ['1st', '2nd', '3rd', '4th', '5th']
-    #previteration =  ['0th', '1st', '2nd', '3rd', '4th']
-    iteration = ['6th', '7th', '8th', '9th', '10th']
-    previteration = ['5th', '6th', '7th', '8th', '9th']
+    iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
+    previteration =  ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
+
     for iter, previter in zip(iteration, previteration):
 
         xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
@@ -888,7 +887,11 @@ if __name__ == '__main__':
 
         if previter == '0th':
 
-            dustEBV = np.zeros(np.sum(indices))
+            dustZeroFile = 'dustCorrection.128gauss.dQ0.05.5th.2MASS.All.npz'
+            data = np.load(dustZeroFile)
+            dustEBV = data['ebv']
+            #dustEBV = np.zeros(np.sum(indices))
+
         else:
             if not isinstance(dustEBV,np.ndarray):
                 dustFilePrev = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' +str(quantile) + '.' + previter + '.' + survey + '.' + dataFilename
