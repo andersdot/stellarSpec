@@ -790,8 +790,8 @@ if __name__ == '__main__':
     survey = '2MASS'        #survey to calculate prior with
     np.random.seed(2)
     #thresholdSN = 0.001     #threshold S/N
-    ngauss = sys.argv[1] #128            #number of gaussians in the XD
-    quantile = 0.05
+    ngauss = np.int(sys.argv[1]) #128            #number of gaussians in the XD
+    quantile = np.float(sys.argv[2])
 
     Nsamples = 120000       #number of samples of the XD to plot
     nPosteriorPoints = 1000 #number of elements in the posterior array
@@ -808,7 +808,7 @@ if __name__ == '__main__':
 
     subset = False          #subsample the data to generate the XD prior
     dustCorrectedArraysGenerated = False
-    dustEBVnew = None
+    dustEBV = None
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -966,8 +966,15 @@ if __name__ == '__main__':
             np.savez(dustFile, ebv=dustEBV, sourceID=sourceID)
 
 
+
+    color = colorArray(mag1, mag2, dustEBV, bandDictionary)
+    absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
+
+    color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
+    absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+
     #check it's working by inferring distances to M67
-    #distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False)
+    distanceTest(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
-    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgas, nPosteriorPoints, colorDustCorrected, absMagKindaDustCorrected, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension, posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename)
+    summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension, posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename)
