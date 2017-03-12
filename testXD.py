@@ -887,7 +887,7 @@ if __name__ == '__main__':
         priorFile     = 'prior.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.png'
 
         if previter == '0th':
-            zerothDust =
+
             dustEBV = np.zeros(np.sum(indices))
         else:
             if not isinstance(dustEBV,np.ndarray):
