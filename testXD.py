@@ -2,6 +2,7 @@ import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 import os
+import sys
 import stellarTwins as st
 from extreme_deconvolution import extreme_deconvolution as ed
 import astropy.units as units
@@ -789,7 +790,7 @@ if __name__ == '__main__':
     survey = '2MASS'        #survey to calculate prior with
     np.random.seed(2)
     #thresholdSN = 0.001     #threshold S/N
-    ngauss = 128            #number of gaussians in the XD
+    ngauss = sys.argv[1] #128            #number of gaussians in the XD
     quantile = 0.05
 
     Nsamples = 120000       #number of samples of the XD to plot
@@ -874,10 +875,10 @@ if __name__ == '__main__':
                       'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
                       'G':{'key':'phot_g_mean_mag', 'array':tgas}}
 
-    iteration = ['1st', '2nd', '3rd', '4th', '5th']
-    previteration =  ['0th', '1st', '2nd', '3rd', '4th']
-    #iteration = ['6th', '7th', '8th', '9th', '10th']
-    #previteration = ['5th', '6th', '7th', '8th', '9th']
+    #iteration = ['1st', '2nd', '3rd', '4th', '5th']
+    #previteration =  ['0th', '1st', '2nd', '3rd', '4th']
+    iteration = ['6th', '7th', '8th', '9th', '10th']
+    previteration = ['5th', '6th', '7th', '8th', '9th']
     for iter, previter in zip(iteration, previteration):
 
         xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
@@ -886,6 +887,7 @@ if __name__ == '__main__':
         priorFile     = 'prior.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.png'
 
         if previter == '0th':
+            zerothDust =
             dustEBV = np.zeros(np.sum(indices))
         else:
             if not isinstance(dustEBV,np.ndarray):
