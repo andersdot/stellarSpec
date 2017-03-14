@@ -1,57 +1,18 @@
 % This project is part of the stellarTwins project.
 % Copyright 2017 the authors.
 
+%@archiver{PUT FIGURE NAME HERE}
+
 % # To-do list
-% - We need a standard name for the \tgas--\tmass\ Intersection.
+% - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
 % - zeroth draft the introduction
 % - zeroth draft the method section
 % - zeroth draft the assumptions list
 % - reformat single-column
 
-\documentclass[12pt, preprint]{aastex6}
-\hypersetup{colorlinks = false}
-
-%% Begin DWH mods
-\setlength{\voffset}{0in}
-\setlength{\hoffset}{0in}
-\setlength{\textwidth}{6in}
-\setlength{\textheight}{9in}
-\setlength{\headheight}{0ex}
-\setlength{\footnotesep}{0in}
-\setlength{\topmargin}{-\headsep}
-\setlength{\oddsidemargin}{0.25in}
-\setlength{\evensidemargin}{0.25in}
-\linespread{1.09}
-\setlength{\parindent}{1.2\baselineskip}
-\makeatletter % you know you are living your life wrong when you need to do this
-\long\def\frontmatter@title@above{
-\vspace*{-\headsep}\vspace*{\headheight}
-\noindent\footnotesize
-{\noindent\footnotesize\textsc{\@journalinfo}}\par
-{\noindent\scriptsize Preprint typeset using \LaTeX\ style AASTeX6
-with modifications by DWH.
-}\par\vspace*{-\baselineskip}\vspace*{0.625in}
-}%
-\long\def\frontmatter@abstractheading{%
-\makeaffils
-  \vspace*{-\baselineskip}\vspace*{1.5pt}
-  \vspace*{0.13189in}
- \begingroup
-  \centering
-  \abstractname
-  \vskip 1mm
-  \par
- \endgroup
- \everypar{\rightskip=0.0in\leftskip=\rightskip}\par
-}%
-\def\frontmatter@keys@format{\vspace*{0.5mm}%
-  \settowidth{\keys@width}{\normalsize\@keys@name}%
-  \rightskip=0.0in\leftskip=\rightskip\parindent=0pt%
-    \hangindent=\keys@width\hangafter=1\normalsize\raggedright}%
-\def\twodigits#1{\ifnum#1<10 0\fi\the#1}
-\def\mydate{\leavevmode\hbox{\the\year-\twodigits\month-\twodigits\day}}
-\makeatother
-%% End DWH mods
+\documentclass[modern]{aastex61}
+\usepackage{amsmath}
+\setlength{\parindent}{\baselineskip}
 
 \newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
 \newcommand{\foreign}[1]{\textsl{#1}}
@@ -63,27 +24,33 @@ with modifications by DWH.
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
-\usepackage{amsmath}
-
-\newcommand{\myemail}{landerson@simonsfoundation.org}
-\slugcomment{Draft manuscript not ready for distribution. \textbf{Copyright 2017 the authors.}}
-\shorttitle{Improving Gaia parallaxes}
-\shortauthors{Anderson, Hogg, Leistedt, Price-Whelan}
-\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing
+\shorttitle{improving gaia parallaxes}
+\shortauthors{anderson et al.}
+\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Improving \textsl{Gaia} parallaxes
        with a data-driven model of the color--magnitude diagram}
-\author{Lauren Anderson\altaffilmark{1},
-        David W. Hogg\altaffilmark{1,2,3,4},
-        Boris Leistedt\altaffilmark{2},
-        Adrian Price-Whelan\altaffilmark{5}}
-\altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute, Simons Foundation, New York City}
-\altaffiltext{2}{Center for Cosmology and Particle Physics, Department of Physics, New York University}
-\altaffiltext{3}{Center for Data Science, New York University}
-\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, Heidelberg}
-\altaffiltext{5}{Princeton University Observatory, Princeton University}
 
-\begin{abstract}
+\author{Lauren Anderson}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+
+\author{David W. Hogg}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+\affil{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA}
+\affil{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg}
+
+\author{Jo Bovy}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+\affil{Department of Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, ON M5S 3H4, Canada}
+
+\author{Boris Leistedt}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+
+\author{Adrian Price-Whelan}
+\affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
+
+\begin{abstract}\noindent % trust me
 The \gaia\ \tgas\ \project{Catalog} contains more than 2 million parallax measurements.
 Conversion of a noisy parallax measurement into a posterior belief over distances requires inference with a prior.
 Usually this prior represents some kind of belief about the Milky Way.
@@ -211,7 +178,7 @@ Exploration of that possibility, and its computational tractability,
 is among our long-term goals and motivations.
 Along those lines, this paper can be seen as a companion to
 a related project (CITE BORIS), in which we use a
-somewhat less flexible model for the \cmd, but in which we take a much more principled
+slightly less appropriate model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
 On a different tack, there has been some discussion in the literature
@@ -244,18 +211,50 @@ in later \gaia\ data releases, and eventually put distances on $>10^9$
 \gaia\ stars using photometric distance methodologies but without any
 commitment to---or even use of---physical models of stars or the Milky Way.
 
+\section{Why does this work?}
+
+LA+DWH: Do we we want to put a pedagogical section in right here?
+
+Hogg would propose a straight-line fit (possibly with intrinsic
+width); showing that it can be used to de-noise noisy y-data.
+
 \section{Assumptions and methods}
 
-LA: Insert itemized or enumerated list of assumptions here. DWH will
-typeset it to look okay! Be exhaustive and then we will edit down.
-
+We make the following assumptions. The method we present is correct
+and justifiable under these assumptions, each of which is questionable
+in its own right. We return to criticize these assumptions---and the
+method that flows from them---in the Discussion below.
 \begin{itemize}
-\item The photometric uncertainties in the J band are small compared with the uncertainties in the parallax
-\item Our empirical bayes approach is ok as long as we only infer information about the data contained within the prior
-\item the uncertainties are gaussian
-\item most stars lie where we expect them to on the CMD
-\item number of gaussians that's efficient? or do x-validation
-\item can't think
+\item We make an assumption of \emph{stationarity}; that is, that the
+  stars measured at lower signal-to-noise have analogs measured at
+  higher signal-to-noise.  In detail, this assumption is wrong, of
+  course (for example, distant halo stars are different than local
+  disk stars), but the stationarity assumption is fairly weak; as long
+  as there is support in the high signal-to-noise stars for the types
+  of stars seen at low signal-to-noise, the results will not be
+  strongly biased, but this assumption is deep and fundamental to this
+  work.
+\item We assume that we have large numbers of stars, large enough that
+  an empirical-Bayes or maximum-marginalized likelihood is a safe
+  approximation to full Bayesian inference. This assumption will be
+  least true in the least-populated parts of the \cmd. In the extreme
+  case of a stellar type with only one (statistically distinct)
+  exemplar in the data set, this assumption will be maximally wrong.
+\item We assume that the \tgas\ parallax uncertainties dominate the
+  noise in any estimates of absolute magnitude. We further assume that
+  the parallax and color uncertainties are Gaussian in form with
+  correctly known variances. In detail, we assume that the [INSERT
+    CORRECT TERMINOLOGY FROM GAIA HERE] parallax uncertainty estimates
+  are correct. Here we are making use of the fact that, for
+  de-noising, under-estimation of measurement noise is conservative
+  (it leads to under-deconvolution).
+\item We assume that the \cmd\ can be represented with a mixture of
+  Gaussians in a particular transformed space. This mixture we fix
+  (with only heuristic analysis) at 128, 512, and 2048 Gaussians in
+  different experiments.
+\item We make no use of stellar models; our only assumptions about
+  stellar physics are generic and implicit (for example, that the
+  \cmd\ is somehow smooth and compact).
 \end{itemize}
 
 We would like to infer the distance to stars using the measured (noisy) parallax from Gaia. Gaia gives us the likelihood of the parallax of a star, given some unknown distance and uncertainties (assumed gaussian)
@@ -280,9 +279,8 @@ To generate our CMD prior we use the J and K band from 2MASS, as well as the par
 \begin{aligned}
 \mathrm{data vector} \;\;\;\; &\vec{y} = [10^{0.2M_{J,n}}, (J- K)_n] \;  n \in \mathrm{stars} \\
 \mathrm{with \; absolute \; magnitude} \;\;\;\; &M_{J,n} = J_n - DM_n - Q_JE(B-V)_n \\
-& DM_n = -5\mathrm{log_{10}}\frac{1}{\varpi} \\
+& DM_n = -5\log_{10}\frac{1}{\varpi} \\
 \mathrm{and \; color} \;\;\;\; &(J - K)_n = J_n - K_n - Q_{JK}E(B-V)_n
-
 \end{aligned}
 \end{equation}
 
