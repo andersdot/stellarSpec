@@ -21,6 +21,7 @@
 \newcommand{\tgas}{\project{\acronym{TGAS}}}
 \newcommand{\tmass}{\project{\acronym{2MASS}}}
 \newcommand{\gaia}{\project{Gaia}}
+\newcommand{\panstarrs}{\project{Pan\acronym{STARRS}}}
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
@@ -137,15 +138,16 @@ so it requires relatively high technology to build this data-driven model
 using all the data available, fairly and responsibly.
 We have this technology!
 
-Here we build and use just such a data-driven model.
-In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\
-photometry, to make a model of the noise-free (or low-noise)
-color--magnitude diagram (\cmd) of stars.
-We use
-an Empirical-Bayes approach known as Extreme Deconvolution (DWH CITE).
-This method deconvolves heteroskedastic data to derive an estimate
-of the noise-free or low-noise distribution that \emph{would have}
-been observed with far better data.
+Here we build and use just such a data-driven model.  In particular,
+we use all of the \gaia\ \tgas\ data, matched to the
+\tmass\ photometry (\citealt{skrutskie06}), and in the footprint of
+the \panstarrs\ Dust Map (CITE GREEN), to make a model of the
+noise-free (or low-noise) color--magnitude diagram (\cmd) of stars.
+We use an Empirical-Bayes approach known as Extreme Deconvolution (XD;
+\citealt{bovy11}).
+This method deconvolves heteroskedastic data to derive an
+estimate of the noise-free or low-noise distribution that \emph{would
+  have} been observed with far better data.
 This method has been used in astrophysics
 previously to model the velocity distribution of stars in the Solar
 Neighborhood (DWH CITE BOTH) and to perform quasar target selection
@@ -157,7 +159,7 @@ or implies a strictly Gaussian noise model.
 In the below, this requires us to transform the \cmd\ to a space in which
 the noise is approximately Gaussian.
 
-The novel use of \xd\ \citep{bovy11} here is to treat its output---the deconvolved \cmd---as
+The novel use of \xd\ here is to treat its output---the deconvolved \cmd---as
 a prior for use in inference of individual-star distances.
 These inferences, one per star, provide much more precise parallax, distance,
 or absolute magnitude estimates than we get from each star's primary
@@ -176,9 +178,9 @@ probabilistic perspective---if we performed a full hierarchical Bayesian
 inference.
 Exploration of that possibility, and its computational tractability,
 is among our long-term goals and motivations.
-Along those lines, this paper can be seen as a companion to
-a related project (CITE BORIS), in which we use a
-slightly less appropriate model for the \cmd, but in which we take a much more principled
+Along those lines, this paper can be seen as a companion to a related
+project (CITE BORIS), in which we use a slightly less appropriate
+model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
 On a different tack, there has been some discussion in the literature
@@ -428,11 +430,10 @@ like, eg, the Tri--Coryn papers. Favorably! And with \emph{fewer}
 assumptions, in fact!
 
 \acknowledgments It is a pleasure to thank
-  Jo Bovy (Toronto),
+  Ana Bonaca (Harvard),
   Andy Casey (Monash),
 and the attendees at the Stars Group Meeting at the Flatiron Institute
 Center for Computational Astrophysics for comments and input.
-
 This project was developed in part at the 2016 \acronym{NYC} Gaia Sprint, hosted
 by the Center for Computational Astrophysics at the Simons Foundation
 in New York City.
@@ -443,7 +444,12 @@ Data Processing and Analysis Consortium (\acronym{DPAC}\footnote{\url{http://www
 \acronym{DPAC} has been provided by national institutions, in particular the
 institutions participating in the Gaia Multilateral Agreement.
 
-[IS THERE A \tmass\ ACKNOWLEDGEMENT?]
+This publication makes use of data products from the Two Micron All
+Sky Survey, which is a joint project of the
+University of Massachusetts and the Infrared Processing and Analysis
+Center/California Institute of Technology, funded by the National
+Aeronautics and Space Administration and the National Science
+Foundation.
 
 This project was partially supported by This research was partially supported by
   the \acronym{NSF} (\acronym{AST-1517237}),
