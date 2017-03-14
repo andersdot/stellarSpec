@@ -1,8 +1,10 @@
 % This project is part of the stellarTwins project.
 % Copyright 2017 the authors.
 
+%@archiver{PUT FIGURE NAME HERE}
+
 % # To-do list
-% - We need a standard name for the \tgas--\tmass\ Intersection.
+% - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
 % - zeroth draft the introduction
 % - zeroth draft the method section
 % - zeroth draft the assumptions list
@@ -210,7 +212,7 @@ Exploration of that possibility, and its computational tractability,
 is among our long-term goals and motivations.
 Along those lines, this paper can be seen as a companion to
 a related project (CITE BORIS), in which we use a
-somewhat less flexible model for the \cmd, but in which we take a much more principled
+slightly less appropriate model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
 On a different tack, there has been some discussion in the literature
@@ -279,9 +281,8 @@ To generate our CMD prior we use the J and K band from 2MASS, as well as the par
 \begin{aligned}
 \mathrm{data vector} \;\;\;\; &\vec{y} = [10^{0.2M_{J,n}}, (J- K)_n] \;  n \in \mathrm{stars} \\
 \mathrm{with \; absolute \; magnitude} \;\;\;\; &M_{J,n} = J_n - DM_n - Q_JE(B-V)_n \\
-& DM_n = -5\mathrm{log_{10}}\frac{1}{\varpi} \\
+& DM_n = -5\log_{10}\frac{1}{\varpi} \\
 \mathrm{and \; color} \;\;\;\; &(J - K)_n = J_n - K_n - Q_{JK}E(B-V)_n
-
 \end{aligned}
 \end{equation}
 
