@@ -219,13 +219,41 @@ width); showing that it can be used to de-noise noisy y-data.
 
 \section{Assumptions and methods}
 
-We make the following assumptions. The method we present is correct and justifiable under these assumptions, each of which is questionable in its own right. We return to criticize these assumptions---and the method that flows from them---in the Discussion below.
+We make the following assumptions. The method we present is correct
+and justifiable under these assumptions, each of which is questionable
+in its own right. We return to criticize these assumptions---and the
+method that flows from them---in the Discussion below.
 \begin{itemize}
-\item Some kind of stationarity assumption.
-\item Our empirical bayes approach is ok---that is, our numbers are large enough.
-\item The photometric uncertainties in the J band are small compared with the uncertainties in the parallax; the uncertainties are gaussian
-\item Mixture-of-gaussian model with fixed number of gaussians
-\item no use of physical models, baby!
+\item We make an assumption of \emph{stationarity}; that is, that the
+  stars measured at lower signal-to-noise have analogs measured at
+  higher signal-to-noise.  In detail, this assumption is wrong, of
+  course (for example, distant halo stars are different than local
+  disk stars), but the stationarity assumption is fairly weak; as long
+  as there is support in the high signal-to-noise stars for the types
+  of stars seen at low signal-to-noise, the results will not be
+  strongly biased, but this assumption is deep and fundamental to this
+  work.
+\item We assume that we have large numbers of stars, large enough that
+  an empirical-Bayes or maximum-marginalized likelihood is a safe
+  approximation to full Bayesian inference. This assumption will be
+  least true in the least-populated parts of the \cmd. In the extreme
+  case of a stellar type with only one (statistically distinct)
+  exemplar in the data set, this assumption will be maximally wrong.
+\item We assume that the \tgas\ parallax uncertainties dominate the
+  noise in any estimates of absolute magnitude. We further assume that
+  the parallax and color uncertainties are Gaussian in form with
+  correctly known variances. In detail, we assume that the [INSERT
+    CORRECT TERMINOLOGY FROM GAIA HERE] parallax uncertainty estimates
+  are correct. Here we are making use of the fact that, for
+  de-noising, under-estimation of measurement noise is conservative
+  (it leads to under-deconvolution).
+\item We assume that the \cmd\ can be represented with a mixture of
+  Gaussians in a particular transformed space. This mixture we fix
+  (with only heuristic analysis) at 128, 512, and 2048 Gaussians in
+  different experiments.
+\item We make no use of stellar models; our only assumptions about
+  stellar physics are generic and implicit (for example, that the
+  \cmd\ is somehow smooth and compact).
 \end{itemize}
 
 We would like to infer the distance to stars using the measured (noisy) parallax from Gaia. Gaia gives us the likelihood of the parallax of a star, given some unknown distance and uncertainties (assumed gaussian)
