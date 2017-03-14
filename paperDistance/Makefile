@@ -3,7 +3,7 @@ CHECK_RERUN = grep "Rerun to get" $*.log
 
 all: paper.pdf
 
-%.pdf: %.tex
+%.pdf: %.tex lmanders.bib
 	${LATEX} $*
 	bibtex $*
 	( ${CHECK_RERUN} && ${LATEX} $* ) || echo "Done."
