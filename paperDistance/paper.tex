@@ -245,18 +245,24 @@ in later \gaia\ data releases, and eventually put distances on $>10^9$
 \gaia\ stars using photometric distance methodologies but without any
 commitment to---or even use of---physical models of stars or the Milky Way.
 
+\section{Why does this work?}
+
+LA+DWH: Do we we want to put a pedagogical section in right here?
+
+Hogg would propose a straight-line fit (possibly with intrinsic
+width); showing that it can be used to de-noise noisy y-data.
+
 \section{Assumptions and methods}
 
 LA: Insert itemized or enumerated list of assumptions here. DWH will
 typeset it to look okay! Be exhaustive and then we will edit down.
 
 \begin{itemize}
-\item The photometric uncertainties in the J band are small compared with the uncertainties in the parallax
-\item Our empirical bayes approach is ok as long as we only infer information about the data contained within the prior
-\item the uncertainties are gaussian
-\item most stars lie where we expect them to on the CMD
-\item number of gaussians that's efficient? or do x-validation
-\item can't think
+\item Some kind of stationarity assumption.
+\item Our empirical bayes approach is ok---that is, our numbers are large enough.
+\item The photometric uncertainties in the J band are small compared with the uncertainties in the parallax; the uncertainties are gaussian
+\item number of gaussians
+\item no use of physical models, baby!
 \end{itemize}
 
 We would like to infer the distance to stars using the measured (noisy) parallax from Gaia. Gaia gives us the likelihood of the parallax of a star, given some unknown distance and uncertainties (assumed gaussian)
