@@ -53,6 +53,7 @@ with modifications by DWH.
 \makeatother
 %% End DWH mods
 
+\newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
 \newcommand{\foreign}[1]{\textsl{#1}}
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
@@ -189,7 +190,7 @@ or implies a strictly Gaussian noise model.
 In the below, this requires us to transform the \cmd\ to a space in which
 the noise is approximately Gaussian.
 
-The novel use of \xd\ here is to treat its output---the deconvolved \cmd---as
+The novel use of \xd\ \citep{bovy11} here is to treat its output---the deconvolved \cmd---as
 a prior for use in inference of individual-star distances.
 These inferences, one per star, provide much more precise parallax, distance,
 or absolute magnitude estimates than we get from each star's primary
@@ -285,7 +286,7 @@ To generate our CMD prior we use the J and K band from 2MASS, as well as the par
 \end{aligned}
 \end{equation}
 
-where $E(B-V)$ is the output of the Schlafly dust model, and $Q$ is the correction factor for that band assuming some reddening law. To generate our prior, we fit the data in the CMD space using XD (Bovy et al) which deconvolves the data with its noise, which are heterogeneous measurement uncertainties. It generates the denoised, underlying distribution from which the noisey data were drawn from. It represents the distribution as a mixture of gaussians which maximizes the likelihood of the noisy data.
+where $E(B-V)$ is the output of the Schlafly dust model, and $Q$ is the correction factor for that band assuming some reddening law. To generate our prior, we fit the data in the CMD space using XD which deconvolves the data with its noise, which are heterogeneous measurement uncertainties. It generates the denoised, underlying distribution from which the noisey data were drawn from. It represents the distribution as a mixture of gaussians which maximizes the likelihood of the noisy data.
 
 \begin{equation}
 \label{eq:xdlikelihood}
@@ -454,7 +455,7 @@ made use of the \acronym{NASA} Astrophysics Data System.
 
 \section{Appendix material}
 
-
+\bibliography{lmanders}
 %\begin{thebibliography}{}
 %\end{thebibliography}
 

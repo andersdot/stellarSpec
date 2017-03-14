@@ -63,34 +63,39 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
     alpha = 0.01
-    fig = plt.figure(figsize=(12, 9))
-    fig.subplots_adjust(left=0.1, right=0.95,
-                        bottom=0.1, top=0.95,
-                        wspace=0.02, hspace=0.02)
+    alpha_points = 0.01
+    figData = plt.figure(figsize=(12, 4.5))
+    figPrior = plt.figure(figsize=(12, 4.5))
+    for fig in [figData, figPrior]:
+        fig.subplots_adjust(left=0.1, right=0.95,
+                            bottom=0.1, top=0.95,
+                            wspace=0.02, hspace=0.02)
 
-    ax1 = fig.add_subplot(221)
+    ax1 = figData.add_subplot(121)
     ax1.scatter(x_true, y_true, s=1, lw=0, c='k', alpha=alpha)
 
-    ax2 = fig.add_subplot(222)
+    ax2 = figData.add_subplot(122)
 
-    ax2.scatter(x, y, s=1, lw=0, c='k', alpha=alpha)
-    ax2.errorbar(x, y, xerr=xerr, yerr=yerr, fmt="none", ecolor='black', zorder=0, lw=0.5, mew=0, alpha=0.05)
+    ax2.scatter(x, y, s=1, lw=0, c='k', alpha=alpha_points)
+    ax2.errorbar(x, y, xerr=xerr, yerr=yerr, fmt="none", zorder=0, lw=0.05, mew=0, alpha=1.0, cmap='Greys')
 
-    ax3 = fig.add_subplot(223)
-    ax3.scatter(samplex, sampley, s=4, lw=0, c='k', alpha=alpha)
-    xlim = ax3.get_xlim()
-    ylim = [10, -5] #ax3.get_ylim()
-
-    ax4 = fig.add_subplot(224)
+    ax3 = figPrior.add_subplot(121)
     for i in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
-        ax4.plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
+        ax3.plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
         #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
         #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
+
+    ax4 = figPrior.add_subplot(122)
+    ax4.scatter(samplex, sampley, s=4, lw=0, c='k', alpha=alpha)
+    xlim = ax4.get_xlim()
+    ylim = [10, -5] #ax3.get_ylim()
+
+
     titles = ["Observed Distribution", "Obs+Noise Distribution",
-              "Extreme Deconvolution\n  resampling",
-            "Extreme Deconvolution\n  cluster locations"]
+              "Extreme Deconvolution\n  cluster locations",
+            "Extreme Deconvolution\n  resampling"]
 
     ax = [ax1, ax2, ax3, ax4]
 
@@ -104,10 +109,10 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
         ax[i].text(0.05, 0.95, titles[i],
                    ha='left', va='top', transform=ax[i].transAxes)
 
-        if i in (0, 1):
-            ax[i].xaxis.set_major_formatter(plt.NullFormatter())
-        else:
-            ax[i].set_xlabel(xlabel, fontsize = 18)
+        #if i in (0, 1):
+        #    ax[i].xaxis.set_major_formatter(plt.NullFormatter())
+        #else:
+        ax[i].set_xlabel(xlabel, fontsize = 18)
 
         if i in (1, 3):
             ax[i].yaxis.set_major_formatter(plt.NullFormatter())
@@ -123,7 +128,8 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     #ax[3].yaxis.tick_right()
     #ax[3].yaxis.set_label_position("right")
     plt.tight_layout()
-    plt.savefig('plot_sample.png')
+    figData.savefig('plot_sample.data.png')
+    figPrior.savefig('plot_sample.prior.png')
 
 def plot_cond_model(xdgmm, cond_xdgmm, y):
     plt.clf()

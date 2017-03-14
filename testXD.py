@@ -455,10 +455,19 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
         nSmallMax = 0
         nSmallFlatMin = 0
         nSmallFlatMax = 0
-        debug=False
-        plotPost = False
+        debug = False
+        plotPost = True
+
+        distSmalldata = np.load('distanceQuantiles.128gauss.dQ0.05.6th.2MASS.All.npz.save')
+        distSmall = distSmalldata['distance']
+
+        distLargedata = np.load('distanceQuantiles.128gauss.dQ0.5.1st.2MASS.All.npz.save')
+        distLarge = distLargedata['distance']
+
+        delta = distLarge - distSmall
+
         if plotPost: fig, ax = plt.subplots()
-        for index in range(nstars):
+        for index in np.where(delta < 0)[0]: #range(nstars):
             if np.mod(index, 10000) == 0.0:
                 end = time.time()
                 print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*((nstars-index)/10000.))
@@ -509,16 +518,16 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             #if the posterior lies well within the distance window then do the right thing
             if np.max(cdf) > 0.95:
                 distance[index] = 10.**cdfInv(quantile)
-                if np.mod(index, 10000) == 0.0:
-                    label = 'posterior is good, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
-                    if plotPost:
-                        plt.cla()
-                        ax.plot(logDistance[:-1], cdf, label=label, lw=2)
-                        ax.set_xlabel('log distance [kpc]')
-                        ax.set_ylabel('cdf')
-                        ax.legend()
-                        ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                        fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.png')
+                #if np.mod(index, 10000) == 0.0:
+                label = 'posterior is good, log distance is ' + '{0:.2f}'.format(float(cdfInv(quantile)))
+                if plotPost:
+                    plt.cla()
+                    ax.plot(logDistance[:-1], cdf, label=label, lw=2)
+                    ax.set_xlabel('log distance [kpc]')
+                    ax.set_ylabel('cdf')
+                    ax.legend()
+                    ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
+                    fig.savefig('cdfplots/cdf.good.' + str(index) + '.' + iter + '.dQ.' + str(quantile) + '.png')
 
             #if the posterior lies way outside the distance window [0.01-10] kpc then set distance to which ever side of window has higher probability
             elif np.max(cdf) < quantile:
@@ -549,7 +558,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                     ax.set_ylabel('cdf')
                     ax.legend()
                     ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                    fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.png')
+                    fig.savefig('cdfplots/cdf.Small.' + str(index) + '.' + iter + '.dQ.' + str(quantile) + '.png')
 
             #if the posterior lies just on the edge, then if the pdf appears to be rising with distance set to quantile, else set to min distance
             else:
@@ -582,7 +591,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                     ax.set_ylabel('cdf')
                     ax.legend()
                     ax.set_title('$J-K$ ' +  '{0:.2f}'.format(float(color[index])) + ' $M_J$ ' + '{0:.2f}'.format(float(absMag)))
-                    fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.png')
+                    fig.savefig('cdfplots/cdf.Mid.' + str(index) + '.' + iter + '.dQ.' + str(quantile) + '.png')
             """
             try:
                 distance[index] = cdfInv(quantile)
@@ -785,6 +794,73 @@ def absMagKindaArray(absmag, dustEBV, bandDictionary):
     absMagKindaDustCorrected = tgas['parallax']*10.**(0.2*apparentMagDustCorrected)
     return absMagKindaDustCorrected
 
+
+def dataArrays(survey='2MASS'):
+
+    tgas = fits.getdata("stacked_tgas.fits", 1)
+    Apass = fits.getdata('tgas-matched-apass-dr9.fits')
+    twoMass = fits.getdata('tgas-matched-2mass.fits')
+
+    if survey == 'APASS':
+        mag1 = 'B'
+        mag2 = 'V'
+        absmag = 'G'
+        xlabel='B-V'
+        ylabel = r'M$_\mathrm{G}$'
+        xlim = [-0.2, 2]
+        ylim = [9, -2]
+
+    if survey == '2MASS':
+        mag1 = 'J'
+        mag2 = 'K'
+        absmag = 'J'
+        xlabel = 'J-K$_s$'
+        ylabel = r'M$_\mathrm{J}$'
+        xlim = [-0.25, 1.25]
+        ylim = [6, -4]
+
+    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':twoMass},
+                     'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
+                     'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
+                     'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
+                     'G':{'key':'phot_g_mean_mag', 'array':tgas}}
+
+    nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
+                   (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
+
+    bayes = BayestarQuery(max_samples=1)
+    dust = bayes(SkyCoord(tgas['l']*units.deg, tgas['b']*units.deg, frame='galactic'), mode='median')
+    nanDust = np.isnan(dust[:,0])
+
+    nanPhotErr = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]) & \
+                 ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]) & \
+                 ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
+
+    nanPhot = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['key']]) & \
+              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['key']]) & \
+              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+
+    if survey == '2MASS':
+        nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
+                        bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
+                       (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
+        indices = twoMass['matched'] & nonzeroError & ~nanDust & nanPhot & nanPhotErr
+
+    else:
+        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError & ~nanDust
+
+    tgas = tgas[indices]
+    Apass = Apass[indices]
+    twoMass = twoMass[indices]
+    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':Apass},
+                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
+                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
+                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
+                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
+
+    return tgas, twoMass, Apass, bandDictionary, indices
+
+
 if __name__ == '__main__':
 
     survey = '2MASS'        #survey to calculate prior with
@@ -798,7 +874,7 @@ if __name__ == '__main__':
     projectedDimension = 1  #which dimension to project the prior onto
     ndim = 2
 
-
+    tgas, twoMass, Apass, bandDictionary, indices = dataArrays()
     dataFilename = 'All.npz'
     tgas = fits.getdata("stacked_tgas.fits", 1)
     #tgasRave = fits.getdata('tgas-rave.fits', 1)
@@ -876,7 +952,7 @@ if __name__ == '__main__':
                       'G':{'key':'phot_g_mean_mag', 'array':tgas}}
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
-    previteration =  ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
+    previteration = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
 
     for iter, previter in zip(iteration, previteration):
 
@@ -884,6 +960,7 @@ if __name__ == '__main__':
         distanceFile  = 'distanceQuantiles.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
         dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
         priorFile     = 'prior.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.png'
+        dataFile      = 'data.'              + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.png'
 
         if previter == '0th':
 
@@ -946,7 +1023,8 @@ if __name__ == '__main__':
         sample = xdgmm.sample(Nsamples)
         dp.plot_sample(color, absMagKinda2absMag(absMagKinda), color, absMagKinda2absMag(absMagKinda),
                     sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=color_err, yerr=absMagKinda2absMag(absMagKinda_err), xlabel=xlabel, ylabel=ylabel)
-        os.rename('plot_sample.png', priorFile)
+        os.rename('plot_sample.data.png', dataFile)
+        os.rename('plot_sample.prior.png', priorFile)
 
         #using prior calculate distances
 
