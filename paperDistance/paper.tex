@@ -10,50 +10,9 @@
 % - zeroth draft the assumptions list
 % - reformat single-column
 
-\documentclass[12pt, preprint]{aastex6}
-\hypersetup{colorlinks = false}
-
-%% Begin DWH mods
-\setlength{\voffset}{0in}
-\setlength{\hoffset}{0in}
-\setlength{\textwidth}{6in}
-\setlength{\textheight}{9in}
-\setlength{\headheight}{0ex}
-\setlength{\footnotesep}{0in}
-\setlength{\topmargin}{-\headsep}
-\setlength{\oddsidemargin}{0.25in}
-\setlength{\evensidemargin}{0.25in}
-\linespread{1.09}
-\setlength{\parindent}{1.2\baselineskip}
-\makeatletter % you know you are living your life wrong when you need to do this
-\long\def\frontmatter@title@above{
-\vspace*{-\headsep}\vspace*{\headheight}
-\noindent\footnotesize
-{\noindent\footnotesize\textsc{\@journalinfo}}\par
-{\noindent\scriptsize Preprint typeset using \LaTeX\ style AASTeX6
-with modifications by DWH.
-}\par\vspace*{-\baselineskip}\vspace*{0.625in}
-}%
-\long\def\frontmatter@abstractheading{%
-\makeaffils
-  \vspace*{-\baselineskip}\vspace*{1.5pt}
-  \vspace*{0.13189in}
- \begingroup
-  \centering
-  \abstractname
-  \vskip 1mm
-  \par
- \endgroup
- \everypar{\rightskip=0.0in\leftskip=\rightskip}\par
-}%
-\def\frontmatter@keys@format{\vspace*{0.5mm}%
-  \settowidth{\keys@width}{\normalsize\@keys@name}%
-  \rightskip=0.0in\leftskip=\rightskip\parindent=0pt%
-    \hangindent=\keys@width\hangafter=1\normalsize\raggedright}%
-\def\twodigits#1{\ifnum#1<10 0\fi\the#1}
-\def\mydate{\leavevmode\hbox{\the\year-\twodigits\month-\twodigits\day}}
-\makeatother
-%% End DWH mods
+\documentclass[modern]{aastex61}
+\usepackage{amsmath}
+\setlength{\parindent}{\baselineskip}
 
 \newcommand{\foreign}[1]{\textsl{#1}}
 \newcommand{\acronym}[1]{{\small{#1}}}
@@ -64,27 +23,33 @@ with modifications by DWH.
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
-\usepackage{amsmath}
-
-\newcommand{\myemail}{landerson@simonsfoundation.org}
-\slugcomment{Draft manuscript not ready for distribution. \textbf{Copyright 2017 the authors.}}
-\shorttitle{Improving Gaia parallaxes}
-\shortauthors{Anderson, Hogg, Leistedt, Price-Whelan}
-\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing
+\shorttitle{improving gaia parallaxes}
+\shortauthors{anderson et al.}
+\begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Improving \textsl{Gaia} parallaxes
        with a data-driven model of the color--magnitude diagram}
-\author{Lauren Anderson\altaffilmark{1},
-        David W. Hogg\altaffilmark{1,2,3,4},
-        Boris Leistedt\altaffilmark{2},
-        Adrian Price-Whelan\altaffilmark{5}}
-\altaffiltext{1}{Center for Computational Astrophysics, Flatiron Institute, Simons Foundation, New York City}
-\altaffiltext{2}{Center for Cosmology and Particle Physics, Department of Physics, New York University}
-\altaffiltext{3}{Center for Data Science, New York University}
-\altaffiltext{4}{Max-Planck-Institut f\"ur Astronomie, Heidelberg}
-\altaffiltext{5}{Princeton University Observatory, Princeton University}
 
-\begin{abstract}
+\author{Lauren Anderson}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+
+\author{David W. Hogg}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+\affil{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA}
+\affil{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg}
+
+\author{Jo Bovy}
+\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+\affil{Department of Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, ON M5S 3H4, Canada}
+
+\author{Boris Leistedt}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+
+\author{Adrian Price-Whelan}
+\affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
+
+\begin{abstract}\noindent % trust me
 The \gaia\ \tgas\ \project{Catalog} contains more than 2 million parallax measurements.
 Conversion of a noisy parallax measurement into a posterior belief over distances requires inference with a prior.
 Usually this prior represents some kind of belief about the Milky Way.
@@ -254,14 +219,12 @@ width); showing that it can be used to de-noise noisy y-data.
 
 \section{Assumptions and methods}
 
-LA: Insert itemized or enumerated list of assumptions here. DWH will
-typeset it to look okay! Be exhaustive and then we will edit down.
-
+We make the following assumptions. The method we present is correct and justifiable under these assumptions, each of which is questionable in its own right. We return to criticize these assumptions---and the method that flows from them---in the Discussion below.
 \begin{itemize}
 \item Some kind of stationarity assumption.
 \item Our empirical bayes approach is ok---that is, our numbers are large enough.
 \item The photometric uncertainties in the J band are small compared with the uncertainties in the parallax; the uncertainties are gaussian
-\item number of gaussians
+\item Mixture-of-gaussian model with fixed number of gaussians
 \item no use of physical models, baby!
 \end{itemize}
 
