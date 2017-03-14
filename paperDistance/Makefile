@@ -5,6 +5,6 @@ all: paper.pdf
 
 %.pdf: %.tex
 	${LATEX} $*
-	# bibtex $*
+	bibtex $*
 	( ${CHECK_RERUN} && ${LATEX} $* ) || echo "Done."
 	( ${CHECK_RERUN} && ${LATEX} $* ) || echo "Done."
