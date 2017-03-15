@@ -250,6 +250,13 @@ method that flows from them---in the Discussion below.
   are correct. Here we are making use of the fact that, for
   de-noising, under-estimation of measurement noise is conservative
   (it leads to under-deconvolution).
+\item We treat the \panstarrs-based three-dimensional dust maps (CITE
+  SCHLAFLY) as correct in their median dust estimates, and their
+  effects on color and magnitude. We iteratively update each star's
+  dust correction as its inferred distance updates as we optimize the
+  empirical-Bayes model. Our assumption is that these corrections are
+  good enough, and uncertainties in these are not dominant, for either
+  color or absolute magnitude.
 \item We assume that the \cmd\ can be represented with a mixture of
   Gaussians in a particular transformed space. This mixture we fix
   (with only heuristic analysis) at 128, 512, and 2048 Gaussians in
