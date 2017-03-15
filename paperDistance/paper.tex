@@ -5,14 +5,13 @@
 
 % # To-do list
 % - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
-% - zeroth draft the introduction
-% - zeroth draft the method section
-% - zeroth draft the assumptions list
-% - reformat single-column
+% - zeroth draft / re-write the method section
+% - make a ``why does this work'' section
 
 \documentclass[modern]{aastex61}
 \usepackage{amsmath}
-\setlength{\parindent}{\baselineskip}
+\setlength{\parindent}{\baselineskip} % trust me!
+\renewcommand{\twocolumngrid}{} % trust me!
 
 \newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
 \newcommand{\foreign}[1]{\textsl{#1}}
@@ -30,7 +29,8 @@
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Improving \textsl{Gaia} parallaxes
-       with a data-driven model of the color--magnitude diagram}
+       with a data-driven model \\
+       of the color--magnitude diagram}
 
 \author{Lauren Anderson}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
@@ -484,8 +484,6 @@ All the code used in this project is available online\footnote{\url{https://gith
 %% \section{Appendix material}
 
 \bibliography{lmanders}
-%\begin{thebibliography}{}
-%\end{thebibliography}
 
 \clearpage
 
