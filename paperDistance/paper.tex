@@ -5,14 +5,13 @@
 
 % # To-do list
 % - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
-% - zeroth draft the introduction
-% - zeroth draft the method section
-% - zeroth draft the assumptions list
-% - reformat single-column
+% - zeroth draft / re-write the method section
+% - make a ``why does this work'' section
 
 \documentclass[modern]{aastex61}
 \usepackage{amsmath}
-\setlength{\parindent}{\baselineskip}
+\setlength{\parindent}{\baselineskip} % trust me!
+\renewcommand{\twocolumngrid}{} % trust me!
 
 \newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
 \newcommand{\foreign}[1]{\textsl{#1}}
@@ -21,6 +20,7 @@
 \newcommand{\tgas}{\project{\acronym{TGAS}}}
 \newcommand{\tmass}{\project{\acronym{2MASS}}}
 \newcommand{\gaia}{\project{Gaia}}
+\newcommand{\panstarrs}{\project{Pan\acronym{STARRS}}}
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
@@ -29,14 +29,15 @@
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Improving \textsl{Gaia} parallaxes
-       with a data-driven model of the color--magnitude diagram}
+       with a data-driven model \\
+       of the color--magnitude diagram}
 
 \author{Lauren Anderson}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
 
 \author{David W. Hogg}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
-\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA}
 \affil{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA}
 \affil{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg}
 
@@ -45,7 +46,7 @@
 \affil{Department of Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, ON M5S 3H4, Canada}
 
 \author{Boris Leistedt}
-\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, Newy York, NY 10003, USA}
+\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA}
 
 \author{Adrian Price-Whelan}
 \affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
@@ -137,15 +138,16 @@ so it requires relatively high technology to build this data-driven model
 using all the data available, fairly and responsibly.
 We have this technology!
 
-Here we build and use just such a data-driven model.
-In particular, we use all of the \gaia\ \tgas\ data, matched to the \tmass\
-photometry, to make a model of the noise-free (or low-noise)
-color--magnitude diagram (\cmd) of stars.
-We use
-an Empirical-Bayes approach known as Extreme Deconvolution (DWH CITE).
-This method deconvolves heteroskedastic data to derive an estimate
-of the noise-free or low-noise distribution that \emph{would have}
-been observed with far better data.
+Here we build and use just such a data-driven model.  In particular,
+we use all of the \gaia\ \tgas\ data, matched to the
+\tmass\ photometry (\citealt{skrutskie06}), and in the footprint of
+the \panstarrs\ Dust Map (CITE GREEN), to make a model of the
+noise-free (or low-noise) color--magnitude diagram (\cmd) of stars.
+We use an Empirical-Bayes approach known as Extreme Deconvolution (XD;
+\citealt{bovy11}).
+This method deconvolves heteroskedastic data to derive an
+estimate of the noise-free or low-noise distribution that \emph{would
+  have} been observed with far better data.
 This method has been used in astrophysics
 previously to model the velocity distribution of stars in the Solar
 Neighborhood (DWH CITE BOTH) and to perform quasar target selection
@@ -157,7 +159,7 @@ or implies a strictly Gaussian noise model.
 In the below, this requires us to transform the \cmd\ to a space in which
 the noise is approximately Gaussian.
 
-The novel use of \xd\ \citep{bovy11} here is to treat its output---the deconvolved \cmd---as
+The novel use of \xd\ here is to treat its output---the deconvolved \cmd---as
 a prior for use in inference of individual-star distances.
 These inferences, one per star, provide much more precise parallax, distance,
 or absolute magnitude estimates than we get from each star's primary
@@ -176,9 +178,9 @@ probabilistic perspective---if we performed a full hierarchical Bayesian
 inference.
 Exploration of that possibility, and its computational tractability,
 is among our long-term goals and motivations.
-Along those lines, this paper can be seen as a companion to
-a related project (CITE BORIS), in which we use a
-slightly less appropriate model for the \cmd, but in which we take a much more principled
+Along those lines, this paper can be seen as a companion to a related
+project (CITE BORIS), in which we use a slightly less appropriate
+model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
 On a different tack, there has been some discussion in the literature
@@ -317,6 +319,9 @@ Dust corrections are non trivial for stars with poor signal to noise. Stars with
 m_{\mathrm{band, corrected}} = m_{\mathrm{band}} - Q_{\lambda} \times E(B-V)
 \end{equation}
 
+DWH: Placeholder for the output format for our data products. Should
+be the last paragraph or two of this section.
+
 \section{Discussion}
 
 We have shown that it is possible to obtain photometric parallaxes for
@@ -404,7 +409,28 @@ distances for the full billion-star catalog released in \gaia\ DR1
 alongside \tgas, or for stars fainter or brighter or bluer than those
 included in the \tgas--\tmass\ intersection.
 
-Note the dangers of using the stars from our output in hierarchical inferences!
+The outputs of this project include posterior pdfs and posterior
+samplings for stellar parallaxes or distances.
+It is tempting to treat these outputs as equivalent to some kind of catalog of
+measurements, as we treated the original parallax measurements from \tgas.
+That is, it is tempting to treat these as simply ``better'' measurements.
+Taken one star at a time, this is permitted and true, and the basis for our
+claim that we have de-noised the \tgas\ Catalog.
+However, there are important differences, as there are with all
+probabilistic catalogs (HOGG CITE LANG, FINKBEINER), between the
+measurements and the de-noised measurements.
+The most important difference, for users of our output, between our
+output and the \tgas\ data input, is that the \tgas\ data is the representation
+of a likelihood function, whereas our ouptut is a
+representation of a posterior pdf, one per star.
+If used naively, posterior information can lead to serious statistical
+errors, because each data point has had a prior multiplied in.
+Effectively multiplicative uses of the data will effectively take the prior
+pdf to a large power.
+We have given examples of correct uses of posterior samplings or pdfs
+for subsequent inferences in previous work (HOGG CITE ECC and DFM); we
+encourage power-users to consult those methodological
+contributions before engaging with these outputs.
 
 Come back to the assumptions. What happens if we change or violate them?
 
@@ -417,9 +443,7 @@ Some discussion of possible failure modes. Including very rare kinds of stars.
 Number of gaussians in \xd, and the w parameter. That we set them heuristically.
 
 Talk about structures in CMD; red bump - acknowledge Ana ! s
-What's That Feature ?!!
-
-Fraction of stars in various parts of the diagram?
+What's That Feature? Similarly; Fraction of stars in various parts of the diagram?
 
 Compare with literature stellar models
 
@@ -428,34 +452,38 @@ like, eg, the Tri--Coryn papers. Favorably! And with \emph{fewer}
 assumptions, in fact!
 
 \acknowledgments It is a pleasure to thank
-  Jo Bovy (Toronto),
+  Ana Bonaca (Harvard),
   Andy Casey (Monash),
 and the attendees at the Stars Group Meeting at the Flatiron Institute
 Center for Computational Astrophysics for comments and input.
-
 This project was developed in part at the 2016 \acronym{NYC} Gaia Sprint, hosted
 by the Center for Computational Astrophysics at the Simons Foundation
 in New York City.
 
 This work has made use of data from the European Space Agency (\acronym{ESA})
-mission Gaia (http://www.cosmos.esa.int/gaia), processed by the Gaia
-Data Processing and Analysis Consortium (\acronym{DPAC},
-http://www.cosmos.esa.int/web/gaia/dpac/consortium). Funding for the
+mission Gaia\footnote{\url{http://www.cosmos.esa.int/gaia}}, processed by the Gaia
+Data Processing and Analysis Consortium (\acronym{DPAC}\footnote{\url{http://www.cosmos.esa.int/web/gaia/dpac/consortium}}). Funding for the
 \acronym{DPAC} has been provided by national institutions, in particular the
 institutions participating in the Gaia Multilateral Agreement.
 
-[IS THERE A \tmass\ ACKNOWLEDGEMENT?]
+This publication makes use of data products from the Two Micron All
+Sky Survey, which is a joint project of the
+University of Massachusetts and the Infrared Processing and Analysis
+Center/California Institute of Technology, funded by the National
+Aeronautics and Space Administration and the National Science
+Foundation.
 
-This project was partially supported by [DWH GIVE GRANT NUMBERS]. It
-made use of the \acronym{NASA} Astrophysics Data System.
+This project was partially supported by This research was partially supported by
+  the \acronym{NSF} (\acronym{AST-1517237}),
+  \acronym{NASA} (grant \acronym{NNX12AI50G}),
+  and the Moore-Sloan Data Science Environment at \acronym{NYU}.
+It made use of the \acronym{NASA} Astrophysics Data System.
+All the code used in this project is available online\footnote{\url{https://github.com/andersdot/stellarTwins}} under an open-source license.
 
-\appendix
-
-\section{Appendix material}
+%% \appendix
+%% \section{Appendix material}
 
 \bibliography{lmanders}
-%\begin{thebibliography}{}
-%\end{thebibliography}
 
 \clearpage
 
