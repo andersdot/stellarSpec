@@ -429,6 +429,11 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
     plt.tight_layout()
     figDist.savefig('distancesM67.png')
 
+def plotPrior(xdgmm, ax, c='k', lw=1):
+    for gg in range(xdgmm.n_components):
+        points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
+        ax[0].plot(points[0,:],testXD.absMagKinda2absMag(points[1,:]), c, lw=lw, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+
 
 def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st', plotPost=False):
     try:
@@ -874,7 +879,14 @@ if __name__ == '__main__':
     projectedDimension = 1  #which dimension to project the prior onto
     ndim = 2
 
+    subset = False          #subsample the data to generate the XD prior
+    dustCorrectedArraysGenerated = False
+    dustEBV = None
+
+
     tgas, twoMass, Apass, bandDictionary, indices = dataArrays()
+
+    """
     dataFilename = 'All.npz'
     tgas = fits.getdata("stacked_tgas.fits", 1)
     #tgasRave = fits.getdata('tgas-rave.fits', 1)
@@ -882,9 +894,6 @@ if __name__ == '__main__':
     #tgasWise = fits.getdata('tgas-matched-wise.fits')
     twoMass = fits.getdata('tgas-matched-2mass.fits')
 
-    subset = False          #subsample the data to generate the XD prior
-    dustCorrectedArraysGenerated = False
-    dustEBV = None
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -950,6 +959,7 @@ if __name__ == '__main__':
                       'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
                       'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
                       'G':{'key':'phot_g_mean_mag', 'array':tgas}}
+    """
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
     previteration = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']

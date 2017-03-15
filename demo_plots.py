@@ -77,7 +77,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax2 = figData.add_subplot(122)
 
     ax2.scatter(x, y, s=1, lw=0, c='k', alpha=alpha_points)
-    ax2.errorbar(x, y, xerr=xerr, yerr=yerr, fmt="none", zorder=0, lw=0.05, mew=0, alpha=1.0, cmap='Greys')
+    ax2.errorbar(x, y, xerr=xerr, yerr=yerr, fmt="none", zorder=0, lw=0.05, mew=0, alpha=0.1, color='0.5')
 
     ax3 = figPrior.add_subplot(121)
     for i in range(xdgmm.n_components):
