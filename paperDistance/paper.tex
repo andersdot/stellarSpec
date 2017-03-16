@@ -32,7 +32,7 @@
        with a data-driven model \\
        of the color--magnitude diagram}
 
-\author{Lauren Anderson}
+\author[0000-0001-5725-9329]{Lauren Anderson}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
 
 \author{David W. Hogg}
@@ -259,47 +259,95 @@ method that flows from them---in the Discussion below.
   \cmd\ is somehow smooth and compact).
 \end{itemize}
 
+
+
 We would like to infer the distance to stars using the measured (noisy) parallax from Gaia. Gaia gives us the likelihood of the parallax of a star, given some unknown distance and uncertainties (assumed gaussian)
 \begin{equation}
-\label{eq:likelihood}
+\label{eq:gaialike}
 P(\varpi |d, \sigma^2_{\varpi}, \textbf{I})
 \end{equation}
 
-where $d$ is distance to the star, $\varpi$ is the observed parallax, and $\sigma^2_{\varpi}$ is the uncertainty in that measurement, and I are other various prior assumptions (mostly about the noise properties?). This is the probability of the data given the model, or distance, but we want to flip it around and infer the distance to the star given the measured parallax and it's uncertainty. We do this using probability theory/bayes rule, and turn the likelihood of the data into the posterior probablity of the distance
+where $d$ is distance to the star, $\varpi$ is the observed parallax, and $\sigma^2_{\varpi}$ is the uncertainty in that measurement, and I are other various prior assumptions (mostly about the noise properties?). This is the probability of the data given the model distance, but we want to flip it around and infer the distance to the star given the measured parallax and it's uncertainty. We do this using probability theory/bayes rule, and turn the likelihood of the data into the posterior probability of the distance
 
 \begin{equation}
 \label{eq:bayes}
-P(d|\varpi, \sigma^2_{\varpi}, \textbf{I}) = \frac{P(\varpi |d, \sigma^2_{\varpi}, \textbf{I}) P(d)}{\textbf{Z}},
+P(d_{true}|\varpi, \sigma^2_{\varpi}, \textbf{I}) = \frac{P(\varpi |d_{true} \sigma^2_{\varpi}, \textbf{I}) P(d)}{\textbf{Z}},
 \end{equation}
 
 where $P(d)$ is our prior knowledge of the distance to the star, and $\textbf{Z}$ is a normalization constant to make the posterior sum to 1. The strength in our inference method lies in how we generate our prior knowledge of the distances to stars. Here, instead of assuming the spatial distribution of stars in the milky way, or relying on stellar models, as previous work as shown, we build the color-magnitude diagram of the observed stars from their observations as our prior. The absolute magnitude of the CMD carries information about the distances to stars and where they can physically lie in this space. Toy model?
 
 To generate our CMD prior we use the J and K band from 2MASS, as well as the parallax from Gaia. The data are a transformation of the dust corrected absolute magnitude, and the dust corrected colors.
 
+True values:
+  C - true color,
+  M - true absolute magnitude
+  Y = [10.^0.2(M+2), C]
+data:
+    (J-K)_c
+    \varpi
+    J_c
+    y = [\varpi10^0.2J_c, (J-K)_c]
+
+  prior assumptions:
+    \sigma_J, sigma_K, sigma_\varpi, Greene map
+
+Our true, latent values are C, the true J-K color, and M the true absolute magnitude, which we encapsulate in the true vector $\vec{Y}$. The observed data is the dust corrected J-K color $(J-K)_n$, the Gaia parallax $\varpi_n$, and the dust corrected J band magnitude $J_c$, which we encapsulate in the data vector.  Our prior assumptions $I$ are the uncertainties in each of these measurements, as well as the Greene dust map
+
 \begin{equation}
 \label{eq:data}
 \begin{aligned}
-\mathrm{data vector} \;\;\;\; &\vec{y} = [10^{0.2M_{J,n}}, (J- K)_n] \;  n \in \mathrm{stars} \\
+\mathrm{true vector} \;\;\;\; &\vec{Y} = [10^{0.2\,M + 2}, C] \\
+\mathrm{data vector} \;\;\;\; &\vec{y} = [\varpi\,10^{0.2J_{c,n}}, (J- K)_{c,n}] \;  n \in \mathrm{stars} \\
 \mathrm{with \; absolute \; magnitude} \;\;\;\; &M_{J,n} = J_n - DM_n - Q_JE(B-V)_n \\
 & DM_n = -5\log_{10}\frac{1}{\varpi} \\
-\mathrm{and \; color} \;\;\;\; &(J - K)_n = J_n - K_n - Q_{JK}E(B-V)_n
+\mathrm{and \; color} \;\;\;\; &(J - K)_n = J_n - K_n - Q_{JK}E(B-V)_n \\
+\mathrm{assumptions} \;\;\;\; &I = \left\{\left\{\sigma^2_n\right\}_{n=1}^N, \mathrm{assumptions}\right\}
 \end{aligned}
 \end{equation}
 
-where $E(B-V)$ is the output of the Schlafly dust model, and $Q$ is the correction factor for that band assuming some reddening law. To generate our prior, we fit the data in the CMD space using XD which deconvolves the data with its noise, which are heterogeneous measurement uncertainties. It generates the denoised, underlying distribution from which the noisey data were drawn from. It represents the distribution as a mixture of gaussians which maximizes the likelihood of the noisy data.
+where $E(B-V)$ is the output of the Schlafly dust model, and $Q$ is the correction factor for that band assuming some reddening law.
+
+Likelihood function:
+  P(y|Y) = N(y|Y,I)
+Working with these variables, we then have a likelihood for the data, both the Gaia parallaxes and 2mass photometry of
 
 \begin{equation}
-\label{eq:xdlikelihood}
-P(\vec{y}|\alpha, I)
+\label{eq:fulllike}
+P(\vec{y}|\vec{Y}) = N(\vec{y}|\vec{Y}, I)
 \end{equation}
 
-with the output mixture of gaussians
+To generate our prior, we fit the data in the CMD space using XD which deconvolves the data with its noise, which are heterogeneous measurement uncertainties. It generates the denoised, underlying distribution from which the noisey data were drawn from. It represents the distribution as a mixture of gaussians which maximizes the marginalized likelihood of the noisy data, marginalized over the true, latent variables.
+
+XD generates the gaussian parameters
 
 \begin{equation}
-\label{eq:xd}
+\label{eq:xdmml}
 \begin{aligned}
-\alpha = &\left\{\mathrm{amp}_k, \mu_k, V_k\right\}_{k=1}^K \; k \in \mathrm{Gaussians} \\
-I = &\left\{\left\{\sigma^2_n\right\}_{n=1}^N, \mathrm{assumptions}\right\}
+
+\alpha =& \left\{\mathrm{amp}_k, \mu_k, V_k\right\}_{k=1}^K \; k \in \mathrm{Gaussians} \\
+       =& \argmax_{\alpha} \Pi_n P(\vec{y}_n|\alpha) \\
+       =& \argmax_{\alpha} \Pi_n \int P(\vec{y}_n|\vec{Y}_n,I)P(\vec{Y}|\alpha)d\vec{Y}
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\label{eq:posterior}
+P(Y|y, \alpha, I) = 1/Z p(y| Y,I)p(Y|\alpha, I)
+\end{equation}
+
+\begin{equation}
+\label{eq:parallaxPost}
+P(\vec{Y}_1|\vec{y}, \alpha, I) => p(\varpi_{true}|y, \alpha, I) \, f(\varpi_{true})
+\[
+f(\varpi_{true}) = \begin{cases}
+              1: -2 < log_{10} \varpi < 2\\
+              0: otherwise
+              \end{cases}
+\]
+\end{equation}
+
+
+
 \end{aligned}
 \end{equation}
 
