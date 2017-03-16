@@ -6,14 +6,14 @@
 % # To-do list
 % - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
 % - zeroth draft / re-write the method section
-% - make a ``why does this work'' section
+% - add ORCIDs like Hogg's
 
 \documentclass[modern]{aastex61}
 \usepackage{amsmath}
 \setlength{\parindent}{\baselineskip} % trust me!
 \renewcommand{\twocolumngrid}{} % trust me!
 
-\newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
+% text macros
 \newcommand{\foreign}[1]{\textsl{#1}}
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
@@ -24,10 +24,13 @@
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
+% math macros
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% start and title
 \shorttitle{improving gaia parallaxes}
 \shortauthors{anderson et al.}
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
-
 \title{Improving \textsl{Gaia} parallaxes
        with a data-driven model \\
        of the color--magnitude diagram}
@@ -35,7 +38,7 @@
 \author[0000-0001-5725-9329]{Lauren Anderson}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
 
-\author{David W. Hogg}
+\author[0000-0003-2866-9403]{David W. Hogg}
 \affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
 \affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA}
 \affil{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA}
@@ -250,6 +253,13 @@ method that flows from them---in the Discussion below.
   are correct. Here we are making use of the fact that, for
   de-noising, under-estimation of measurement noise is conservative
   (it leads to under-deconvolution).
+\item We treat the \panstarrs-based three-dimensional dust maps (CITE
+  SCHLAFLY) as correct in their median dust estimates, and their
+  effects on color and magnitude. We iteratively update each star's
+  dust correction as its inferred distance updates as we optimize the
+  empirical-Bayes model. Our assumption is that these corrections are
+  good enough, and uncertainties in these are not dominant, for either
+  color or absolute magnitude.
 \item We assume that the \cmd\ can be represented with a mixture of
   Gaussians in a particular transformed space. This mixture we fix
   (with only heuristic analysis) at 128, 512, and 2048 Gaussians in
@@ -475,8 +485,9 @@ If used naively, posterior information can lead to serious statistical
 errors, because each data point has had a prior multiplied in.
 Effectively multiplicative uses of the data will effectively take the prior
 pdf to a large power.
-We have given examples of correct uses of posterior samplings or pdfs
-for subsequent inferences in previous work (HOGG CITE ECC and DFM); we
+We have (in previous work)
+given examples of correct uses of posterior samplings or pdfs
+for subsequent inferences (\citealt{hogg08}; \citealt{dfm14}); we
 encourage power-users to consult those methodological
 contributions before engaging with these outputs.
 
@@ -531,7 +542,7 @@ All the code used in this project is available online\footnote{\url{https://gith
 %% \appendix
 %% \section{Appendix material}
 
-\bibliography{lmanders}
+\bibliography{gaia}
 
 \clearpage
 
