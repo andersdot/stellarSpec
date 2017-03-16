@@ -13,7 +13,7 @@
 \setlength{\parindent}{\baselineskip} % trust me!
 \renewcommand{\twocolumngrid}{} % trust me!
 
-\newcommand{\bibtex}{\textsc{Bib}\!\TeX} % bibtex. Not quite the correct typesetting, but close enough
+% text macros
 \newcommand{\foreign}[1]{\textsl{#1}}
 \newcommand{\acronym}[1]{{\small{#1}}}
 \newcommand{\project}[1]{\textsl{#1}}
@@ -24,10 +24,13 @@
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
 
+% math macros
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+% start and title
 \shorttitle{improving gaia parallaxes}
 \shortauthors{anderson et al.}
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
-
 \title{Improving \textsl{Gaia} parallaxes
        with a data-driven model \\
        of the color--magnitude diagram}
