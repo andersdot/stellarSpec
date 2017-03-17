@@ -299,10 +299,13 @@ stars in the Milky Way (CITE TRI--CORYN), or relying on stellar
 models, we build a noise-deconvolved estimate of the color--magnitude
 diagram (\cmd) from the observed colors and absolute magnitudes of our
 full set of stars.
-This \cmd\ model becomes, for each star, a prior pdf for the distance
+This \cmd\ model becomes, for each star---given its observed color and
+magnitude (and uncertainties on those)---a prior pdf for the distance
 to that star.
 
-[HOGG: NOW CONNECT THIS TO WHAT WE ACTUALLY DO WITH THE 2-d SPACE]
+That said, this is \emph{not} exactly how we do the inference here.
+Here we perform the inference in a two-dimensional space that is a
+transform of the \cmd....[HOGG: Syntactical marker]
 
 To generate our \cmd\ prior we use the $J$ and $K$ band photometry from \tmass, as well as the parallax from \gaia. The data are a transformation of the dust corrected absolute magnitude, and the dust corrected colors.
 
