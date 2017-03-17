@@ -1,11 +1,11 @@
 import numpy as np
-from astropy.io import fits
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from dustmaps.bayestar import BayestarQuery
-from astropy.coordinates import SkyCoord
-import astropy.units as units
 import comparePrior
+import testXD
+from xdgmm import XDGMM
+import testXD
+import stellarTwins as st
 
 def distanceFilename(ngauss, quantile, iter, survey, dataFilename):
     return 'distanceQuantiles.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
@@ -13,97 +13,106 @@ def distanceFilename(ngauss, quantile, iter, survey, dataFilename):
 def dustFilename(ngauss, quantile, iter, survey, dataFilename):
     return 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
 
-def dataArrays(survey='2MASS'):
-
-    tgas = fits.getdata("stacked_tgas.fits", 1)
-    Apass = fits.getdata('tgas-matched-apass-dr9.fits')
-    twoMass = fits.getdata('tgas-matched-2mass.fits')
-
-    if survey == 'APASS':
-        mag1 = 'B'
-        mag2 = 'V'
-        absmag = 'G'
-        xlabel='B-V'
-        ylabel = r'M$_\mathrm{G}$'
-        xlim = [-0.2, 2]
-        ylim = [9, -2]
-
-    if survey == '2MASS':
-        mag1 = 'J'
-        mag2 = 'K'
-        absmag = 'J'
-        xlabel = 'J-K$_s$'
-        ylabel = r'M$_\mathrm{J}$'
-        xlim = [-0.25, 1.25]
-        ylim = [6, -4]
-
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':twoMass},
-                     'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
-                     'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
-                     'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
-                     'G':{'key':'phot_g_mean_mag', 'array':tgas}}
-
-    nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
-                   (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
-
-    bayes = BayestarQuery(max_samples=1)
-    dust = bayes(SkyCoord(tgas['l']*units.deg, tgas['b']*units.deg, frame='galactic'), mode='median')
-    nanDust = np.isnan(dust[:,0])
-
-    nanPhotErr = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]) & \
-                 ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]) & \
-                 ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
-
-    nanPhot = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['key']]) & \
-              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['key']]) & \
-              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
-
-    if survey == '2MASS':
-        nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
-                        bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
-                       (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
-        indices = twoMass['matched'] & nonzeroError & ~nanDust & nanPhot & nanPhotErr
-
-    else:
-        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError & ~nanDust
-
-    tgas = tgas[indices]
-    Apass = Apass[indices]
-    twoMass = twoMass[indices]
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':Apass},
-                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
-                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
-                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
-                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
-
-    return tgas, twoMass, Apass, indices
+tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
 
 ngauss = 128
-thresholdSN = 0.001
-survey = '2MASS'
-dataFilename = 'All.npz'
 survey = '2MASS'
 quantile = 0.05
 dataFilename = 'All.npz'
 norm = mpl.colors.Normalize(vmin=-1, vmax=5)
+iter = '8th'
 
-iteration = ['8th']
-color = ['black', 'purple', 'blue', 'green', 'yellow', 'orange', 'red']
+if survey == 'APASS':
+    mag1 = 'B'
+    mag2 = 'V'
+    absmag = 'G'
+    xlabel='B-V'
+    ylabel = r'M$_\mathrm{G}$'
+    xlim = [-0.2, 2]
+    ylim = [9, -2]
 
-    fig, ax = plt.subplots(2, 3, figsize=(12, 12))
-    ax = ax.flatten()
-
-    dustEBVnew = None
-    if quantile == 0.5:
-        dustFile = dustFilename(ngauss, 0.05, '5th', survey, dataFilename)
-        dust = np.load(dustFile)
-        dustEBV = dust['ebv']
-    else:
-        dustFile = dustFilename(ngauss, 0.05, '1st', survey, dataFilename)
-        dust = np.load(dustFile)
-        dustEBV = np.zeros(len(dust['ebv']))
+if survey == '2MASS':
+    mag1 = 'J'
+    mag2 = 'K'
+    absmag = 'J'
+    xlabel = 'J-K$_s$'
+    ylabel = r'M$_\mathrm{J}$'
+    xlim = [-0.25, 1.25]
+    ylim = [6, -4]
 
 
-print 'N stars matching all criteria: ', str(np.sum(indices))
+fig, ax = plt.subplots(2, 3, figsize=(12, 7))
+ax = ax.flatten()
 
-tgas, twoMass, Apass, indices = dataArrays()
+tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+
+dustFile = dustFilename(ngauss, quantile, iter, survey, dataFilename)
+data = np.load(dustFile)
+dustEBV = data['ebv']
+
+color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
+absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+
+color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
+absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+
+
+#plot prior in upper left
+xdgmmFilename = 'xdgmm.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.2MASS.All.npz.fit'
+xdgmm = XDGMM(filename=xdgmmFilename)
+testXD.plotPrior(xdgmm, ax[0], c='k', lw=1)
+ax[0].set_xlim(xlim)
+ax[0].set_ylim(ylim)
+ax[0].set_xlabel('$(J-K)^C$')
+ax[0].set_ylabel('$M_J^C$')
+
+colorBins = [0.0, 0.2, 0.4, 0.7, 1.0]
+digit = np.digitize(color, colorBins)
+debug = False
+ndim = 2
+nPosteriorPoints = 1000 #number of elements in the posterior array
+projectedDimension = 1  #which dimension to project the prior onto
+ndim = 2
+xparallaxMAS = np.linspace(0, 10, nPosteriorPoints)
+
+#plot likelihood and posterior in each axes
+for i in range(np.max(digit)):
+    currentInd = np.where(digit == i)[0]
+    index = currentInd[np.random.randint(0, high=np.sum(digit==i))]
+    ax[0].scatter(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), c='black')
+    ax[0].errorbar(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), xerr=color_err[index], yerr=testXD.absMagKinda2absMag(absMagKinda_err[index]), fmt="none", zorder=0, lw=0.5, mew=0, alpha=1.0, color='black', ecolor='black')
+    ax[0].annotate(str(i+1), (color[index]+0.02, testXD.absMagKinda2absMag(absMagKinda[index])+0.02))
+    meanData, covData = testXD.matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+    meanPrior, covPrior = testXD.matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
+    meanData = meanData[0]
+    covData = covData[0]
+    meanPrior = meanPrior[0]
+    covPrior = covPrior[0]
+    xabsMagKinda = testXD.parallax2absMagKinda(xparallaxMAS, apparentMagnitude[index])
+
+    if debug:
+        windowFactor = 15. #the number of sigma to sample in mas for plotting
+        minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
+        maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
+        xparallaxMAS, xabsMagKinda = testXD.plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude[index], nPosteriorPoints=nPosteriorPoints)
+        xabsMagKinda = xabsMagKinda[::-1]
+        xparallaxMAS = xparallaxMAS[::-1]
+        positive = xparallaxMAS > 0.
+        if np.sum(positive) == 0:
+            print str(index) + ' has no positive distance values'
+            continue
+        logDistance = np.log10(1./xparallaxMAS[positive])
+    allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanData, covData, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+    print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
+    posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
+    priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
+    likeParallax = st.gaussian(absMagKinda[index]/10.**(0.2*apparentMagnitude[index]), absMagKinda_err[index]/10.**(0.2*apparentMagnitude[index]), xparallaxMAS)
+
+    ax[i+1].plot(xparallaxMAS, likeParallax*np.max(posteriorParallax)/np.max(likeParallax), label='likelihood', lw=2, color='black')
+    ax[i+1].plot(xparallaxMAS, priorParallax*np.max(posteriorParallax)/np.max(priorParallax), label='prior', lw=0.5, color='black')
+    ax[i+1].plot(xparallaxMAS, posteriorParallax, label='posterior', lw=2, color='black', alpha=0.5)
+    ax[i+1].set_title(str(i+1))
+    ax[i+1].set_xlabel(r'$\varpi$ [mas]')
+    if i+1 == 2: ax[i+1].legend()
+plt.tight_layout()
+fig.savefig('tightPosterior.png')
