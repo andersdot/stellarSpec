@@ -269,22 +269,38 @@ method that flows from them---in the Discussion below.
   \cmd\ is somehow smooth and compact).
 \end{itemize}
 
-
-
-Given these assumptions, we would like to infer the true parallax $\varpi_{true}$ to a star using the measured noisy parallax $\varpi$ and $\sigma_{\varpi}$ from \gaia. \gaia\ gives us the likelihood of the parallax of a star, given some unknown true parallax and uncertainties, which we assume to be a Gaussian
+We would like to infer the true parallax $\varpi_{\true}$ for
+each star given its parallax measurement $\varpi$ and associated
+uncertainty $\sigma_{\varpi}$ from \tgas.
+We assume (as \gaia\ suggests) that the likelihood is Gaussian
 \begin{equation}
-p(\varpi \given \varpi_{true}, \sigma_{\varpi},I) = \mathcal{N}(\varpi \given \varpi_{true}, \sigma_{\varpi})
+p(\varpi \given \varpi_{\true}, I) = \mathcal{N}(\varpi \given \varpi_{\true}, \sigma^2_{\varpi}) \quad ,
 \label{eq:gaialike}
 \end{equation}
-
-where $\varpi_{true}$ represents the true parallax, or distance, to the star, $\varpi$ is the observed parallax, and $\sigma_{\varpi}$ is the uncertainty in that measurement. There are other various prior assumptions (mostly about the noise properties which we will drop in our notation but is implicitly there and labeled $I$ below). $\mathcal{N}$ is the Gaussian function $\mathcal{N}(x \given \mu, \sigma)$ with mean $\mu$ and variance $\sigma$. This is the probability of the data given the true parallax, but we want to flip it around and infer the true parallax, or distance, to the star given the measured parallax and it's uncertainty. We do this using probability theory/bayes rule, and turn the likelihood of the data into the posterior probability of the true parallax
-
+where $I$ is a placeholder containing our assumptions, including all
+uncertainty estimates, and $\mathcal{N}(x \given \mu, \sigma^2)$ is a
+Gaussian function for $x$ with mean $\mu$ and variance $\sigma^2$.
+This is the probability of the data given the true parallax, but we
+want to flip it around and infer the true parallax, or distance, to
+the star given the measured parallax and it's uncertainty. We do this
+using probability theory
 \begin{equation}
-p(\varpi_{true} \given \varpi, \sigma^2_{\varpi}) = \frac{p(\varpi \given \varpi_{true}, \sigma^2_{\varpi}) \, p(\varpi_{true})}{Z},
+p(\varpi_{true} \given \varpi, \sigma^2_{\varpi}) = \frac{1}{Z}\,p(\varpi \given \varpi_{true}, \sigma^2_{\varpi}) \, p(\varpi_{true}) \quad ,
 \label{eq:bayes}
 \end{equation}
+where $p(\varpi_{true})$ is a prior probability density (pdf) for the
+parallax to the star, and $Z$ is a normalization constant.
+The strength of our inference method here lies in how we generate our prior
+pdf for the parallax $p(\varpi_{true})$.
+Instead of assuming a functional form for the spatial distribution of
+stars in the Milky Way (CITE TRI--CORYN), or relying on stellar
+models, we build a noise-deconvolved estimate of the color--magnitude
+diagram (\cmd) from the observed colors and absolute magnitudes of our
+full set of stars.
+This \cmd\ model becomes, for each star, a prior pdf for the distance
+to that star.
 
-where $p(\varpi_{true})$ is our prior knowledge of the parallax to the star, and $Z$ is a normalization constant to properly normalize the posterior. The strength in our inference method lies in how we generate our prior knowledge of the parallax to a star, $p(\varpi_{true})$. For our prior, instead of assuming the spatial distribution of stars in the Milky Way, or relying on stellar models, as previous work as shown, we build the \cmd\ from the observed colors and absolute magnitudes of our full set of stars. The absolute magnitude of the \cmd\ carries information about the distances, or parallaxes, to stars and the tight correlation of observed stars within this space dictates where each indivdually observed star can physically lie in this space. Toy model?
+[HOGG: NOW CONNECT THIS TO WHAT WE ACTUALLY DO WITH THE 2-d SPACE]
 
 To generate our \cmd\ prior we use the $J$ and $K$ band photometry from \tmass, as well as the parallax from \gaia. The data are a transformation of the dust corrected absolute magnitude, and the dust corrected colors.
 
