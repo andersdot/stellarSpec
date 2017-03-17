@@ -23,9 +23,11 @@
 \newcommand{\panstarrs}{\project{Pan\acronym{STARRS}}}
 \newcommand{\xd}{\acronym{XD}}
 \newcommand{\cmd}{\acronym{CMD}}
-\newcommand{\given}{\,|\,}
+
 % math macros
 \DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\given}{\,|\,}
+\newcommand{\true}{\mathrm{true}}
 
 % start and title
 \shorttitle{improving gaia parallaxes}
@@ -285,13 +287,13 @@ want to flip it around and infer the true parallax, or distance, to
 the star given the measured parallax and it's uncertainty. We do this
 using probability theory
 \begin{equation}
-p(\varpi_{true} \given \varpi, \sigma^2_{\varpi}) = \frac{1}{Z}\,p(\varpi \given \varpi_{true}, \sigma^2_{\varpi}) \, p(\varpi_{true}) \quad ,
+p(\varpi_{\true} \given \varpi, \sigma^2_{\varpi}) = \frac{1}{Z}\,p(\varpi \given \varpi_{\true}, \sigma^2_{\varpi}) \, p(\varpi_{\true}) \quad ,
 \label{eq:bayes}
 \end{equation}
-where $p(\varpi_{true})$ is a prior probability density (pdf) for the
+where $p(\varpi_{\true})$ is a prior probability density (pdf) for the
 parallax to the star, and $Z$ is a normalization constant.
 The strength of our inference method here lies in how we generate our prior
-pdf for the parallax $p(\varpi_{true})$.
+pdf for the parallax $p(\varpi_{\true})$.
 Instead of assuming a functional form for the spatial distribution of
 stars in the Milky Way (CITE TRI--CORYN), or relying on stellar
 models, we build a noise-deconvolved estimate of the color--magnitude
@@ -315,11 +317,11 @@ Our true, latent values are the true $J-K$ color $C_n$ and the true $J$ band abs
 
 \begin{equation}
 \begin{aligned}
-\mathrm{true \, vector} \;\;\;\; &\vec{Y} = [10^{0.2\,M_{J,n} + 2}, C_n] \\
-\mathrm{data \, vector} \;\;\;\; &\vec{y} = [\varpi_n\,10^{0.2J^c_n}, (J- K)^c_n] \;  n \in \mathrm{stars} \\
-\mathrm{with \; apparent \; magnitude} \;\;\;\; &J^c_n = J_n - Q_J\,E(B-V)_n \\
-\mathrm{and \; color} \;\;\;\; &(J - K)^c_n = J_n - K_n - Q_{JK}\,E(B-V)_n \\
-\mathrm{assumptions} \;\;\;\; &I = \left\{\left\{\sigma^2_{\varpi, n}\right\}, \left\{\sigma^2_{J,n}\right\}, \left\{\sigma^2_{K,n}\right\}, \mathrm{Dust \, Map}\right\}
+\mathrm{true \, vector} \quad &\vec{Y} = [10^{0.2\,M_{J,n} + 2}, C_n] \\
+\mathrm{data \, vector} \quad &\vec{y} = [\varpi_n\,10^{0.2J^c_n}, (J- K)^c_n] \;  n \in \mathrm{stars} \\
+\mathrm{with \; apparent \; magnitude} \quad &J^c_n = J_n - Q_J\,E(B-V)_n \\
+\mathrm{and \; color} \quad &(J - K)^c_n = J_n - K_n - Q_{JK}\,E(B-V)_n \\
+\mathrm{assumptions} \quad &I = \left\{\left\{\sigma^2_{\varpi, n}\right\}, \left\{\sigma^2_{J,n}\right\}, \left\{\sigma^2_{K,n}\right\}, \mathrm{Dust \, Map}\right\}
 \end{aligned}
 \label{eq:data}
 \end{equation}
@@ -344,7 +346,7 @@ To generate our prior, we fit the data in the slightly transformed \cmd\ space, 
 \label{eq:xdmml}
 \end{eqnarray}
 
-To infer $\varpi_{true}$ from the likelihood of the \gaia\ data, Equation \ref{eq:gaialike}, we first do the inference in the 2D space of the \cmd
+To infer $\varpi_{\true}$ from the likelihood of the \gaia\ data, Equation \ref{eq:gaialike}, we first do the inference in the 2D space of the \cmd
 
 \begin{equation}
 p(\vec{Y} \given \vec{y}, \alpha) = \frac{1}{Z} \, p(\vec{y} \given \vec{Y}) \, p(\vec{Y} \given \alpha)
@@ -354,10 +356,10 @@ p(\vec{Y} \given \vec{y}, \alpha) = \frac{1}{Z} \, p(\vec{y} \given \vec{Y}) \, 
 We then project the 2D posterior into the 1D absolute magnitude/parallax space
 
 \begin{eqnarray}
-p(\vec{Y}_0 \given \vec{y}, \alpha) &\rightarrow& p(\varpi_{true} \given y, \alpha) \, f(\varpi_{true}) \\
-f(\varpi_{true}) &=& \begin{cases}
-              1: -2 < \mathrm{log}_{10} \varpi_{true} < 2\\
-              0: \mathrm{otherwise}
+p(\vec{Y}_0 \given \vec{y}, \alpha) &\rightarrow& p(\varpi_{\true} \given y, \alpha) \, f(\varpi_{\true}) \\
+f(\varpi_{\true}) &=& \begin{cases}
+              1 \quad \mathrm{if} \quad -2 < \mathrm{log}_{10} \varpi_{true} < 2\\
+              0 \quad \mathrm{otherwise}
               \end{cases}
 \label{eq:parallaxPost}
 \end{eqnarray}
