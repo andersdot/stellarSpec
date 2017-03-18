@@ -165,7 +165,7 @@ def plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoi
     return xparallaxMAS, xabsMagKinda
 
 
-def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1):
+def absMagKindaPosterior(xdgmm, ndim, mean, cov, meanPrior, covPrior, x, projectedDimension=1, nPosteriorPoints=1000):
     """
     calculate the posterior of data likelihood mean, cov with prior xdgmm
     """
@@ -173,7 +173,10 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1):
     allAmps = np.zeros(xdgmm.n_components)
     allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
     summedPosterior = np.zeros(len(x))
+    summedPrior = np.zeros(len(x))
     individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
+    individualPrior = np.zeros((xdgmm.n_components, nPosteriorPoints))
+    allpriorAmps = np.zeros(xdgmm.n_components)
     for gg in range(xdgmm.n_components):
         #print mean2[dimension], cov2[dimension], xdgmm.mu[gg], xdgmm.V[gg]
         newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean, cov)
@@ -181,11 +184,17 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1):
         allMeans[gg] = newMean
         allAmps[gg] = newAmp
         allCovs[gg] = newCov
-
         summedPosterior += st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
         individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
+
+        newpriorMean, newpriorCov, newpriorAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], meanPrior, covPrior)
+        newpriorAmp *= xdgmm.weights[gg]
+        allpriorAmps[gg] = newpriorAmp
+        summedPrior += st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
+        individualPrior[gg,:] = st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
     summedPosterior = summedPosterior/np.sum(allAmps)
-    return allMeans, allAmps, allCovs, summedPosterior
+    summedPrior = summedPrior#/np.sum(allpriorAmps)
+    return allMeans, allAmps, allCovs, summedPosterior, summedPrior
 
 def posterior2d(means, amps, covs, xbins, ybins, nperGauss=100000., plot=False):
     """
@@ -312,7 +321,7 @@ def plotPosteriorEachStar(meanPost, covPost, ampPost, summedPosterior, meanLike,
     fig.savefig('example.png')
 
 
-def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False):
+def distanceTest(tgas, xdgmm, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, plot2DPost=False):
     """
     test posterior accuracy using distances to cluster M67
     """
@@ -320,6 +329,7 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
 
     #all the plot stuff
     figDist, axDist = plt.subplots(2, 3, figsize=(20, 15))
+    figPaper, axPaper = plt.subplots(1, 2, figsize=(10, 7))
     axDist = axDist.flatten()
     ylabel_posterior_logd = r'P(log d | y, $\sigma_{y}$)'
     ylabel_posterior_d = r'P(d | y, $\sigma_{y}$)'
@@ -361,7 +371,7 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
         ndim = 2
 
         #calculate the posterior, a gaussian for each xdgmm component
-        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda)
+        allMeans, allAmps, allCov, summedPosterior[k,:] = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, nPosteriorPoints=nPosteriorPoints)
 
         #for 2D visual of posterior, sample all the xdgmm component gaussians into 2d historgram
         if plot2DPost: xedges, yedges, Z, samplesY = posterior2d(allMeans, allAmps, allCov, xbins, ybins, nperGauss=nperGauss)
@@ -432,10 +442,10 @@ def distanceTest(tgas, nPosteriorPoints, data1, data2, err1, err2, xlim, ylim, p
 def plotPrior(xdgmm, ax, c='k', lw=1):
     for gg in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-        ax[0].plot(points[0,:],testXD.absMagKinda2absMag(points[1,:]), c, lw=lw, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
+        ax.plot(points[0,:], absMagKinda2absMag(points[1,:]), c, lw=lw, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
 
 
-def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st', plotPost=False):
+def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st', plotPost=False):
     try:
         data = np.load(distanceFile)
         distance = data['distance']
@@ -461,18 +471,19 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
         nSmallFlatMin = 0
         nSmallFlatMax = 0
         debug = False
-        plotPost = True
+        plotPost = False
 
-        distSmalldata = np.load('distanceQuantiles.128gauss.dQ0.05.6th.2MASS.All.npz.save')
-        distSmall = distSmalldata['distance']
+        #distSmalldata = np.load('distanceQuantiles.128gauss.dQ0.05.6th.2MASS.All.npz.save')
+        #distSmall = distSmalldata['distance']
 
-        distLargedata = np.load('distanceQuantiles.128gauss.dQ0.5.1st.2MASS.All.npz.save')
-        distLarge = distLargedata['distance']
+        #distLargedata = np.load('distanceQuantiles.128gauss.dQ0.5.1st.2MASS.All.npz.save')
+        #distLarge = distLargedata['distance']
 
-        delta = distLarge - distSmall
+        #delta = distLarge - distSmall
+        priorFig = plt.figure()
 
         if plotPost: fig, ax = plt.subplots()
-        for index in np.where(delta < 0)[0]: #range(nstars):
+        for index in range(100):
             if np.mod(index, 10000) == 0.0:
                 end = time.time()
                 print index, ' took ', str(end - start), 'seconds, projecting will be ', str((end-start)*((nstars-index)/10000.))
@@ -481,17 +492,19 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
             #np.savez('dustCorrection_' + dataFilename, ebv=dustEBV, sourceID=sourceID)
             #calculate parallax-ish posterior for each star
             meanData, covData = matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
+            meanPrior, covPrior = matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
             meanData = meanData[0]
             covData = covData[0]
-            apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']][index]
-            xabsMagKinda = parallax2absMagKinda(xparallaxMAS, apparentMagnitude)
+            meanPrior = meanPrior[0]
+            covPrior = covPrior[0]
+            xabsMagKinda = parallax2absMagKinda(xparallaxMAS, apparentMagnitude[index])
 
             if debug:
 
                 windowFactor = 15. #the number of sigma to sample in mas for plotting
                 minParallaxMAS = tgas['parallax'][index] - windowFactor*tgas['parallax_error'][index]
                 maxParallaxMAS = tgas['parallax'][index] + windowFactor*tgas['parallax_error'][index]
-                xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
+                xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude[index], nPosteriorPoints=nPosteriorPoints)
                 xabsMagKinda = xabsMagKinda[::-1]
                 xparallaxMAS = xparallaxMAS[::-1]
                 positive = xparallaxMAS > 0.
@@ -499,10 +512,29 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm
                     print str(index) + ' has no positive distance values'
                     continue
                 logDistance = np.log10(1./xparallaxMAS[positive])
-            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1)
+            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+            print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
+            posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
+            priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
+            likeParallax = st.gaussian(absMagKinda[index]/10.**(0.2*apparentMagnitude[index]), absMagKinda_err[index]/10.**(0.2*apparentMagnitude[index]), xparallaxMAS)
+            #pdb.set_trace()
+            priorFig.clf()
+            priorAx1 = priorFig.add_subplot(111)
+            #priorAx2 = priorFig.add_subplot(132)
+            #priorAx3 = priorFig.add_subplot(133)
+            small = xparallaxMAS < 20
+            priorAx1.plot(xparallaxMAS[small], likeParallax[small]*np.max(posteriorParallax)/np.max(likeParallax), label='likelihood', lw=2, color='black')
+            priorAx1.plot(xparallaxMAS[small], priorParallax[small]*np.max(posteriorParallax)/np.max(priorParallax), label='prior', lw=0.5, color='black')
+            priorAx1.plot(xparallaxMAS[small], posteriorParallax[small], label='posterior', lw=2, color='black', alpha=0.5)
+
+            for ax in [priorAx1]:#, priorAx2, priorAx3]:
+                ax.set_xlabel(r'$\varpi$ [mas]')
+                ax.legend()
+            priorFig.savefig('prior.' + str(index) + '.png')
+
             #normalize prior pdf
             #posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
-            posteriorLogDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude)/np.log10(np.exp(1))
+            posteriorLogDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]*10.**(0.2*apparentMagnitude[index])/np.log10(np.exp(1))
 
             #distanceIncreasing = distance[::-1]
             #posteriorIncreasingDistance = posteriorDistance[::-1]
@@ -738,7 +770,7 @@ def posteriorDistanceAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_
         xparallaxMAS, xabsMagKinda = plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoints=nPosteriorPoints)
 
         positive = xparallaxMAS > 0.
-        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=projectedDimension)
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=projectedDimension, nPosteriorPoints=nPosteriorPoints)
 
         posteriorDistance = summedPosteriorAbsmagKinda[positive]*xparallaxMAS[positive]**2.*10.**(0.2*apparentMagnitude)
         distance = 1./xparallaxMAS[positive]
@@ -793,11 +825,11 @@ def colorArray(mag1, mag2, dustEBV, bandDictionary):
     return mag1DustCorrected - mag2DustCorrected
 
 
-def absMagKindaArray(absmag, dustEBV, bandDictionary):
+def absMagKindaArray(absmag, dustEBV, bandDictionary, parallax):
     apparentMagnitude = bandDictionary[absmag]['array'][bandDictionary[absmag]['key']]
     apparentMagDustCorrected = dustCorrect(apparentMagnitude, dustEBV, absmag)
-    absMagKindaDustCorrected = tgas['parallax']*10.**(0.2*apparentMagDustCorrected)
-    return absMagKindaDustCorrected
+    absMagKindaDustCorrected = parallax*10.**(0.2*apparentMagDustCorrected)
+    return absMagKindaDustCorrected, apparentMagDustCorrected
 
 
 def dataArrays(survey='2MASS'):
@@ -873,7 +905,7 @@ if __name__ == '__main__':
     #thresholdSN = 0.001     #threshold S/N
     ngauss = np.int(sys.argv[1]) #128            #number of gaussians in the XD
     quantile = np.float(sys.argv[2])
-
+    dataFilename = 'All.npz'
     Nsamples = 120000       #number of samples of the XD to plot
     nPosteriorPoints = 1000 #number of elements in the posterior array
     projectedDimension = 1  #which dimension to project the prior onto
@@ -885,15 +917,6 @@ if __name__ == '__main__':
 
 
     tgas, twoMass, Apass, bandDictionary, indices = dataArrays()
-
-    """
-    dataFilename = 'All.npz'
-    tgas = fits.getdata("stacked_tgas.fits", 1)
-    #tgasRave = fits.getdata('tgas-rave.fits', 1)
-    Apass = fits.getdata('tgas-matched-apass-dr9.fits')
-    #tgasWise = fits.getdata('tgas-matched-wise.fits')
-    twoMass = fits.getdata('tgas-matched-2mass.fits')
-
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -912,54 +935,6 @@ if __name__ == '__main__':
         ylabel = r'M$_\mathrm{J}$'
         xlim = [-0.25, 1.25]
         ylim = [6, -4]
-
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':twoMass},
-                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
-                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
-                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
-                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
-
-
-    #parallaxSNcut = tgas['parallax']/tgas['parallax_error'] >= thresholdSN
-    #sigMax = 1.086/thresholdSN
-    #lowPhotErrorcut = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] < sigMax) & \
-    #                  (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] < sigMax)
-    nonzeroError = (bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']] != 0.0) & \
-                   (bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']] != 0.0)
-
-    bayes = BayestarQuery(max_samples=1)
-    dust = bayes(SkyCoord(tgas['l']*units.deg, tgas['b']*units.deg, frame='galactic'), mode='median')
-    nanDust = np.isnan(dust[:,0])
-
-    nanPhotErr = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]) & \
-              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]) & \
-              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['err_key']])
-
-    nanPhot = ~np.isnan(bandDictionary[mag1]['array'][bandDictionary[mag1]['key']]) & \
-              ~np.isnan(bandDictionary[mag2]['array'][bandDictionary[mag2]['key']]) & \
-              ~np.isnan(bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
-
-    if survey == '2MASS':
-        nonZeroColor = (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] -
-                        bandDictionary[mag2]['array'][bandDictionary[mag2]['key']] != 0.0) & \
-                       (bandDictionary[mag1]['array'][bandDictionary[mag1]['key']] != 0.0)
-
-        indices = twoMass['matched'] & nonzeroError & ~nanDust & nanPhot & nanPhotErr
-
-    else:
-        indices = parallaxSNcut & lowPhotErrorcut & nonzeroError & ~nanDust
-
-    print 'N stars matching all criteria: ', str(np.sum(indices))
-
-    tgas = tgas[indices]
-    Apass = Apass[indices]
-    twoMass = twoMass[indices]
-    bandDictionary = {'B':{'key':'bmag', 'err_key':'e_bmag', 'array':Apass},
-                      'V':{'key':'vmag', 'err_key':'e_vmag', 'array':Apass},
-                      'J':{'key':'j_mag', 'err_key':'j_cmsig', 'array':twoMass},
-                      'K':{'key':'k_mag', 'err_key':'k_cmsig', 'array':twoMass},
-                      'G':{'key':'phot_g_mean_mag', 'array':tgas}}
-    """
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
     previteration = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
@@ -987,7 +962,7 @@ if __name__ == '__main__':
             assert np.sum(dustEBV) != 0.0, 'dust for iteration ' + str(iter) +  ' not read in properly'
 
         color = colorArray(mag1, mag2, dustEBV, bandDictionary)
-        absMagKinda = absMagKindaArray(absmag, dustEBV, bandDictionary)
+        absMagKinda, apparentMagnitude = absMagKindaArray(absmag, dustEBV, bandDictionary)
 
         color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
         absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
@@ -1037,9 +1012,8 @@ if __name__ == '__main__':
         os.rename('plot_sample.prior.png', priorFile)
 
         #using prior calculate distances
-
-        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, tgas, xdgmm, distanceFile=distanceFile, quantile=quantile, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
-
+        distance = distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, tgas, xdgmm, distanceFile=distanceFile, quantile=quantile, nDistanceSamples=128, nPosteriorPoints=nPosteriorPoints)
+        pdb.set_trace()
 
         #using distance, calculate dust
         try:
@@ -1062,7 +1036,7 @@ if __name__ == '__main__':
     absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
     #check it's working by inferring distances to M67
-    distanceTest(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xlim, ylim, plot2DPost=False)
+    distanceTest(xdgmm, tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
     summedPosterior, distancePosterior, sourceID = posteriorDistanceAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xdgmm, ndim=ndim, projectedDimension=projectedDimension, posteriorFile = 'posteriorDistanceTgas_' + str(ngauss) + '_' + dataFilename)
