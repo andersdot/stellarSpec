@@ -89,20 +89,21 @@ All our results, including a posterior parallax and distance sampling for [ZZZ] 
 
 \section{Introduction}
 
-The \gaia\ Mission (DWH CITE) will deliver more than a billion stellar distances.
+The \gaia\ Mission (\citealt{gaia16}) will deliver more than a billion stellar distances.
 Only a small fraction (but large number) of these distance
 measurements will be purely astrometric:
 \gaia\ uses astrometric parallax to determine the distances of the closer
 stars, and calibrate spectrophotometric models.
 These spectrophotometric models, in turn, along with \gaia's on-board
 low-resolution $B_p\,R_p$ spectrophotometry, are used to provide
-distance estimates to more distant stars (DWH CITE).
+distance estimates to more distant stars.
 The full stack required for these distance inferences is complex.
 It involves modeling not just stars, but also the dust in the Milky Way,
-and the response of the telescope itself (DWH CITE).
+and the response of the telescope itself.
 
-With projects like \project{The Cannon} (DWH CITE) and \project{Avast}
-(DWH CITE), we are exploring the extent to which our predictive models of
+With projects like \project{The Cannon} (\citealt{ness15}; \citealt{casey17}; \citealt{ho17})
+and \project{Avast} (Bedell et al.\ in preparation),
+we are exploring the extent to which our predictive models of
 stars could be purely data-driven or statistical.
 That is, under what circumstances could the data themselves deliver
 more precise or more accurate information than any theoretical or
@@ -144,7 +145,7 @@ using all the data available, fairly and responsibly.
 We have this technology!
 
 Here we build and use just such a data-driven model.  In particular,
-we use all of the \gaia\ \tgas\ data, matched to the
+we use all of the \gaia\ \tgas\ data (\citealt{tgas}), matched to the
 \tmass\ photometry (\citealt{skrutskie06}), and in the footprint of
 the \panstarrs\ Dust Map (CITE GREEN), to make a model of the
 noise-free (or low-noise) color--magnitude diagram (\cmd) of stars.
@@ -155,8 +156,9 @@ estimate of the noise-free or low-noise distribution that \emph{would
   have} been observed with far better data.
 This method has been used in astrophysics
 previously to model the velocity distribution of stars in the Solar
-Neighborhood (DWH CITE BOTH) and to perform quasar target selection
-in \project{Sloan Digital Sky Survey} data (DWH CITE BOTH).
+Neighborhood (\citealt{hogg05}; \citealt{bovy09}) and to
+perform quasar target selection
+in \project{Sloan Digital Sky Survey} data (\citealt{xdqso}; \citealt{xdqsoz}).
 Its advantage over other deconvolution methods is that it takes as input,
 and handles in a principled way, heteroskedastic data.
 Its principle disadvantage for the present purposes is that it requires
@@ -184,7 +186,7 @@ inference.
 Exploration of that possibility, and its computational tractability,
 is among our long-term goals and motivations.
 Along those lines, this paper can be seen as a companion to a related
-project (CITE BORIS), in which we use a slightly less appropriate
+project (Leistedt et al. in preparation), in which we use a slightly less appropriate
 model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
@@ -494,7 +496,7 @@ and other classes (like hot main-sequence stars) have few to no exemplars
 in the data set at high signal-to-noise (in parallax).
 For all these reasons, we do think that this approximation is not perfectly
 safe, and it is a goal to explore full hierarchical modeling in the coming
-years (and see, for example, CITE BORIS).
+years (and see, for example, Leistedt et al. in preparation).
 
 In some sense, the biggest limitation of the data-driven \cmd\ model
 created in this project is that we made no use of any kind of \tgas\ selection
@@ -526,7 +528,7 @@ That is, it is tempting to treat these as simply ``better'' measurements.
 Taken one star at a time, this is permitted and true, and the basis for our
 claim that we have de-noised the \tgas\ Catalog.
 However, there are important differences, as there are with all
-probabilistic catalogs (HOGG CITE LANG, FINKBEINER), between the
+probabilistic catalogs (\citealt{hogg11}; \citealt{portillo17}), between the
 measurements and the de-noised measurements.
 The most important difference, for users of our output, between our
 output and the \tgas\ data input, is that the \tgas\ data is the representation
