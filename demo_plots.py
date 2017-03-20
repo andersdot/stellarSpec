@@ -59,13 +59,13 @@ def absMagKinda2absMag(absMagKinda):
     return 5.*np.log10(10.*absMagKinda_in_arcseconds)
 
 
-def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None):
+def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5)):
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
-    alpha = 0.01
+    alpha = 0.1
     alpha_points = 0.01
-    figData = plt.figure(figsize=(12, 4.5))
-    figPrior = plt.figure(figsize=(12, 4.5))
+    figData = plt.figure(figsize=(12, 5.5))
+    figPrior = plt.figure(figsize=(12, 5.5))
     for fig in [figData, figPrior]:
         fig.subplots_adjust(left=0.1, right=0.95,
                             bottom=0.1, top=0.95,
@@ -89,8 +89,8 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
 
     ax4 = figPrior.add_subplot(122)
     ax4.scatter(samplex, sampley, s=4, lw=0, c='k', alpha=alpha)
-    xlim = ax4.get_xlim()
-    ylim = [10, -5] #ax3.get_ylim()
+    #xlim = ax4.get_xlim()
+    #ylim = ylim #ax3.get_ylim()
 
 
     titles = ["Observed Distribution", "Obs+Noise Distribution",
@@ -100,7 +100,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
-        ax[i].set_xlim(-0.5, 1.5)
+        ax[i].set_xlim(xlim)
         ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
         #ax[i].xaxis.set_major_locator(plt.MultipleLocator([-1, 0, 1]))

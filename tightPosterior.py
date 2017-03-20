@@ -41,7 +41,7 @@ if survey == '2MASS':
     ylim = [6, -4]
 
 
-fig, ax = plt.subplots(2, 3, figsize=(12, 7))
+fig, ax = plt.subplots(2, 3, figsize=(15, 7))
 ax = ax.flatten()
 
 tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
@@ -79,8 +79,11 @@ xparallaxMAS = np.linspace(0, 10, nPosteriorPoints)
 for i in range(np.max(digit)):
     currentInd = np.where(digit == i)[0]
     index = currentInd[np.random.randint(0, high=np.sum(digit==i))]
+    yerr_minus = testXD.absMagKinda2absMag(absMagKinda[index]+absMagKinda_err[index]) - testXD.absMagKinda2absMag(absMagKinda[index])
+    yerr_plus = testXD.absMagKinda2absMag(absMagKinda[index]) - testXD.absMagKinda2absMag(absMagKinda[index]-absMagKinda_err[index])
+    print yerr_minus, yerr_plus
     ax[0].scatter(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), c='black')
-    ax[0].errorbar(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), xerr=color_err[index], yerr=testXD.absMagKinda2absMag(absMagKinda_err[index]), fmt="none", zorder=0, lw=0.5, mew=0, alpha=1.0, color='black', ecolor='black')
+    ax[0].errorbar(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), xerr=[[color_err[index], color_err[index]]], yerr=[[yerr_minus, yerr_plus]], fmt="none", zorder=0, lw=0.5, mew=0, alpha=1.0, color='black', ecolor='black')
     ax[0].annotate(str(i+1), (color[index]+0.02, testXD.absMagKinda2absMag(absMagKinda[index])+0.02))
     meanData, covData = testXD.matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
     meanPrior, covPrior = testXD.matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
@@ -108,11 +111,17 @@ for i in range(np.max(digit)):
     priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
     likeParallax = st.gaussian(absMagKinda[index]/10.**(0.2*apparentMagnitude[index]), absMagKinda_err[index]/10.**(0.2*apparentMagnitude[index]), xparallaxMAS)
 
-    ax[i+1].plot(xparallaxMAS, likeParallax*np.max(posteriorParallax)/np.max(likeParallax), label='likelihood', lw=2, color='black')
-    ax[i+1].plot(xparallaxMAS, priorParallax*np.max(posteriorParallax)/np.max(priorParallax), label='prior', lw=0.5, color='black')
-    ax[i+1].plot(xparallaxMAS, posteriorParallax, label='posterior', lw=2, color='black', alpha=0.5)
+    l1, = ax[i+1].plot(xparallaxMAS, likeParallax*np.max(posteriorParallax)/np.max(likeParallax), alpha=0.5, lw=2, color='black')
+    l2, = ax[i+1].plot(xparallaxMAS, priorParallax*np.max(posteriorParallax)/np.max(priorParallax), lw=0.5, color='black')
+    l3, = ax[i+1].plot(xparallaxMAS, posteriorParallax, lw=2, color='black')
     ax[i+1].set_title(str(i+1))
     ax[i+1].set_xlabel(r'$\varpi$ [mas]')
-    if i+1 == 2: ax[i+1].legend()
+    ax[i+1].tick_params(
+        axis='y',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom='off',      # ticks along the bottom edge are off
+        top='off',         # ticks along the top edge are off
+        labelbottom='off') # labels along the bottom edge are off
+    if i+1 == 1: fig.legend((l1, l2, l3), ('likelihood', 'prior', 'posterior'), 'upper right', fontsize=15)
 plt.tight_layout()
 fig.savefig('tightPosterior.png')

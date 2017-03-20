@@ -934,7 +934,7 @@ if __name__ == '__main__':
         xlabel = 'J-K$_s$'
         ylabel = r'M$_\mathrm{J}$'
         xlim = [-0.25, 1.25]
-        ylim = [6, -4]
+        ylim = [6, -6]
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
     previteration = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
@@ -962,7 +962,7 @@ if __name__ == '__main__':
             assert np.sum(dustEBV) != 0.0, 'dust for iteration ' + str(iter) +  ' not read in properly'
 
         color = colorArray(mag1, mag2, dustEBV, bandDictionary)
-        absMagKinda, apparentMagnitude = absMagKindaArray(absmag, dustEBV, bandDictionary)
+        absMagKinda, apparentMagnitude = absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
 
         color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
         absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
@@ -1006,8 +1006,11 @@ if __name__ == '__main__':
 
         #plot 2x2 visual of prior w/ samples
         sample = xdgmm.sample(Nsamples)
+        yerr_minus = absMagKinda2absMag(absMagKinda+absMagKinda_err) - absMagKinda2absMag(absMagKinda)
+        yerr_plus = absMagKinda2absMag(absMagKinda) - absMagKinda2absMag(absMagKinda-absMagKinda_err)
+
         dp.plot_sample(color, absMagKinda2absMag(absMagKinda), color, absMagKinda2absMag(absMagKinda),
-                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=color_err, yerr=absMagKinda2absMag(absMagKinda_err), xlabel=xlabel, ylabel=ylabel)
+                    sample[:,0],absMagKinda2absMag(sample[:,1]),xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim)
         os.rename('plot_sample.data.png', dataFile)
         os.rename('plot_sample.prior.png', priorFile)
 
