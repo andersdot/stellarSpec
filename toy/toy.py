@@ -1,13 +1,27 @@
 import numpy as np
 import scipy.optimize as op
+import sys
 
-def make_fake_data(N=512):
+
+def make_fake_data(parsTrue, N=512):
     np.random.seed(42)
-    mtrue, btrue, ttrue = -1.37, 0.2, 0.4
+    mtrue, btrue, ttrue = parsTrue
     xns = np.random.uniform(size=N) * 2. - 1.
-    yntrues = mtrue * xns + btrue + np.random.normal(size=N) * ttrue
-    sigmans = (np.random.uniform(size=N) * 1.5) ** 3
-    yns = yntrues + np.random.normal(size=N) * sigmans
+    tns = np.random.normal(scale=ttrue, size=N)
+    #tns = np.random.normal(size=N) * ttrue
+    yntrues = mtrue * xns + btrue + tns
+    sigmans = (np.random.uniform(size=N) * 2.) ** 3.
+    #yns = yntrues + np.random.normal(size=N) * sigmans
+    yns = yntrues + np.random.normal(scale=sigmans)
+    fig, ax = plt.subplots(1,3)
+    ax[0].scatter(xns, tns, s=2)
+    ax[0].set_ylabel('sampled noise from ttrue gaussian')
+    ax[1].scatter(xns, sigmans, s=2)
+    ax[1].set_ylabel('sigmans')
+    ax[2].scatter(xns, np.random.normal(scale=sigmans), s=2)
+    ax[2].set_ylabel('sampled noise from sigmans gaussian')
+    plt.tight_layout()
+    fig.savefig('laurenUnderstanding.png')
     return xns, yns, sigmans, yntrues
 
 def objective(pars, xns, yns, sigmas):
@@ -28,37 +42,67 @@ def denoise_one_datum(xn, yn, sigman, m, b, t):
         np.sqrt(1. / (s2inv + t2inv))
 
 if __name__ == "__main__":
-    import pylab as plt
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    mpl.rcParams['xtick.labelsize'] = 18
+    mpl.rcParams['ytick.labelsize'] = 18
+    nexamples =  np.int(sys.argv[1])
+    xlim = (-1, 1)
+    ylim = (-5, 5)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    axes = axes.flatten()
+    mtrue, btrue, ttrue = -1.37, 0.2, 0.8
+    parsTrue = [mtrue, btrue, ttrue] #m, b, t
 
-    xns, yns, sigmans, yntrues = make_fake_data()
-    plt.clf()
-    plt.errorbar(xns, yns, yerr=sigmans, fmt="o", color="k", alpha=0.25)
-    plt.errorbar(xns[0:16], yns[0:16], yerr=sigmans[0:16], fmt="o", color="k", zorder=37)
-    plt.ylim(-5, 5)
-    plt.savefig("data.png")
+    alpha_all = 0.05
+    alpha_chosen = 1.0
+
+    dataMap = mpl.cm.get_cmap('Blues')
+    dataColor = dataMap(0.75)
+    trueMap = mpl.cm.get_cmap('Reds')
+    trueColor = trueMap(0.75)
+    xns, yns, sigmans, yntrues = make_fake_data(parsTrue)
+    for ax in axes[:-1]:
+        ax.errorbar(xns, yns, yerr=sigmans, fmt="o", color="k", alpha=alpha_all ,mew=0)
+        ax.errorbar(xns[0:nexamples], yns[0:nexamples], yerr=sigmans[0:nexamples], fmt="o", color="k", zorder=37, alpha=alpha_chosen, mew=0)
+
 
     m, b, t = get_best_fit_pars(xns, yns, sigmans)
-    x1, x2 = plt.xlim()
-    xp = np.array([x1, x2])
-    plt.plot(xp, m * xp + b + t, "b-")
-    plt.plot(xp, m * xp + b - t, "b-")
-    plt.savefig("bestfit.png")
+    print m, b, t
+    xp = np.array(xlim)
+    axes[1].plot(xp, m * xp + b + t, color=dataColor)
+    axes[1].plot(xp, m * xp + b - t, color=dataColor)
+    axes[1].scatter(xns[0:nexamples], yntrues[0:nexamples], c=trueColor, s=20., lw=2, zorder=36, alpha=alpha_chosen, facecolors='None')
+    axes[1].plot(xp, mtrue*xp + btrue + ttrue, color=trueColor, zorder=35)
+    axes[1].plot(xp, mtrue*xp + btrue - ttrue, color=trueColor, zorder=34)
+    r1 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color='black', alpha=alpha_chosen))
+    r2 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=trueColor, alpha=alpha_chosen))
+    r3 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=dataColor, alpha=alpha_chosen))
+    axes[1].legend((r1,r2,r3), ('data', 'truth', 'denoised'), loc='best', fontsize=12)
 
     ydns = np.zeros_like(yns)
     sigmadns = np.zeros_like(sigmans)
     for n, (xn, yn, sigman) in enumerate(zip(xns, yns, sigmans)):
         ydns[n], sigmadns[n] = denoise_one_datum(xn, yn, sigman, m, b, t)
-    plt.errorbar(xns[0:16], ydns[0:16], yerr=sigmadns[0:16], fmt="o", color="b", zorder=37, alpha=0.75)
-    plt.savefig("examples.png")
+    #for ax in axes[1]:
+    axes[1].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color=dataColor, zorder=37, alpha=alpha_chosen, mew=0)
 
-    plt.plot(xns[0:16], yntrues[0:16], "rx", ms=8., mew=2, zorder=39, alpha=0.75)
-    plt.savefig("truths.png")
+    norm = mpl.colors.Normalize(vmin=0, vmax=9)
+    im = axes[2].scatter(xns,  ydns,  c=sigmans**2., cmap='Blues', norm=norm, alpha=0.5, lw=0)
+    fig.subplots_adjust(left=0.05, right=0.89)
+    cbar_ax = fig.add_axes([0.9, 0.125, 0.02, 0.75])
+    cb = fig.colorbar(im, cax=cbar_ax)
+    #cb = plt.colorbar(im, ax=axes[2])
+    cb.set_label(r'$\sigma_n^2$', fontsize=20)
+    cb.set_clim(-4, 9)
 
-    xlim = plt.xlim()
-    ylim = plt.ylim()
-    plt.clf()
-    plt.errorbar(xns, ydns, yerr=sigmadns, fmt="o", color="b", alpha=0.25)
-    plt.errorbar(xns[0:16], ydns[0:16], yerr=sigmadns[0:16], fmt="o", color="b", zorder=37, alpha=0.75)
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    plt.savefig("denoised.png")
+
+    axes[2].errorbar(xns, ydns, yerr=sigmadns, fmt="None", mew=0, color='black', alpha=0.25, elinewidth=0.5)
+    #axes[2].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color="b", zorder=37, alpha=alpha_chosen, mew=0)
+    for ax in axes:
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_xticks((-1, -0.5, 0, 0.5, 1))
+        ax.set_xticklabels((-1, 0.5, 0, 0.5, 1))
+    plt.tight_layout()
+    fig.savefig("toy.png")
