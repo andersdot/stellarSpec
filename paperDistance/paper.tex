@@ -225,7 +225,7 @@ commitment to---or even use of---physical models of stars or the Milky Way.
 \begin{figure}
 \centering
   \includegraphics[width=\textwidth]{toy.png}
-\caption{Why does this work: Fitting a line}
+\caption{ {\bf Why does this work}: An example of generating posterior beliefs of noisy data by using the denoised distribution of data as a prior. The left panel is 1024 realizations of noisy data drawn from the gaussian distribution represented by the $1\sigma$ red lines shown in the center panel. The black points are 5 randomly chosen data to highlight the method. The blue lines in the center panel represent the MML best estimate for the underlying distribution, which denoises the data. The blue points in the center panel represent the posterior belief of the true values of the noisy black points, and the red points represent the actual true values. The right panel shows the posterior belief of the true value for all the points. They are colored by the measurement variance showing that data with larger measured variance are more influenced by the prior and lie towards the center of the MML distribution, or prior. Where as more certain measurements tend to lie closer to their measured value. The blue points are better than the black for doing stuff.}
 \label{fig:line}
 \end{figure}
 
@@ -245,7 +245,7 @@ When the true values are inferred in this way, the associated variance $\tilde{\
 Figure \ref{fig:line}, left panel, shows 1024 realizations of the noisy values $y_n$ and their associated measurement uncertainties $\sigma_n$ as the grey points. Here we highlight 5 random points in black to highlight the method, but the same method is being applied to all the data.
 We denoise these points using marginalized maximum likelihood estimation (MML), which marginalizes over the true data values (we never need to know them) and maximizes the likelihood of the data. Here our likelihood for each individual datum is $p(y_n \given m, b, t^2, \sigma_n^2) = \mathcal{N}(y_n \given m\,x_n + b, t^2 + \sigma_n^2)$ and the likelihood of the full data set is $\prod_n\, p(y_n \given m, b, t^2, \sigma_n^2)$. Maximizing this likelihood is the same as minimizing the $\chi^2 = \sum_n \frac{[y_n - [m\,x_n + b]]^2}{[\sigma_n^2 + t_n^2]} + \sum_n\,ln(2\pi\,[\sigma_n^2 + t^2])$. This MML gives us the best fit parameters $\hat{m}$, $\hat{b}$, and $\hat{t}$. In Figure \ref{fig:line}, center panel, the true functions $y_{true} = m_{true}\,x + b_{true} \pm t_{true}$ are shown as the red lines, and the best fit MML functions $\hat{y}_{true} = \hat{m}\, x + \hat{b} \pm \hat{t}$ are shown as the blue lines. Now that we have an estimate of the true underlying distribution $\hat{y}_{true}$, we use this as a prior to infer a posterior belief of the true values for each datum $p(y_{true,n} \given y_n, \tilde{\sigma}_n^2)$
 
-So
+So using Bayes theorem
 \begin{eqnarray}
 p(y_{true,n} \given y_n, \tilde{\sigma}_n) &=& p(y_n \given y_{true,n}, \sigma_n)\,p(y_{true,n}) \\
 p(y_n \given y_{true,n}, \sigma_n) &=& \mathcal{N}(y_n \given y_{true,n}, \sigma_n) \\
