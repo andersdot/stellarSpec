@@ -240,7 +240,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
     data = np.load(dustFile)
     dustEBV = data['ebv']
     absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
-    color = colorArray(mag1, mag2, dustEBV, bandDictionary)
+    color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
     color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
     xparallaxMAS = np.logspace(-2, 2, 1000)
     data = np.load(postFile)
@@ -292,7 +292,9 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         plt.tight_layout()
         #if file == 'posteriorSimple.npz':
         ax[0].set_ylim(-5, 5)
-        ax[1].set_ylim(-7, 2)
+        ax[1].set_ylim(-6, 2)
+        ax[0].set_xlim(1e-1, 1e1)
+        ax[1].set_xlim(1e-1, 1e2)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
         notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
         print np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
