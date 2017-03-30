@@ -251,10 +251,11 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_xlabel(r'$E[\varpi]$', fontsize=18)
         ax[1].set_xlabel(r'$E[\varpi]$', fontsize=18)
         ax[0].set_ylabel(r'$E[\varpi] - \varpi$', fontsize=18)
-        ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
+        ax[1].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         plt.tight_layout()
-        if file == 'posteriorSample.npz': ax[0].set_ylim(-1, 5)
-
+        if file == 'posteriorSimple.npz':
+            ax[0].set_ylim(-1, 5)
+            ax[1].set_ylim(-5, 1)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
 
 if __name__ == '__main__':
