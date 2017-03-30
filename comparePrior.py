@@ -232,7 +232,13 @@ def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
     plt.tight_layout()
 
-def examplePosterior(nexamples=100, postFile='posteriorSimple.npz'):
+def examplePosterior(apparentMagnitude, nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz'., nPosteriorPoints=1000):
+    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+
+    data = np.load(dustFile)
+    dustEBV = data['ebv']
+    absMagKinda, apparentMagnitude = absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+
     xparallaxMAS = np.logspace(-2, 2, 1000)
     data = np.load(postFile)
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
@@ -242,16 +248,22 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz'):
     varDiff = var - tgas['parallax_error']**2.
     ind = np.argsort(varDiff)[::-1]
     for i in ind[0:nexamples]:
+        xabsMagKinda = testXD.parallax2absMagKinda(xparallaxMAS, apparentMagnitude[i])
+        meanPrior, covPrior = matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
+        meanPrior = meanPrior[0]
+        covPrior = covPrior[0]
+        allMeans, allAmps, allCovs, summedPriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
+        priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
         plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'][i], tgas['parallax_error'][i], xparallaxMAS), label='likelhood')
-        plt.plot(xparallaxMAS, testXD.expDecreasingSpDensity(xparallaxMAS, L=1.35), label='prior')
+        plt.plot(xparallaxMAS, priorParallax, label='prior')
         plt.legend()
         plt.xscale('log')
         plt.legend(loc='best')
         plt.tight_layout()
         plt.xlabel('parallax [mas]', fontsize=18)
-        plt.savefig('examplePosteriorLargerVariance_' + str(i) + '.png')
+        plt.savefig('exampleCMDPosteriorLargerVariance_' + str(i) + '.png')
 
 
 def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
@@ -294,7 +306,8 @@ if __name__ == '__main__':
     survey='2MASS'
     dataFilename = 'All.npz'
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+    dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
     #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    examplePosterior(postFile=postFile, nexamples=100)
+    examplePosterior(postFile=postFile, nexamples=100, dustFile=dustFile)
     #compareSimpleGaia()
