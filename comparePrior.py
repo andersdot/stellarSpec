@@ -237,7 +237,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
 
     data = np.load(dustFile)
     dustEBV = data['ebv']
-    absMagKinda, apparentMagnitude = absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
 
     xparallaxMAS = np.logspace(-2, 2, 1000)
     data = np.load(postFile)
@@ -249,10 +249,10 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
     ind = np.argsort(varDiff)[::-1]
     for i in ind[0:nexamples]:
         xabsMagKinda = testXD.parallax2absMagKinda(xparallaxMAS, apparentMagnitude[i])
-        meanPrior, covPrior = matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
+        meanPrior, covPrior = testXD.matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
         meanPrior = meanPrior[0]
         covPrior = covPrior[0]
-        allMeans, allAmps, allCovs, summedPriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
+        allMeans, allAmps, allCovs, summedPriorAbsmagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
         priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
