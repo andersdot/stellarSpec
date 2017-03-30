@@ -1,6 +1,8 @@
 import numpy as np
 from xdgmm import XDGMM
 import drawEllipse
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import testXD
@@ -181,6 +183,28 @@ def comparePosterior():
 def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     data = np.load(postFile)
+    mean = data['mean']
+    var = data['var']
+    posterior = data['posterior']
+
+    dataSim = np.load('posteriorSimple.npz')
+    meanSim = data['mean']
+    varSim = data['var']
+    posteriorSim = data['posterior']
+
+    neg = tgas['parallax'] < 0
+    fig, ax = plt.subplots(1, 2)
+    ax[0].plot(data['mean'][~neg], mean[~neg] - tgas['parallax'][~neg], 'ko', markersize=1)
+    ax[0].plot(data['mean'][neg], mean[neg] - tgas['parallax'][neg], 'ro', markersize=1)
+    ax[0].set_xscale('log')
+    ax[1].plot(data['mean'][~neg], np.log(var[~neg]) - np.log(tgas['parallax_error'][~neg]**2.), 'ko', markersize=1)
+    ax[1].plot(data['mean'][neg], np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), 'ro', markersize=1)
+    ax[1].set_xscale('log')
+    ax[0].set_xlabel(r'$E[\varpi]$', fontsize=18)
+    ax[1].set_xlabel(r'$E[\varpi]$', fontsize=18)
+    ax[0].set_ylabel(r'$E[\varpi] - \varpi$', fontsize=18)
+    ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
+    plt.tight_layout()
 
 def examplePosterior(nexamples=100):
     xparallaxMAS = np.logspace(-2, 2, 1000)
