@@ -141,6 +141,28 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     os.rename('plot_sample.prior.png', priorFile)
     #import pdb; pdb.set_trace()
 
+    posteriorFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+    data = np.load(posteriorFile)
+    parallax = data['mean']
+    parallax_err = np.sqrt(data['var'])
+
+    absMagKinda = parallax*10.**(0.2*apparentMagnitude)
+    absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+
+    yplus  = y + absMagKinda_err
+    yminus = y - absMagKinda_err
+    parallaxErrGoesNegative = yminus < 0
+    absMagYMinus = testXD.absMagKinda2absMag(yminus)
+    absMagYMinus[parallaxErrGoesNegative] = -50.
+    yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
+    yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
+    dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
+                xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
+    dataFile = 'inferredDistances_data.png'
+    priorFile = 'prior_' + str(ngauss) +'gauss.png'
+    os.rename('plot_sample.data.png', dataFile)
+    os.rename('plot_sample.prior.png', priorFile)
+
 
 
 def comparePosterior():
@@ -234,7 +256,7 @@ def examplePosterior(nexamples=100):
 def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     yim = (-1, 5)
-    for file in ['posteriorSimple.npz']: #, postFile]:
+    for file in ['posteriorSimple.npz', postFile]:
         data = np.load(file)
         mean = data['mean']
         var = data['var']
