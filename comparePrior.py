@@ -9,6 +9,7 @@ import testXD
 import sys
 import demo_plots as dp
 import os
+import stellarTwins as st
 
 def prior(xdgmm, ax):
     for gg in range(xdgmm.n_components):
