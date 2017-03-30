@@ -194,7 +194,7 @@ def examplePosterior(nexamples=100):
     for i in ind[0:nexamples]:
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
-        plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'], tgas['parallax_error'], xparallaxMAS), label='likelhood')
+        plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'][i], tgas['parallax_error'][i], xparallaxMAS), label='likelhood')
         plt.plot(xparallaxMAS, testXD.expDecreasingSpDensity(xparallaxMAS, L=1.35), label='prior')
         plt.legend()
         plt.xscale('log')
