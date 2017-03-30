@@ -120,7 +120,8 @@ for iteration in np.arange(20, 40):
                 print str(index) + ' has no positive distance values'
                 continue
             logDistance = np.log10(1./xparallaxMAS[positive])
-        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanData, covData, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+        allMeansPrior, allAmpsPrior, allCovsPrior, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
         print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
         posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
         priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])

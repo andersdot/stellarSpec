@@ -165,7 +165,7 @@ def plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoi
     return xparallaxMAS, xabsMagKinda
 
 
-def absMagKindaPosterior(xdgmm, ndim, mean, cov, meanPrior, covPrior, x, projectedDimension=1, nPosteriorPoints=1000):
+def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1, nPosteriorPoints=1000):
     """
     calculate the posterior of data likelihood mean, cov with prior xdgmm
     """
@@ -173,10 +173,10 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, meanPrior, covPrior, x, project
     allAmps = np.zeros(xdgmm.n_components)
     allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
     summedPosterior = np.zeros(len(x))
-    summedPrior = np.zeros(len(x))
+    #summedPrior = np.zeros(len(x))
     individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
-    individualPrior = np.zeros((xdgmm.n_components, nPosteriorPoints))
-    allpriorAmps = np.zeros(xdgmm.n_components)
+    #individualPrior = np.zeros((xdgmm.n_components, nPosteriorPoints))
+    #allpriorAmps = np.zeros(xdgmm.n_components)
     for gg in range(xdgmm.n_components):
         #print mean2[dimension], cov2[dimension], xdgmm.mu[gg], xdgmm.V[gg]
         newMean, newCov, newAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], mean, cov)
@@ -186,15 +186,16 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, meanPrior, covPrior, x, project
         allCovs[gg] = newCov
         summedPosterior += st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
         individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
-
+        """
         newpriorMean, newpriorCov, newpriorAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], meanPrior, covPrior)
         newpriorAmp *= xdgmm.weights[gg]
         allpriorAmps[gg] = newpriorAmp
         summedPrior += st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
         individualPrior[gg,:] = st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
+        """
     summedPosterior = summedPosterior/np.sum(allAmps)
-    summedPrior = summedPrior#/np.sum(allpriorAmps)
-    return allMeans, allAmps, allCovs, summedPosterior, summedPrior
+    #summedPrior = summedPrior#/np.sum(allpriorAmps)
+    return allMeans, allAmps, allCovs, summedPosterior
 
 def posterior2d(means, amps, covs, xbins, ybins, nperGauss=100000., plot=False):
     """
@@ -528,7 +529,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, apparentMag
                     print str(index) + ' has no positive distance values'
                     continue
                 logDistance = np.log10(1./xparallaxMAS[positive])
-            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
             print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
             posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
             priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
@@ -771,12 +772,14 @@ def posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_
         indices = np.where(indexArray)
 
     parallaxPosterior = np.zeros((nstars, nPosteriorPoints))
+    mean = np.zeros(nstars)
+    var = np.zeros(nstars)
     xparallaxMAS = np.logspace(-2, 2, nPosteriorPoints)
     sourceID = np.zeros(nstars)
     for i, index in enumerate(indices):
-        if np.mod(index, 10000) == 0.0:
-            print index
-            np.savez(posteriorFile, posterior=summedPosterior, distance=distancePosterior)
+        #if np.mod(index, 10000) == 0.0:
+            #print index
+            #np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
         posterior[i], mean[i], var[i] = calcPosterior(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index], apparentMagnitude[index], xdgmm, nPosteriorPoints=nPosteriorPoints, xarray=xparallaxMAS, debug=False, ndim=ndim)
         sourceID[i] = tgas['sourceID'][index]
     np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
@@ -898,7 +901,7 @@ def dataArrays(survey='2MASS'):
 
     return tgas, twoMass, Apass, bandDictionary, indices
 
-def iterateDust(mag1, mag2, absmag, bandDictionary, tgas):
+def iterateDust(mag1, mag2, absmag, bandDictionary, tgas, xlabel='X', ylabel='Y'):
 
     iteration = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th']
     previteration = ['0th', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th']
@@ -959,15 +962,6 @@ def iterateDust(mag1, mag2, absmag, bandDictionary, tgas):
             xdgmm = xdgmm.fit(X, Xerr)
             xdgmm.save_model(xdgmmFilename)
 
-
-        #plot XD prior
-        #figPrior, axPrior = plt.subplots()
-        #for gg in range(xdgmm.n_components):
-        #    points = drawEllipse.plotvector(xdgmm.mu[gg], xdgmm.V[gg])
-        #    axPrior.plot(points[0,:],absMagKinda2absMag(points[1,:]), 'r', lw=0.5, alpha=xdgmm.weights[gg]/np.max(xdgmm.weights))
-        #    axPrior.invert_yaxis()
-        #figPrior.savefig('prior.' + iter + '.png')
-
         #plot 2x2 visual of prior w/ samples
         sample = xdgmm.sample(Nsamples)
         yerr_minus = absMagKinda2absMag(absMagKinda+absMagKinda_err) - absMagKinda2absMag(absMagKinda)
@@ -1002,7 +996,7 @@ if __name__ == '__main__':
     #thresholdSN = 0.001     #threshold S/N
     ngauss = np.int(sys.argv[1]) #128            #number of gaussians in the XD
     quantile = np.float(sys.argv[2])
-    calculatePosteriors = np.bool(np.int(sys.argv[3]))
+    iterDust = np.bool(np.int(sys.argv[3]))
     dataFilename = 'All.npz'
     Nsamples = 120000       #number of samples of the XD to plot
     nPosteriorPoints = 1000 #number of elements in the posterior array
@@ -1012,7 +1006,6 @@ if __name__ == '__main__':
     subset = False          #subsample the data to generate the XD prior
     dustCorrectedArraysGenerated = False
     dustEBV = None
-
 
     tgas, twoMass, Apass, bandDictionary, indices = dataArrays()
 
@@ -1034,8 +1027,8 @@ if __name__ == '__main__':
         xlim = [-0.25, 1.25]
         ylim = [6, -6]
 
-    if not calculatePosteriors:
-        iterateDust(mag1, mag2, absmag, bandDictionary, tgas)
+    if iterDust:
+        iterateDust(mag1, mag2, absmag, bandDictionary, tgas, xlabel=xlabel, ylabel=ylabel)
 
     iter = '10th'
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
@@ -1058,4 +1051,7 @@ if __name__ == '__main__':
     #distanceTest(xdgmm, tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, xlim, ylim, plot2DPost=False)
 
     #calculate parallax-ish posterior for each star
-    posteriorParallax, mean, var = posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, xdgmm, ndim=2, projectedDimension=1, posteriorFile = posteriorFile, indexArray=None)
+    #set indexArray to boolean array of sources you want to calculate otherwise calculatese all stars
+    #e.g. indexArray = tgas['parallax_error'] > 0.1
+    indexArray = None
+    posteriorParallax, mean, var = posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, xdgmm, ndim=2, projectedDimension=1, posteriorFile = posteriorFile, indexArray=indexArray)
