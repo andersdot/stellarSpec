@@ -6,6 +6,11 @@ from astroML.plotting.tools import draw_ellipse
 from astroML.plotting import setup_text_plots
 from sklearn.mixture import GMM as skl_GMM
 import drawEllipse
+import matplotlib as mpl
+plt.style.use('seaborn-talk')
+mpl.rcParams['xtick.labelsize'] = 18
+mpl.rcParams['ytick.labelsize'] = 18
+from scipy.stats import gaussian_kde
 
 def plot_bic(param_range,bics,lowest_comp):
     plt.clf()
@@ -58,8 +63,46 @@ def absMagKinda2absMag(absMagKinda):
     absMagKinda_in_arcseconds = absMagKinda/1e3 #first convert parallax from mas ==> arcseconds
     return 5.*np.log10(10.*absMagKinda_in_arcseconds)
 
+def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
 
-def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5)):
+    points = np.vstack([x, y])
+
+    # perform kernel density estimate
+    kde = gaussian_kde(points)
+    z = kde(points)
+
+    # mask points above density threshold
+    x = np.ma.masked_where(z > threshold, x)
+    y = np.ma.masked_where(z > threshold, y)
+
+    # plot unmasked points
+    ax.scatter(x, y, c='black', marker='.', s=s, lw=lw, alpha=alpha)
+
+    # get bounds from axes
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+
+    # prepare grid for density map
+    xedges = np.linspace(xmin, xmax, bins)
+    yedges = np.linspace(ymin, ymax, bins)
+    xx, yy = np.meshgrid(xedges, yedges)
+    gridpoints = np.array([xx.ravel(), yy.ravel()])
+
+    # compute density map
+    zz = np.reshape(kde(gridpoints), xx.shape)
+
+    # plot density map
+    im = ax.imshow(zz, cmap='Greys', interpolation='nearest',
+               origin='lower', aspect='auto', extent=[xmin, xmax, ymin, ymax])
+
+    # plot threshold contour
+    cs = ax.contour(xx, yy, zz, levels=[threshold], colors='black', linestyle='--', linewidths=0.5)
+
+    # show
+    #fig.colorbar(im)
+    return ax
+
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200):
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
     alpha = 0.1
@@ -68,34 +111,38 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     figPrior = plt.figure(figsize=(12, 5.5))
     for fig in [figData, figPrior]:
         fig.subplots_adjust(left=0.1, right=0.95,
-                            bottom=0.1, top=0.95,
-                            wspace=0.02, hspace=0.02)
+                            bottom=0.15, top=0.95,
+                            wspace=0.1, hspace=0.1)
 
     ax1 = figData.add_subplot(121)
-    ax1.scatter(x_true, y_true, s=1, lw=0, c='k', alpha=alpha)
+    ax1.scatter(x, y, s=1, lw=0, c='k', alpha=alpha)
 
     ax2 = figData.add_subplot(122)
-
-    ax2.scatter(x, y, s=1, lw=0, c='k', alpha=alpha_points)
-    ax2.errorbar(x, y, xerr=xerr, yerr=yerr, fmt="none", zorder=0, lw=0.05, mew=0, alpha=0.1, color='0.5')
+    ind = np.random.randint(0, len(x), size=errSubsample)
+    ax2.scatter(x[ind], y[ind], s=1, lw=0, c='k', alpha=alpha_points)
+    ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, lw=0.5, mew=0, alpha=0.5, color='Grey')
 
     ax3 = figPrior.add_subplot(121)
+    #kdeDensity(ax3, samplex, sampley, threshold=thresholdScatter, bins=binsScatter, s=1, lw=0, alpha=alpha)
+    ax3.scatter(samplex, sampley, s=1, lw=0, c='k', alpha=alpha)
+
+    ax4 = figPrior.add_subplot(122)
     for i in range(xdgmm.n_components):
         points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
-        ax3.plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
+        ax4.plot(points[0, :], absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
         #draw_ellipse(xdgmm.mu[i], xdgmm.V[i], scales=[2], ax=ax4,
         #         ec='None', fc='gray', alpha=xdgmm.weights[i]/np.max(xdgmm.weights)*0.1)
 
 
-    ax4 = figPrior.add_subplot(122)
-    ax4.scatter(samplex, sampley, s=4, lw=0, c='k', alpha=alpha)
+
+
     #xlim = ax4.get_xlim()
     #ylim = ylim #ax3.get_ylim()
 
 
     titles = ["Observed Distribution", "Obs+Noise Distribution",
-              "Extreme Deconvolution\n  cluster locations",
-            "Extreme Deconvolution\n  resampling"]
+              "Extreme Deconvolution\n  resampling",
+              "Extreme Deconvolution\n  cluster locations"]
 
     ax = [ax1, ax2, ax3, ax4]
 
@@ -107,7 +154,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
         #ax[i].yaxis.set_major_locator(plt.MultipleLocator([3, 4, 5, 6]))
 
         ax[i].text(0.05, 0.95, titles[i],
-                   ha='left', va='top', transform=ax[i].transAxes)
+                   ha='left', va='top', transform=ax[i].transAxes, fontsize=18)
 
         #if i in (0, 1):
         #    ax[i].xaxis.set_major_formatter(plt.NullFormatter())
@@ -127,7 +174,7 @@ def plot_sample(x_true, y_true, x, y, samplex, sampley, xdgmm, xlabel='x', ylabe
     #ax[3].set_ylim(3, -1)
     #ax[3].yaxis.tick_right()
     #ax[3].yaxis.set_label_position("right")
-    plt.tight_layout()
+    #plt.tight_layout()
     figData.savefig('plot_sample.data.png')
     figPrior.savefig('plot_sample.prior.png')
 

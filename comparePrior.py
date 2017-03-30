@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import testXD
 import sys
+import demo_plots as dp
+import os
 
 def prior(xdgmm, ax):
     for gg in range(xdgmm.n_components):
@@ -65,9 +67,84 @@ def dustViz(ngauss=128, quantile=0.5, iter='8th', survey='2MASS', dataFilename='
     cb.set_label(r'E($B-V$ )')
     fig.savefig('dustViz.dQ' + str(quantile) + '.png')
 
+def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5):
 
+    if survey == 'APASS':
+        mag1 = 'B'
+        mag2 = 'V'
+        absmag = 'G'
+        xlabel='B-V'
+        ylabel = r'M$_\mathrm{G}$'
+        xlim = [-0.2, 2]
+        ylim = [9, -2]
+
+    if survey == '2MASS':
+        mag1 = 'J'
+        mag2 = 'K'
+        absmag = 'J'
+        xlabel = 'J-K$_s$'
+        ylabel = r'M$_\mathrm{J}$'
+        xlim = [-0.25, 1.25]
+        ylim = [6, -6]
+
+    xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
+
+    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+    dustEBV = 0.0
+    color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+
+    color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
+    absMagKinda_err = tgas['parallax_error']*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+
+    xdgmm = XDGMM(filename=xdgmmFilename)
+    sample = xdgmm.sample(Nsamples)
+    negParallax = sample[:,1] < 0
+    nNegP = np.sum(negParallax)
+    while nNegP > 0:
+        sampleNew = xdgmm.sample(nNegP)
+        sample[negParallax] = sampleNew
+        negParallax = sample[:,1] < 0
+        nNegP = np.sum(negParallax)
+    positive = absMagKinda > 0
+    y = absMagKinda[positive]
+    yplus  = y + absMagKinda_err[positive]
+    yminus = y - absMagKinda_err[positive]
+    parallaxErrGoesNegative = yminus < 0
+    absMagYMinus = testXD.absMagKinda2absMag(yminus)
+    absMagYMinus[parallaxErrGoesNegative] = -50.
+    yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
+    yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
+    #yerr_minus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
+    #yerr_plus = testXD.absMagKinda2absMag(y) - absMagYMinus
+    """
+    testfig, testax = plt.subplots(3)
+    testax[0].scatter(testXD.absMagKinda2absMag(y), y, s=1)
+    testax[0].set_xlabel('absMag')
+    testax[0].set_ylabel('absMagKinda')
+    testax[1].scatter(testXD.absMagKinda2absMag(y), absMagYMinus, s=1)
+    testax[1].set_xlabel('absMag')
+    testax[1].set_ylabel('absMag Minus')
+    testax[2].scatter(testXD.absMagKinda2absMag(y), testXD.absMagKinda2absMag(yplus), s=1)
+    testax[2].set_xlabel('absMag')
+    testax[2].set_ylabel('absMag Plus')
+    plt.show()
+    """
+    dp.plot_sample(color[positive], testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
+                xdgmm, xerr=color_err[positive], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
+    dataFile = 'data_noDust.png'
+    priorFile = 'prior_' + str(ngauss) +'gauss.png'
+    os.rename('plot_sample.data.png', dataFile)
+    os.rename('plot_sample.prior.png', priorFile)
+    #import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
-    dustViz(quantile=quantile)
+    ngauss = np.int(sys.argv[2])
+    if ngauss == 128: iter='10th'
+    if ngauss == 512: iter='4th'
+    if ngauss == 2048: iter='1st'
+    Nsamples=1.2e5
+    #dustViz(quantile=quantile)
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
