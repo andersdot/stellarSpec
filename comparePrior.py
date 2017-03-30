@@ -142,24 +142,24 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     #import pdb; pdb.set_trace()
 
     posteriorFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
-    #for file in [posteriorFile, ]:
-    data = np.load(posteriorFile)
-    parallax = data['mean']
-    parallax_err = np.sqrt(data['var'])
+    for file in [posteriorFile, 'posteriorSimple.npz']:
+        data = np.load(posteriorFile)
+        parallax = data['mean']
+        parallax_err = np.sqrt(data['var'])
 
-    absMagKinda = parallax*10.**(0.2*apparentMagnitude)
-    absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
+        absMagKinda = parallax*10.**(0.2*apparentMagnitude)
+        absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
-    yplus  = y + absMagKinda_err
-    yminus = y - absMagKinda_err
-    parallaxErrGoesNegative = yminus < 0
-    absMagYMinus = testXD.absMagKinda2absMag(yminus)
-    absMagYMinus[parallaxErrGoesNegative] = -50.
-    yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
-    yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
-    dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
-                xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
-    dataFile = 'inferredDistances_data.png'
+        yplus  = y + absMagKinda_err
+        yminus = y - absMagKinda_err
+        parallaxErrGoesNegative = yminus < 0
+        absMagYMinus = testXD.absMagKinda2absMag(yminus)
+        absMagYMinus[parallaxErrGoesNegative] = -50.
+        yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
+        yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
+        dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
+                    xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
+    dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
     priorFile = 'prior_' + str(ngauss) +'gauss.png'
     os.rename('plot_sample.data.png', dataFile)
     os.rename('plot_sample.prior.png', priorFile)
@@ -265,20 +265,20 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
 
         neg = tgas['parallax'] < 0
         fig, ax = plt.subplots(1, 2)
-        ax[0].plot(data['mean'][~neg], mean[~neg] - tgas['parallax'][~neg], 'ko', markersize=1)
-        ax[0].plot(data['mean'][neg], mean[neg] - tgas['parallax'][neg], 'ro', markersize=1)
+        ax[0].plot(data['mean'][~neg], mean[~neg] - tgas['parallax'][~neg], 'ko', markersize=0.5)
+        ax[0].plot(data['mean'][neg], mean[neg] - tgas['parallax'][neg], 'ro', markersize=0.5)
         ax[0].set_xscale('log')
-        ax[1].plot(data['mean'][~neg], np.log(var[~neg]) - np.log(tgas['parallax_error'][~neg]**2.), 'ko', markersize=1)
-        ax[1].plot(data['mean'][neg], np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), 'ro', markersize=1)
+        ax[1].plot(data['mean'][~neg], np.log(var[~neg]) - np.log(tgas['parallax_error'][~neg]**2.), 'ko', markersize=0.5)
+        ax[1].plot(data['mean'][neg], np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), 'ro', markersize=0.5)
         ax[1].set_xscale('log')
         ax[0].set_xlabel(r'$E[\varpi]$', fontsize=18)
         ax[1].set_xlabel(r'$E[\varpi]$', fontsize=18)
         ax[0].set_ylabel(r'$E[\varpi] - \varpi$', fontsize=18)
         ax[1].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         plt.tight_layout()
-        if file == 'posteriorSimple.npz':
-            ax[0].set_ylim(-1, 5)
-            ax[1].set_ylim(-5, 1)
+        #if file == 'posteriorSimple.npz':
+        ax[0].set_ylim(-5, 5)
+        ax[1].set_ylim(-7, 2)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
 
 if __name__ == '__main__':
