@@ -234,11 +234,14 @@ def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
 
 def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz', nPosteriorPoints=1000):
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
-
+    absmag = 'J'
+    mag1 = 'J'
+    mag2 = 'K'
     data = np.load(dustFile)
     dustEBV = data['ebv']
-    absMagKinda, apparentMagnitude = testXD.absMagKindaArray('J', dustEBV, bandDictionary, tgas['parallax'])
-
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+    color = colorArray(mag1, mag2, dustEBV, bandDictionary)
+    color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
     xparallaxMAS = np.logspace(-2, 2, 1000)
     data = np.load(postFile)
     posterior = data['posterior']
