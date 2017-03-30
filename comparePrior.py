@@ -280,7 +280,8 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_ylim(-5, 5)
         ax[1].set_ylim(-7, 2)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
-        print np.median(np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.))
+        nans = np.isnan(var)
+        print np.median(np.log(var[~nans]) - np.log(tgas['parallax_error'][~nans]**2.))
 if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
