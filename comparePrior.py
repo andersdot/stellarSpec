@@ -178,6 +178,57 @@ def comparePosterior():
     axes[0].set_title('CMD Prior')
     axes[1].set_title('Exp Dec Sp Den Prior')
 
+def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
+    postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+    data = np.load(postFile)
+
+def examplePosterior(nexamples=100):
+    xparallaxMAS = np.logspace(-2, 2, 1000)
+    data = np.load('posteriorSimple.npz')
+    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+    posterior = data['posterior']
+    mean = data['mean']
+    var = data['var']
+    varDiff = var - tgas['parallax_error']**2.
+    ind = np.argsort(varDiff)[::-1]
+    for i in ind[0:nexamples]:
+        plt.clf()
+        plt.plot(xparallaxMAS, posterior[i], label='posterior')
+        plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'], tgas['parallax_error'], xparallaxMAS), label='likelhood')
+        plt.plot(xparallaxMAS, testXD.expDecreasingSpDensity(xparallaxMAS, L=1.35), label='prior')
+        plt.legend()
+        plt.xscale('log')
+        plt.legend(loc='best')
+        plt.tight_layout()
+        plt.xlabel('parallax [mas]', fontsize=18)
+        plt.savefig('examplePosteriorLargerVariance_' + str(i) + '.png')
+
+
+def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
+    postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+    yim = (-1, 5)
+    for file in ['posteriorSimple.npz', postFile]:
+        data = np.load(file)
+        mean = data['mean']
+        var = data['var']
+        tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+
+        neg = tgas['parallax'] < 0
+        fig, ax = plt.subplots(1, 2)
+        ax[0].plot(data['mean'][~neg], mean[~neg] - tgas['parallax'][~neg], 'ko', markersize=1)
+        ax[0].plot(data['mean'][neg], mean[neg] - tgas['parallax'][neg], 'ro', markersize=1)
+        ax[0].set_xscale('log')
+        ax[1].plot(data['mean'][~neg], np.log(var[~neg]) - np.log(tgas['parallax_error'][~neg]**2.), 'ko', markersize=1)
+        ax[1].plot(data['mean'][neg], np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), 'ro', markersize=1)
+        ax[1].set_xscale('log')
+        ax[0].set_xlabel(r'$E[\varpi]$', fontsize=18)
+        ax[1].set_xlabel(r'$E[\varpi]$', fontsize=18)
+        ax[0].set_ylabel(r'$E[\varpi] - \varpi$', fontsize=18)
+        ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
+        plt.tight_layout()
+        if file == 'posteriorSample.npz': ax[0].set_ylim(-1, 5)
+
+        fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
 
 if __name__ == '__main__':
     #comparePrior()
@@ -188,4 +239,5 @@ if __name__ == '__main__':
     if ngauss == 2048: iter='1st'
     Nsamples=1.2e5
     #dustViz(quantile=quantile)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
+    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
+    examplePosterior(nexamples=100)
