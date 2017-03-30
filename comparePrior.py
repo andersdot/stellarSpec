@@ -142,7 +142,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     #import pdb; pdb.set_trace()
 
     posteriorFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
-    for file in [posteriorFile, ]:
+    #for file in [posteriorFile, ]:
     data = np.load(posteriorFile)
     parallax = data['mean']
     parallax_err = np.sqrt(data['var'])
