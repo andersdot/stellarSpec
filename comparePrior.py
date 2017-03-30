@@ -237,11 +237,10 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
 
     data = np.load(dustFile)
     dustEBV = data['ebv']
-    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray('J', dustEBV, bandDictionary, tgas['parallax'])
 
     xparallaxMAS = np.logspace(-2, 2, 1000)
     data = np.load(postFile)
-    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
     posterior = data['posterior']
     mean = data['mean']
     var = data['var']
