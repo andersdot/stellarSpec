@@ -1,8 +1,8 @@
+import matplotlib
+matplotlib.use('pdf')
 import numpy as np
 from xdgmm import XDGMM
 import drawEllipse
-import matplotlib
-matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import testXD
