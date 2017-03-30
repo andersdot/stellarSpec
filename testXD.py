@@ -454,11 +454,11 @@ def calcPosterior(color, absMagKinda, color_err, absMagKinda_err, apparentMagnit
     allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
     posteriorIntegral = scipy.integrate.cumtrapz(summedPosteriorAbsmagKinda, x=xabsMagKinda)[-1]
     summedPosteriorAbsmagKinda = summedPosteriorAbsmagKinda/posteriorIntegral
-    posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
+    posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude)
     meanPosteriorParallax = scipy.integrate.cumtrapz(posteriorParallax*xarray, x=xarray)[-1]
     x2PosteriorParallax = scipy.integrate.cumtrapz(posteriorParallax*xarray**2., x=xarray)[-1]
     varPosteriorParallax = x2PosteriorParallax - meanPosteriorParallax**2.
-    print 'parallax posterior sum is ', scipy.integrate.cumptrapz(posteriorParallax, x=xarray)[-1]
+    #print 'parallax posterior sum is ', scipy.integrate.cumtrapz(posteriorParallax, x=xarray)[-1]
     return posteriorParallax, meanPosteriorParallax, varPosteriorParallax
 
 def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, tgas, xdgmm, distanceFile='distance.npy', quantile=0.05, nDistanceSamples=512, nPosteriorPoints=1000, iter='1st', plotPost=False):
@@ -780,8 +780,8 @@ def posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_
         #if np.mod(index, 10000) == 0.0:
             #print index
             #np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
-        posterior[i], mean[i], var[i] = calcPosterior(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index], apparentMagnitude[index], xdgmm, nPosteriorPoints=nPosteriorPoints, xarray=xparallaxMAS, debug=False, ndim=ndim)
-        sourceID[i] = tgas['sourceID'][index]
+        parallaxPosterior[i], mean[i], var[i] = calcPosterior(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index], apparentMagnitude[index], xdgmm, nPosteriorPoints=nPosteriorPoints, xarray=xparallaxMAS, debug=False, ndim=ndim)
+        sourceID[i] = tgas['source_id'][index]
     np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
     return parallaxPosterior, mean, var
 
