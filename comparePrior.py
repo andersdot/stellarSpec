@@ -267,4 +267,5 @@ if __name__ == '__main__':
     Nsamples=1.2e5
     #dustViz(quantile=quantile)
     #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    examplePosterior(nexamples=100)
+    #examplePosterior(nexamples=100)
+    compareSimpleGaia()
