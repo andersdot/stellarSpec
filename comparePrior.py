@@ -232,9 +232,9 @@ def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
     plt.tight_layout()
 
-def examplePosterior(nexamples=100):
+def examplePosterior(nexamples=100, postFile='posteriorSimple.npz'):
     xparallaxMAS = np.logspace(-2, 2, 1000)
-    data = np.load('posteriorSimple.npz')
+    data = np.load(postFile)
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
     posterior = data['posterior']
     mean = data['mean']
@@ -280,8 +280,9 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_ylim(-5, 5)
         ax[1].set_ylim(-7, 2)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
-        nans = np.isnan(var)
-        print np.median(np.log(var[~nans]) - np.log(tgas['parallax_error'][~nans]**2.))
+        notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
+        print np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
+
 if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
@@ -290,7 +291,10 @@ if __name__ == '__main__':
     if ngauss == 512: iter='4th'
     if ngauss == 2048: iter='1st'
     Nsamples=1.2e5
+    survey='2MASS'
+    dataFilename = 'All.npz'
+    postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
     #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    #examplePosterior(nexamples=100)
-    compareSimpleGaia()
+    examplePosterior(postFile=postFile, nexamples=100)
+    #compareSimpleGaia()
