@@ -232,8 +232,9 @@ def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
     plt.tight_layout()
 
-def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz', nPosteriorPoints=1000):
+def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz', nPosteriorPoints=1000, xdgmmFilename='xdgmm.fit'):
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+    xdgmm = XDGMM(filename=xdgmmFilename)
     absmag = 'J'
     mag1 = 'J'
     mag2 = 'K'
@@ -309,9 +310,10 @@ if __name__ == '__main__':
     Nsamples=1.2e5
     survey='2MASS'
     dataFilename = 'All.npz'
+    xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
     #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    examplePosterior(postFile=postFile, nexamples=100, dustFile=dustFile)
+    examplePosterior(postFile=postFile, nexamples=100, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
     #compareSimpleGaia()
