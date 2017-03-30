@@ -141,6 +141,8 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     os.rename('plot_sample.prior.png', priorFile)
     #import pdb; pdb.set_trace()
 
+
+
 def comparePosterior():
     ngauss = 128
     quantile = 0.05
@@ -232,7 +234,7 @@ def examplePosterior(nexamples=100):
 def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     yim = (-1, 5)
-    for file in ['posteriorSimple.npz', postFile]:
+    for file in ['posteriorSimple.npz']: #, postFile]:
         data = np.load(file)
         mean = data['mean']
         var = data['var']
