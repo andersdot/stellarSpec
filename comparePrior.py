@@ -232,7 +232,7 @@ def compareCMD2Simple(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     ax[1].set_ylabel(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=18)
     plt.tight_layout()
 
-def examplePosterior(apparentMagnitude, nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz'., nPosteriorPoints=1000):
+def examplePosterior(apparentMagnitude, nexamples=100, postFile='posteriorSimple.npz', dustFile='dust.npz', nPosteriorPoints=1000):
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
 
     data = np.load(dustFile)
