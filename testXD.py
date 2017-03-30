@@ -1012,7 +1012,7 @@ def simplePosterior(xparallaxMAS, parallax, parallax_err, debug=False, posterior
         parallaxPosterior = np.zeros((len(parallax), len(xparallaxMAS)))
         mean = np.zeros(len(parallax))
         var = np.zeros(len(parallax))
-        for i, (p, e) in enumerate(zip(parallax[0:200], parallax_err[0:200])):
+        for i, (p, e) in enumerate(zip(parallax, parallax_err)):
             p_r = st.gaussian(p, e, xparallaxMAS)*prior
             norm = scipy.integrate.cumtrapz(p_r, x=xparallaxMAS)[-1]
             parallaxPosterior[i,:] = p_r/norm
