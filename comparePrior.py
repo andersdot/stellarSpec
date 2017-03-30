@@ -138,6 +138,47 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     os.rename('plot_sample.prior.png', priorFile)
     #import pdb; pdb.set_trace()
 
+def comparePosterior():
+    ngauss = 128
+    quantile = 0.05
+    iter = '10th'
+    survey = '2MASS'
+    dataFilename = 'All.npz'
+    posteriorFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
+    data = np.load(posteriorFile)
+    parallaxPost = data['posterior']
+    parallaxMean = data['mean']
+    parallaxVar = data['var']
+
+    posteriorFile='posteriorSimple.npz'
+    data = np.load(posteriorFile)
+    parallaxSimplePost = data['posterior']
+    parallaxSimpleMean = data['mean']
+    parallaxSimpleVar = data['var']
+
+    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+
+    fig, axes = plt.subplots(1,2)
+    axes[0].plot(tgas['parallax_error']**2., parallaxVar, 'ko', markersize=1)
+    axes[1].plot(tgas['parallax_error']**2., parallaxSimpleVar, 'ko', markersize=1)
+    for ax in axes:
+        ax.set_xlabel(r'$\sigma^2_{\varpi}$', fontsize=18)
+        ax.set_ylabel(r'$\tilde{sigma}^2_{\varpi}$', fontsize=18)
+    axes[0].set_title('CMD Prior')
+    axes[1].set_title('Exp Dec Sp Den Prior')
+    fig.savefig('varianceComparison.png')
+    fig.close()
+
+    fig, axes = plt.subplots(1, 2)
+    axes[0].plot(tgas['parallax'], parallaxMean, 'ko', markersize=1)
+    axes[1].plot(tgas['parallax'], parallaxSimpleMean, 'ko', markersize=1)
+    for ax in axes:
+        ax.set_xlabel(r'$\varpi$', fontsize=18)
+        ax.set_ylabel(r'$E(\varpi)$', fontsize=18)
+    axes[0].set_title('CMD Prior')
+    axes[1].set_title('Exp Dec Sp Den Prior')
+
+
 if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])

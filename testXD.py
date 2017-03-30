@@ -764,25 +764,31 @@ def samples(x, pdf, N, plot=False):
     return distSamples
 
 def posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, xdgmm, ndim=2, projectedDimension=1, posteriorFile = 'posteriorDistanceTgas', indexArray=None):
-    if indexArray == None:
-        nstars = len(tgas)
-        indices = np.arange(nstars)
-    else:
-        nstars = np.sum(indexArray)
-        indices = np.where(indexArray)
+    try:
+        data = np.load(posteriorFile)
+        parallaxPosterior = data['posterior']
+        mean = data['mean']
+        var = data['var']
+    except IOError:
+        if indexArray == None:
+            nstars = len(tgas)
+            indices = np.arange(nstars)
+        else:
+            nstars = np.sum(indexArray)
+            indices = np.where(indexArray)
 
-    parallaxPosterior = np.zeros((nstars, nPosteriorPoints))
-    mean = np.zeros(nstars)
-    var = np.zeros(nstars)
-    xparallaxMAS = np.logspace(-2, 2, nPosteriorPoints)
-    sourceID = np.zeros(nstars)
-    for i, index in enumerate(indices):
-        #if np.mod(index, 10000) == 0.0:
-            #print index
-            #np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
-        parallaxPosterior[i], mean[i], var[i] = calcPosterior(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index], apparentMagnitude[index], xdgmm, nPosteriorPoints=nPosteriorPoints, xarray=xparallaxMAS, debug=False, ndim=ndim)
-        sourceID[i] = tgas['source_id'][index]
-    np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
+        parallaxPosterior = np.zeros((nstars, nPosteriorPoints))
+        mean = np.zeros(nstars)
+        var = np.zeros(nstars)
+        xparallaxMAS = np.logspace(-2, 2, nPosteriorPoints)
+        sourceID = np.zeros(nstars)
+        for i, index in enumerate(indices):
+            #if np.mod(index, 10000) == 0.0:
+                #print index
+                #np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
+            parallaxPosterior[i], mean[i], var[i] = calcPosterior(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index], apparentMagnitude[index], xdgmm, nPosteriorPoints=nPosteriorPoints, xarray=xparallaxMAS, debug=False, ndim=ndim)
+            sourceID[i] = tgas['source_id'][index]
+        np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var, sourceID=sourceID)
     return parallaxPosterior, mean, var
 
 def correctForDust(tgas, color, color_err, absMagKinda, absMagKinda_err, xdgmm, dustFile='dustCorrection', distanceFile = 'distanceQuantiles', xdgmmFilename='xdgmm'):
@@ -988,6 +994,47 @@ def iterateDust(mag1, mag2, absmag, bandDictionary, tgas, xlabel='X', ylabel='Y'
             assert np.sum(np.isnan(dustEBV)) == 0., 'some stars still have Nan for dust'
             np.savez(dustFile, ebv=dustEBV, sourceID=sourceID)
 
+def expDecreasingSpDensity(parallaxMAS, L=1.35):
+    distance = 1./parallaxMAS
+    p_r = 1./(2.*L**3.)*distance**2.*np.exp(-distance/L)
+    p_r[distance<=0] = 0.0
+    norm = scipy.integrate.cumtrapz(p_r, x=parallaxMAS)[-1]
+    return p_r/norm
+
+def simplePosterior(xparallaxMAS, parallax, parallax_err, debug=False, posteriorFile='posteriorSimple.npz'):
+    try:
+        data = np.load(posteriorFile)
+        parallaxPosterior = data['posterior']
+        mean = data['mean']
+        var = data['var']
+    except IOError:
+        prior = expDecreasingSpDensity(xparallaxMAS, L=1.35)
+        parallaxPosterior = np.zeros((len(parallax), len(xparallaxMAS)))
+        mean = np.zeros(len(parallax))
+        var = np.zeros(len(parallax))
+        for i, (p, e) in enumerate(zip(parallax[0:200], parallax_err[0:200])):
+            p_r = st.gaussian(p, e, xparallaxMAS)*prior
+            norm = scipy.integrate.cumtrapz(p_r, x=xparallaxMAS)[-1]
+            parallaxPosterior[i,:] = p_r/norm
+            mean[i] = scipy.integrate.cumtrapz(parallaxPosterior[i,:]*xparallaxMAS, x=xparallaxMAS)[-1]
+            x2 = scipy.integrate.cumtrapz(parallaxPosterior[i,:]*xparallaxMAS**2., x=xparallaxMAS)[-1]
+            var[i] = x2 - mean[i]**2.
+            if debug:
+                plt.clf()
+                plt.plot(xparallaxMAS, parallaxPosterior[i], label='posterior')
+                plt.plot(xparallaxMAS, st.gaussian(p, e, xparallaxMAS), label='likelihood')
+                plt.plot(xparallaxMAS, prior, label='prior')
+                plt.axvline(x=mean[i],c='black', linestyle='--')
+                plt.axvline(x=(mean[i]-np.sqrt(var[i])), c='grey', linestyle='--')
+                plt.axvline(x=(mean[i]+np.sqrt(var[i])), c='grey', linestyle='--')
+                plt.xscale('log')
+                plt.xlabel('parallax [mas]')
+                plt.legend(loc='best')
+                plt.title('Mean: ' + '{0:.2f}'.format(mean[i]) + '     Var: ' + '{0:.2f}'.format(var[i]))
+                plt.savefig('simplePosterior_' + str(i) + '.png')
+        np.savez(posteriorFile, posterior=parallaxPosterior, mean=mean, var=var)
+    return parallaxPosterior, mean, var
+
 
 if __name__ == '__main__':
 
@@ -1052,6 +1099,9 @@ if __name__ == '__main__':
 
     #calculate parallax-ish posterior for each star
     #set indexArray to boolean array of sources you want to calculate otherwise calculatese all stars
+    xparallaxMAS = np.logspace(-2, 2, nPosteriorPoints)
+    parallaxPosteriorSimple, meanSimple, varSimple = simplePosterior(xparallaxMAS, tgas['parallax'], tgas['parallax_error'], debug=False)
+
     #e.g. indexArray = tgas['parallax_error'] > 0.1
-    indexArray = None
-    posteriorParallax, mean, var = posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, xdgmm, ndim=2, projectedDimension=1, posteriorFile = posteriorFile, indexArray=indexArray)
+    #indexArray = None
+    #posteriorParallax, mean, var = posteriorParallaxAllStars(tgas, nPosteriorPoints, color, absMagKinda, color_err, absMagKinda_err, apparentMagnitude, xdgmm, ndim=2, projectedDimension=1, posteriorFile = posteriorFile, indexArray=indexArray)
