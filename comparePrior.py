@@ -238,6 +238,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
     absmag = 'J'
     mag1 = 'J'
     mag2 = 'K'
+    ndim = 2
     data = np.load(dustFile)
     dustEBV = data['ebv']
     absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
