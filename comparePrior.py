@@ -258,7 +258,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         meanPrior = meanPrior[0]
         covPrior = covPrior[0]
         allMeans, allAmps, allCovs, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
-        norm = scipy.integrate.cumptraz(summedPriorAbsMagKinda, x=xabsMagKinda)[-1]
+        norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda, x=xabsMagKinda)[-1]
         priorParallax = summedPriorAbsMagKinda/norm
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
