@@ -147,7 +147,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         data = np.load(posteriorFile)
         parallax = data['mean']
         parallax_err = np.sqrt(data['var'])
-        c = data['var'] - tgas['parallax_error']**2.
+        c = np.log(data['var']) - np.log(tgas['parallax_error']**2.)
         absMagKinda = parallax*10.**(0.2*apparentMagnitude)
         absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
@@ -262,7 +262,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i]), x=xparallaxMAS)[-1]
         plotPrior = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])/norm
         posteriorFly = likelihood*summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])
-        norm = scipy.integrage.cumtrapz(posteriorFly, x=xparallaxMAS)[-1]
+        norm = scipy.integrate.cumtrapz(posteriorFly, x=xparallaxMAS)[-1]
         posteriorFly = posteriorFly/norm
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
@@ -323,6 +323,7 @@ if __name__ == '__main__':
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
-    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    examplePosterior(postFile=postFile, nexamples=100, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
+    #
+    examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
     #compareSimpleGaia()
