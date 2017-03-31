@@ -103,7 +103,7 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     return ax
 
 def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black'):
-    setup_text_plots(fontsize=16, usetex=True)
+    setup_text_plots(fontsize=16, usetex=True, norm=None, cmap=None)
     plt.clf()
     alpha = 0.1
     alpha_points = 0.01
@@ -115,11 +115,11 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
                             wspace=0.1, hspace=0.1)
 
     ax1 = figData.add_subplot(121)
-    ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha)
+    ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha, norm=norm, cmap=cmap)
 
     ax2 = figData.add_subplot(122)
     ind = np.random.randint(0, len(x), size=errSubsample)
-    ax2.scatter(x[ind], y[ind], s=1, lw=0, c=c, alpha=alpha_points)
+    ax2.scatter(x[ind], y[ind], s=1, lw=0, c=c, alpha=alpha_points, norm=norm, cmap=cmap)
     ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, lw=0.5, mew=0, alpha=0.5, color=c)
 
     ax3 = figPrior.add_subplot(121)
