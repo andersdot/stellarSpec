@@ -149,8 +149,8 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         parallax_err = np.sqrt(data['var'])
         c = np.log(data['var']) - np.log(tgas['parallax_error']**2.)
         absMagKinda = parallax*10.**(0.2*apparentMagnitude)
-        absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
-
+        absMagKinda_err = parallax_err*10.**(0.2*apparentMagnitude)
+        y = absMagKinda
         yplus  = y + absMagKinda_err
         yminus = y - absMagKinda_err
         parallaxErrGoesNegative = yminus < 0
@@ -159,7 +159,8 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
         yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
         dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
-                    xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
+                    xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
+                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c)
     dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
     priorFile = 'prior_' + str(ngauss) +'gauss.png'
     os.rename('plot_sample.data.png', dataFile)
