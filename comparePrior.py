@@ -251,6 +251,9 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
     posterior = data['posterior']
     mean = data['mean']
     var = data['var']
+    notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
+    print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
+
     varDiff = var - tgas['parallax_error']**2.
     ind = np.argsort(varDiff)[::-1]
     for i in ind[0:nexamples]:
