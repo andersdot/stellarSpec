@@ -316,6 +316,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         fig, ax = plt.subplots()
         ax.hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=1000, histtype='step', lw=2, log=True)
         ax.set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
+        ax.set_xlim(-6, 2)
         fig.savefig('deltaLogVariance.png')
 
 if __name__ == '__main__':
