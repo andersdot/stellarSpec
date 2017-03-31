@@ -259,7 +259,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         covPrior = covPrior[0]
         allMeans, allAmps, allCovs, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
         norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda, x=xabsMagKinda)[-1]
-        priorParallax = summedPriorAbsMagKinda/norm
+        priorParallax = summedPriorAbsMagKinda/norm*10.**(0.2*apparentMagnitude[i])
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
         plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'][i], tgas['parallax_error'][i], xparallaxMAS), label='likelhood')
