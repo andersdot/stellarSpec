@@ -176,12 +176,12 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     #ax[3].yaxis.set_label_position("right")
     #plt.tight_layout()
     if norm is not None:
-        fig.subplots_adjust(left=0.15, right=0.95)
-        cbar_ax = fig.add_axes([0.01, 0.125, 0.02, 0.75])
-        cb = fig.colorbar(im, cax=cbar_ax)
+        figData.subplots_adjust(left=0.2, right=0.95)
+        cbar_ax = figData.add_axes([0.01, 0.125, 0.02, 0.75])
+        cb = figData.colorbar(im, cax=cbar_ax)
         #cb = plt.colorbar(im, ax=axes[2])
         cb.set_label(r'$ln \, \tilde{\sigma}_{\varpi}^2 - ln \, \sigma_{\varpi}^2$', fontsize=20)
-        cb.set_clim(-9, 2)
+        cb.set_clim(-7, 2)
 
 
     figData.savefig('plot_sample.data.png')
