@@ -259,9 +259,11 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         meanPrior = meanPrior[0]
         covPrior = covPrior[0]
         allMeans, allAmps, allCovs, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
-        norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda, x=xabsMagKinda)[-1]
+        norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i]), x=xparallaxMAS)[-1]
+        plotPrior = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])/norm
         posteriorFly = likelihood*summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])
-        plotPrior = summedPriorAbsMagKinda/norm
+        norm = scipy.integrage.cumtrapz(posteriorFly, x=xparallaxMAS)[-1]
+        posteriorFly = posteriorFly/norm
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
         plt.plot(xparallaxMAS, likelihood, label='likelhood')
