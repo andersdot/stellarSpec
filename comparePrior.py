@@ -313,6 +313,11 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
         print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
 
+        fig, ax = plt.subplots()
+        ax.hist(np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), bins=1000, histtype='step', lw=2, log=True)
+        ax.set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
+        fig.savefig('deltaLogVariance.png')
+
 if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
@@ -328,6 +333,6 @@ if __name__ == '__main__':
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
     #
-    examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    #compareSimpleGaia()
+    #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
+    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
+    compareSimpleGaia()
