@@ -335,5 +335,5 @@ if __name__ == '__main__':
     #dustViz(quantile=quantile)
     #
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    compareSimpleGaia()
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
+    #compareSimpleGaia()
