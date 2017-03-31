@@ -102,8 +102,8 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     #fig.colorbar(im)
     return ax
 
-def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200):
-    setup_text_plots(fontsize=16, usetex=True, c='black')
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black'):
+    setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
     alpha = 0.1
     alpha_points = 0.01
