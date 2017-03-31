@@ -269,6 +269,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         plt.legend(loc='best')
         plt.tight_layout()
         plt.xlabel('parallax [mas]', fontsize=18)
+        plt.title('J-K: ' + '{0:.1f}'.format(color[i]) + '    M: ' +  '{0:.1f}'.format(testXD.absMagKinda2absMag(absMagKinda[i])))
         plt.savefig('exampleCMDPosteriorLargerVariance_' + str(i) + '.png')
 
 
