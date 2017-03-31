@@ -147,7 +147,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         data = np.load(posteriorFile)
         parallax = data['mean']
         parallax_err = np.sqrt(data['var'])
-
+        c = data['var'] - tgas['parallax_error']**2.
         absMagKinda = parallax*10.**(0.2*apparentMagnitude)
         absMagKinda_err = parallax_err*10.**(0.2*bandDictionary[absmag]['array'][bandDictionary[absmag]['key']])
 
@@ -254,18 +254,21 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
     ind = np.argsort(varDiff)[::-1]
     for i in ind[0:nexamples]:
         xabsMagKinda = testXD.parallax2absMagKinda(xparallaxMAS, apparentMagnitude[i])
+        likelihood = st.gaussian(tgas['parallax'][i], tgas['parallax_error'][i], xparallaxMAS)
         meanPrior, covPrior = testXD.matrixize(color[i], absMagKinda[i], color_err[i], 1e3)
         meanPrior = meanPrior[0]
         covPrior = covPrior[0]
         allMeans, allAmps, allCovs, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
         norm = scipy.integrate.cumtrapz(summedPriorAbsMagKinda, x=xabsMagKinda)[-1]
-        priorParallax = summedPriorAbsMagKinda/np.max(summedPriorAbsMagKinda)*np.max(posterior[i])
+        posteriorFly = likelihood*summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])
+        plotPrior = summedPriorAbsMagKinda/norm
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
-        plt.plot(xparallaxMAS, st.gaussian(tgas['parallax'][i], tgas['parallax_error'][i], xparallaxMAS), label='likelhood')
-        plt.plot(xparallaxMAS, priorParallax, label='prior')
-        plt.legend()
-        plt.xscale('log')
+        plt.plot(xparallaxMAS, likelihood, label='likelhood')
+        plt.plot(xparallaxMAS, plotPrior, label='prior')
+        plt.plot(xparallaxMAS, posteriorFly, label='posterior on the Fly')
+        plt.xlim(tgas['parallax'][i] - 5.*tgas['parallax_error'][i], tgas['parallax'][i] + 5.*tgas['parallax_error'][i])
+        #plt.xscale('log')
         plt.legend(loc='best')
         plt.tight_layout()
         plt.xlabel('parallax [mas]', fontsize=18)
