@@ -264,7 +264,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         plotPrior = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])/norm
         posteriorFly = likelihood*summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])
         norm = scipy.integrate.cumtrapz(posteriorFly, x=xparallaxMAS)[-1]
-        posteriorFly = posteriorFly/norm
+        if norm > 0.0 : posteriorFly = posteriorFly/norm
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
         plt.plot(xparallaxMAS, likelihood, label='likelhood')
@@ -308,7 +308,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[1].set_xlim(1e-1, 1e2)
         fig.savefig(file.split('.')[0] + '_Comparison2Gaia.png')
         notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
-        print np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
+        print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
 
 if __name__ == '__main__':
     #comparePrior()
