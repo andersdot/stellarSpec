@@ -160,7 +160,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
         dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
                     xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
-                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='Greys')
+                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='plasma')
 
         dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
         priorFile = 'prior_' + str(ngauss) +'gauss.png'
