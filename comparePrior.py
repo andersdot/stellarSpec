@@ -10,6 +10,7 @@ import sys
 import demo_plots as dp
 import os
 import stellarTwins as st
+import scipy.integrate
 
 def prior(xdgmm, ax):
     for gg in range(xdgmm.n_components):
