@@ -165,7 +165,7 @@ def plotXarrays(minParallaxMAS, maxParallaxMAS, apparentMagnitude, nPosteriorPoi
     return xparallaxMAS, xabsMagKinda
 
 
-def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1, nPosteriorPoints=1000):
+def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1, nPosteriorPoints=1000, prior=False):
     """
     calculate the posterior of data likelihood mean, cov with prior xdgmm
     """
@@ -174,7 +174,7 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1, nPoste
     allCovs = np.zeros((xdgmm.n_components, ndim, ndim))
     summedPosterior = np.zeros(len(x))
     #summedPrior = np.zeros(len(x))
-    individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
+    #individualPosterior = np.zeros((xdgmm.n_components, nPosteriorPoints))
     #individualPrior = np.zeros((xdgmm.n_components, nPosteriorPoints))
     #allpriorAmps = np.zeros(xdgmm.n_components)
     for gg in range(xdgmm.n_components):
@@ -185,15 +185,10 @@ def absMagKindaPosterior(xdgmm, ndim, mean, cov, x, projectedDimension=1, nPoste
         allAmps[gg] = newAmp
         allCovs[gg] = newCov
         summedPosterior += st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
-        individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
-        """
-        newpriorMean, newpriorCov, newpriorAmp = multiplyGaussians(xdgmm.mu[gg], xdgmm.V[gg], meanPrior, covPrior)
-        newpriorAmp *= xdgmm.weights[gg]
-        allpriorAmps[gg] = newpriorAmp
-        summedPrior += st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
-        individualPrior[gg,:] = st.gaussian(newpriorMean[projectedDimension], np.sqrt(newpriorCov[projectedDimension, projectedDimension]), x, amplitude=newpriorAmp)
-        """
-    summedPosterior = summedPosterior/np.sum(allAmps)
+        #individualPosterior[gg,:] = st.gaussian(newMean[projectedDimension], np.sqrt(newCov[projectedDimension, projectedDimension]), x, amplitude=newAmp)
+
+
+    if not prior: summedPosterior = summedPosterior/np.sum(allAmps)
     #summedPrior = summedPrior#/np.sum(allpriorAmps)
     return allMeans, allAmps, allCovs, summedPosterior
 
@@ -529,7 +524,7 @@ def distanceQuantile(color, absMagKinda, color_err, absMagKinda_err, apparentMag
                     print str(index) + ' has no positive distance values'
                     continue
                 logDistance = np.log10(1./xparallaxMAS[positive])
-            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+            allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
             print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
             posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
             priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[index])
