@@ -314,7 +314,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
 
         fig, ax = plt.subplots()
-        ax.hist(np.log(var[neg]) - np.log(tgas['parallax_error'][neg]**2.), bins=1000, histtype='step', lw=2, log=True)
+        ax.hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=1000, histtype='step', lw=2, log=True)
         ax.set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         fig.savefig('deltaLogVariance.png')
 
