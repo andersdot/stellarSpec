@@ -256,7 +256,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         meanPrior, covPrior = testXD.matrixize(color[i], absMagKinda[i], color_err[i], 1e5)
         meanPrior = meanPrior[0]
         covPrior = covPrior[0]
-        allMeans, allAmps, allCovs, summedPriorAbsmagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
+        allMeans, allAmps, allCovs, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints, prior=True)
         priorParallax = summedPriorAbsMagKinda*10.**(0.2*apparentMagnitude[i])
         plt.clf()
         plt.plot(xparallaxMAS, posterior[i], label='posterior')
