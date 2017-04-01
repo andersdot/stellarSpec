@@ -284,6 +284,18 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
 
 
 def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
+    tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+    xdgmm = XDGMM(filename=xdgmmFilename)
+    absmag = 'J'
+    mag1 = 'J'
+    mag2 = 'K'
+    ndim = 2
+    data = np.load(dustFile)
+    dustEBV = data['ebv']
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+    color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
+    color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
+
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     yim = (-1, 5)
     for file in ['posteriorSimple.npz', postFile]:
@@ -314,10 +326,14 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
         print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
 
-        fig, ax = plt.subplots()
-        ax.hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=1000, histtype='step', lw=2, log=True)
-        ax.set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
-        ax.set_xlim(-6, 2)
+        fig, ax = plt.subplots(1, 2)
+        ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), alpha=0.5, c='black')
+        ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
+        ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
+        #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
+        ax[1].hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=1000, histtype='step', lw=2, log=True, color='black')
+        ax[1].set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
+        ax[1].set_xlim(-6, 2)
         fig.savefig('deltaLogVariance.png')
 
 if __name__ == '__main__':
