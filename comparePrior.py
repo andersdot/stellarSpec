@@ -350,7 +350,6 @@ if __name__ == '__main__':
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
-    #
+    compareSimpleGaia()
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
-    #compareSimpleGaia()
+    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
