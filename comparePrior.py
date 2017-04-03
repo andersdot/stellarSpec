@@ -330,11 +330,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         fig, ax = plt.subplots(1, 2, figsize=(14, 6))
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
-        corner.hist2d(x, y, bins=20, range=None, weights=None, levels=None, smooth=None,
-                   ax=ax[0], color=None, plot_datapoints=True, plot_density=True,
-                   plot_contours=True, no_fill_contours=False, fill_contours=False,
-                   contour_kwargs=None, contourf_kwargs=None, data_kwargs=None,
-                   **kwargs)
+        corner.hist2d(x, y, bins=20, ax=ax[0])
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
         ax[0].set_ylim(-6, 2)
