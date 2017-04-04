@@ -337,10 +337,12 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
-        cNorm  = plt.matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
-        (counts, xedges, yedges, Image) = ax[0].hist2d(x, y, bins=200, cmap='Greys')
+        cNorm  = plt.matplotlib.colors.LogNorm(vmin=1, vmax=1e3)
+        (counts, xedges, yedges, Image) = ax[0].hist2d(x, y, bins=100, cmap='Greys', norm=cNorm)
         figcount, axcounts = plt.subplots()
-        axcounts.hist(counts, bins=100, log=True)
+        nonzero = counts > 0
+        axcounts.hist(np.log10(counts[nonzero]), log=True)
+        axcounts.set_xlabel('log counts')
         figcount.savefig('counts.png')
         corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False)
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
