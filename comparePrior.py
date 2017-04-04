@@ -333,7 +333,8 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
-        ax[0].hist2d(x, y, bins=200, cmap='plasma', normed=True)
+        cNorm  = plt.matplotlib.colors.LogNorm(vmin=1e-6, vmax=1)
+        ax[0].hist2d(x, y, bins=500, cmap='Greys', normed=True)
         corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False)
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
