@@ -348,7 +348,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
         ax[0].set_ylim(-6, 2)
-        ax[0].set_xlim(-1, 3)
+        ax[0].set_xlim(-0.5, 2)
         ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
         ax[1].hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=100, histtype='step', lw=2, log=True, color='black')
