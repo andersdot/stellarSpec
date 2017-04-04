@@ -164,10 +164,10 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         absMag = testXD.absMagKinda2absMag(y)
         yerr_minus = absMag - absMagYMinus
         yerr_plus = testXD.absMagKinda2absMag(yplus) - absMag
-        notnans = ~np.isnan(color[notnans]) & ~np.isnan(absMag)
-        dp.plot_sample(color[notnans], absMag[notnans], sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
-                    xdgmm, xerr=color_err[notnans], yerr=[yerr_minus[notnans], yerr_plus[notnans]], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
-                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c[notnans], norm=cNorm, cmap='plasma')
+        #notnan = ~np.isnan(color[notnans]) & ~np.isnan(absMag)
+        dp.plot_sample(color[notnans], absMag, sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
+                    xdgmm, xerr=color_err[notnans], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
+                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='plasma')
 
         dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
         priorFile = 'prior_' + str(ngauss) +'gauss.png'
