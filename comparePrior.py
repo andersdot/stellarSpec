@@ -299,7 +299,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     mag1 = 'J'
     mag2 = 'K'
     xlabel = '$(J-K)^C$'
-    ylabel = r'M$_\mathrm{J}$'
+    ylabel = r'$M_J^C$'
     xlim = [-0.25, 1.25]
     ylim = [6, -6]
 
@@ -341,7 +341,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         notnans = ~np.isnan(var) & ~np.isnan(tgas['parallax_error'])
         print 'The median of the differences of the logs: ', np.median(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.))
         cNorm  = plt.matplotlib.colors.Normalize(vmin=-6, vmax=6)
-        fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+        fig, ax = plt.subplots(1, 2, figsize=(14, 7))
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
@@ -373,7 +373,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         #ax[1].set_ylim(1,)
         fig.savefig('deltaLogVariance_' + file.split('.')[0] + '.png')
 
-        figVarDiff = plt.figure(figsize=(12,5.5))
+        figVarDiff = plt.figure(figsize=(14,7))
 
         ax1 = figVarDiff.add_subplot(121)
         ax2 = figVarDiff.add_subplot(122)
