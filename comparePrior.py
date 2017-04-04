@@ -306,7 +306,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     data = np.load(dustFile)
     dustEBV = data['ebv']
     absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
-    absMag = testXD.absMagKinda2absMag(absMagKinda)
+
     color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
     color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
 
@@ -316,7 +316,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         data = np.load(file)
         mean = data['mean']
         var = data['var']
-        tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
+        absMag = testXD.absMagKinda2absMag(mean*10.**(0.2*apparentMagnitude))
 
         neg = tgas['parallax'] < 0
         fig, ax = plt.subplots(1, 2)
@@ -359,7 +359,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
         cNorm  = plt.matplotlib.colors.Normalize(vmin=0.1, vmax=1)
-        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues_r')
+        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-1, vmax=1), cmap='inferno')
         ax[1].set_xlim(xlim)
         ax[1].set_ylim(ylim)
         ax[1].set_xlabel(xlabel, fontsize=18)
@@ -376,8 +376,8 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax2 = figVarDiff.add_subplot(122)
 
 
-        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues_r')
-        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='Blues_r')
+        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-1, vmax=1), cmap='inferno')
+        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='inferno')
 
         titles = ["Colored by change in variance", "Colored by observed variance"]
 
