@@ -148,6 +148,9 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         data = np.load(file)
         parallax = data['mean']
         parallax_err = np.sqrt(data['var'])
+        notnans = ~np.isnan(parallax) & ~np.isnan(parallax_err)
+        parallax = parallax[notnans]
+        parallax_err = parallax_err[notnans]
         c = np.log(data['var']) - np.log(tgas['parallax_error']**2.)
         absMagKinda = parallax*10.**(0.2*apparentMagnitude)
         absMagKinda_err = parallax_err*10.**(0.2*apparentMagnitude)
@@ -335,7 +338,9 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
         cNorm  = plt.matplotlib.colors.LogNorm(vmin=1, vmax=1e4)
         (counts, xedges, yedges, Image) = ax[0].hist2d(x, y, bins=500, cmap='Greys')
-        print counts
+        figcount, axcounts = plt.subplots()
+        axcounts.hist(counts, bins=100, log=True)
+        figcount.savefig('counts.png')
         corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False)
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
