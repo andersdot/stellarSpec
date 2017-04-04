@@ -12,6 +12,7 @@ import os
 import stellarTwins as st
 import scipy.integrate
 import corner
+from astroML.plotting import setup_text_plots
 
 def prior(xdgmm, ax):
     for gg in range(xdgmm.n_components):
@@ -296,6 +297,11 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     absmag = 'J'
     mag1 = 'J'
     mag2 = 'K'
+    xlabel = 'J-K$_s$'
+    ylabel = r'M$_\mathrm{J}$'
+    xlim = [-0.25, 1.25]
+    ylim = [6, -6]
+
     ndim = 2
     data = np.load(dustFile)
     dustEBV = data['ebv']
@@ -351,11 +357,47 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_xlim(-0.5, 2)
         ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
-        ax[1].hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=100, histtype='step', lw=2, log=True, color='black')
-        ax[1].set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
-        ax[1].set_xlim(-6, 2)
-        ax[1].set_ylim(1,)
+        cNorm  = plt.matplotlib.colors.LogNorm(vmin=0.1, vmax=1)
+        ax[1].scatter(x, absMagKinda[notnans], s=1, lw=0, c=y, alpha=0.05, norm=cNorm, cmap='Blues')
+        ax[1].set_xlim(xlim)
+        ax[1].set_ylim(ylim)
+        ax[1].set_xlabel(xlabel, fontsize=18)
+        ax[1].set_ylabel(ylabel, fontsize=18)
+        #ax[1].hist(np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), bins=100, histtype='step', lw=2, log=True, color='black')
+        #ax[1].set_xlabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
+        #ax[1].set_xlim(-6, 2)
+        #ax[1].set_ylim(1,)
         fig.savefig('deltaLogVariance_' + file.split('.')[0] + '.png')
+
+        figVarDiff = plt.figure(figsize=(12,5.5))
+        setup_text_plots(fontsize=16, usetex=True)
+        ax1 = figVarDiff.add_subplot(121)
+        ax2 = figVarDiff.add_subplot(122)
+
+
+        ax1.scatter(x, absMagKinda[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Norm(vmin=-4, vmax=1), cmap='Blues')
+        ax2.scatter(x, absMagKinda[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='Blues')
+
+        titles = ["De-noised Distribution", "Colored by observed variance"]
+
+        ax = [ax1, ax2]
+
+        for i in range(4):
+            ax[i].set_xlim(xlim)
+            ax[i].set_ylim(ylim[0], ylim[1]*1.1)
+
+            ax[i].text(0.05, 0.95, titles[i],
+                   ha='left', va='top', transform=ax[i].transAxes, fontsize=18)
+
+            ax[i].set_xlabel(xlabel, fontsize = 18)
+
+        #if i in (1, 3):
+            #ax[i].yaxis.set_major_formatter(plt.NullFormatter())
+        #else:
+            ax[i].set_ylabel(ylabel, fontsize = 18)
+
+        figVarDiff.savefig('denoisedVariance_' + file.split('.')[0] + '.png')
+
 
 if __name__ == '__main__':
     #comparePrior()
