@@ -375,7 +375,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax2 = figVarDiff.add_subplot(122)
 
 
-        ax1.scatter(x, absMagKinda[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Norm(vmin=-4, vmax=1), cmap='Blues')
+        ax1.scatter(x, absMagKinda[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues')
         ax2.scatter(x, absMagKinda[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='Blues')
 
         titles = ["De-noised Distribution", "Colored by observed variance"]
