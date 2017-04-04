@@ -344,22 +344,24 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
-        cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
         #(counts, xedges, yedges, Image) = ax[0].hist2d(x, y, bins=100, cmap='Greys', norm=cNorm)
         #figcount, axcounts = plt.subplots()
         #nonzero = counts > 0
         #axcounts.hist(np.log10(counts[nonzero]), log=True)
         #axcounts.set_xlabel('log counts')
         #figcount.savefig('counts.png')
-        corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False, color=contourColor)
+        norm = plt.matplotlib.colors.Normalize(vmin=-1, vmax=1)
+        cmap = 'inferno'
+        ax[0].scatter(x, y, c=y, s=1, lw=0, alpha=0.05, norm=norm, cmap=cmap)
+        corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False, plot_data=False, color=contourColor)
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
         ax[0].set_ylim(-6, 2)
         ax[0].set_xlim(-0.5, 2)
         ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
-        cNorm  = plt.matplotlib.colors.Normalize(vmin=0.1, vmax=1)
-        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-1, vmax=1), cmap='inferno')
+        cNorm  = plt.matplotlib.colors.Normalize(vmin=0.1, vmax=2)
+        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=norm, cmap=cmap)
         ax[1].set_xlim(xlim)
         ax[1].set_ylim(ylim)
         ax[1].set_xlabel(xlabel, fontsize=18)
@@ -375,9 +377,8 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax1 = figVarDiff.add_subplot(121)
         ax2 = figVarDiff.add_subplot(122)
 
-
-        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-1, vmax=1), cmap='inferno')
-        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='inferno')
+        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=norm, cmap=cmap)
+        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap=cmap)
 
         titles = ["Colored by change in variance", "Colored by observed variance"]
 
