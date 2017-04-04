@@ -104,6 +104,53 @@ def plot(fig, axes, figNoise, axesNoise, xns, yns, sigmans, yntrues, m, b, t, mt
 
     return fig, axes, figNoise, axesNoise
 
+def gaussian(mean, sigma, array, amplitude=1.0):
+    return amplitude/np.sqrt(2.*np.pi*sigma**2.)*np.exp(-(array - mean)**2./(2.*sigma**2.))
+
+def exampleParallax():
+    import matplotlib.pyplot as plt
+    plt.style.use('seaborn-talk')
+    fig, ax = plt.subplots(1, 2, figsize=(15, 7))
+    x = np.linspace(-2., 8., 1000)
+    positive = x > 0
+    parallax = 0.5
+    sigma_parallax = [0.1, 0.2, 0.3]
+    linestyle = ['-', '--', ':']
+    labelParallax = r'$P(\varpi \,|\, \varpi_{true}, \sigma_{\varpi} )$'
+    labelDistance = r'$P(\frac{1}{\varpi} \,|\, \varpi_{true}, \sigma_{\varpi} )$'
+    for i, (sigma, ls) in enumerate(zip(sigma_parallax, linestyle)):
+        likelihood = gaussian(parallax, sigma, x)
+        label = r'$\varpi/\sigma_{\varpi}=$' + '{0:.1f}'.format(parallax/sigma)
+        ax[0].plot(x, likelihood, lw=2, label='likelihood', linestyle=ls)
+        ax[1].plot(1./x[positive], likelihood[positive], lw=2, linestyle=ls, label=label)
+        ax[0].set_xlabel('parallax [mas]', fontsize=18)
+        ax[1].set_xlabel('distance [kpc]', fontsize=18)
+        ax[0].set_ylabel(labelParallax, fontsize=18)
+        ax[1].set_ylabel(labelDistance, fontsize=18)
+        ax[0].set_xlim(-1, 3)
+        ax[1].set_xlim(0, 8)
+        ax[1].legend(loc='best', fontsize=15)
+        #ax[0].legend(loc='best')
+        fig.savefig('likelihoodExample' + str(i) + '.png')
+
+
+    #fig, ax = plt.subplots(1, 2, figsize=(15, 7))
+
+    parallax = -0.25
+    sigma = 0.3
+    likelihood = gaussian(parallax, sigma, x)
+    label = r'$\varpi/\sigma_{\varpi}=$' + '{0:.1f}'.format(np.abs(parallax)/sigma)
+    ax[0].plot(x, likelihood, lw=2, label='likelihood')
+    ax[1].plot(1./x[positive], likelihood[positive], lw=2, label=label)
+    ax[0].set_xlim(-1, 3)
+    ax[1].set_xlim(0, 8)
+    ax[1].legend(loc='best', fontsize=15)
+    #ax[0].legend(loc='best')
+    #ax[0].set_xlabel('parallax [mas]', fontsize=18)
+    #ax[1].set_xlabel('distance [kpc]', fontsize=18)
+    #ax[1].set_xlim(0, 8)
+    fig.savefig('likelihoodExampleNegative.png')
+    plt.close(fig)
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
