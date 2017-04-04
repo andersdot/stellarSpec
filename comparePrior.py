@@ -358,8 +358,8 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax[0].set_xlim(-0.5, 2)
         ax[0].set_ylabel(r'$\mathrm{ln} \, \tilde{\sigma}_{\varpi}^2 - \mathrm{ln} \, \sigma_{\varpi}^2$', fontsize=18)
         #ax[0].errorbar(color, np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
-        cNorm  = plt.matplotlib.colors.LogNorm(vmin=0.1, vmax=1)
-        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=cNorm, cmap='Blues')
+        cNorm  = plt.matplotlib.colors.Normalize(vmin=0.1, vmax=1)
+        ax[1].scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues_r')
         ax[1].set_xlim(xlim)
         ax[1].set_ylim(ylim)
         ax[1].set_xlabel(xlabel, fontsize=18)
@@ -376,10 +376,10 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax2 = figVarDiff.add_subplot(122)
 
 
-        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues')
-        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='Blues')
+        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=plt.matplotlib.colors.Normalize(vmin=-4, vmax=1), cmap='Blues_r')
+        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap='Blues_r')
 
-        titles = ["De-noised Distribution", "Colored by observed variance"]
+        titles = ["Colored by change in variance", "Colored by observed variance"]
 
         ax = [ax1, ax2]
 
