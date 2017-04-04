@@ -126,7 +126,7 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     ax2 = figData.add_subplot(122)
     ind = prng.randint(0, len(x), size=errSubsample)
     #ax2.scatter(x[ind], y[ind], s=1, lw=0, c='black', alpha=alpha_points)
-    ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, lw=0.5, mew=0, color='black')
+    ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, mew=0, ecolor='black', alpha=0.5, elinewidth=0.5)
 
     ax3 = figPrior.add_subplot(121)
     #ax3.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
