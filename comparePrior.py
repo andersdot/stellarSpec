@@ -306,7 +306,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     data = np.load(dustFile)
     dustEBV = data['ebv']
     absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
-    absMag = absMagKinda2absMag(absMagKinda)
+    absMag = testXD.absMagKinda2absMag(absMagKinda)
     color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
     color_err = np.sqrt(bandDictionary[mag1]['array'][bandDictionary[mag1]['err_key']]**2. + bandDictionary[mag2]['array'][bandDictionary[mag2]['err_key']]**2.)
 
