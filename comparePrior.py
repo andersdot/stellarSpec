@@ -337,7 +337,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         x = color[notnans]
         y = np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.)
         levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
-        cNorm  = plt.matplotlib.colors.LogNorm(vmin=1, vmax=1e3)
+        cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
         (counts, xedges, yedges, Image) = ax[0].hist2d(x, y, bins=100, cmap='Greys', norm=cNorm)
         figcount, axcounts = plt.subplots()
         nonzero = counts > 0

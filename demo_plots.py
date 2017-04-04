@@ -118,7 +118,9 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
 
     ax1 = figData.add_subplot(121)
     levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
-    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200)
+    cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
+    ax1.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
+    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False)
     #im = ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha, norm=norm, cmap=cmap)
 
     ax2 = figData.add_subplot(122)
@@ -127,8 +129,9 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, lw=0.5, mew=0, color='grey')
 
     ax3 = figPrior.add_subplot(121)
+    ax3.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
     #kdeDensity(ax3, samplex, sampley, threshold=thresholdScatter, bins=binsScatter, s=1, lw=0, alpha=alpha)
-    corner.hist2d(samplex, sampley, ax=ax3, levels=levels, bins=200)
+    corner.hist2d(samplex, sampley, ax=ax3, levels=levels, bins=200, no_fill_contours=True, plot_density=False)
     ax3.scatter(samplex, sampley, s=1, lw=0, c='k', alpha=alpha)
 
     ax4 = figPrior.add_subplot(122)
