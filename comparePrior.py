@@ -72,7 +72,7 @@ def dustViz(ngauss=128, quantile=0.5, iter='8th', survey='2MASS', dataFilename='
     cb.set_label(r'E($B-V$ )')
     fig.savefig('dustViz.dQ' + str(quantile) + '.png')
 
-def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5):
+def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5, contourColor='k'):
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -136,7 +136,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     plt.show()
     """
     dp.plot_sample(color[positive], testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
-                xdgmm, xerr=color_err[positive], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200)
+                xdgmm, xerr=color_err[positive], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, contourColor=contourColor)
     dataFile = 'data_noDust.png'
     priorFile = 'prior_' + str(ngauss) +'gauss.png'
     os.rename('plot_sample.data.png', dataFile)
@@ -167,7 +167,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         #notnan = ~np.isnan(color[notnans]) & ~np.isnan(absMag)
         dp.plot_sample(color[notnans], absMag, sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
                     xdgmm, xerr=color_err[notnans], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
-                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='plasma')
+                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='plasma', contourColor=contourColor)
 
         dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
         priorFile = 'prior_' + str(ngauss) +'gauss.png'
@@ -290,7 +290,7 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
         plt.savefig('exampleCMDPosteriorLargerVariance_' + str(i) + '.png')
 
 
-def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz'):
+def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz', contourColor='k'):
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
     xdgmm = XDGMM(filename=xdgmmFilename)
     absmag = 'J'
@@ -344,7 +344,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         #axcounts.hist(np.log10(counts[nonzero]), log=True)
         #axcounts.set_xlabel('log counts')
         #figcount.savefig('counts.png')
-        corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False)
+        corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False, color=contourColor)
         #ax[0].scatter(color[notnans], np.log(var[notnans]) - np.log(tgas['parallax_error'][notnans]**2.), lw=0, s=1, alpha=0.5, c=tesXD.absMagKinda2absMag(absMagKinda[notnans]), norm=cNorm, cmap='plasma')
         ax[0].set_xlabel(r'$(J-K)^c$', fontsize=18)
         ax[0].set_ylim(-6, 2)
@@ -361,6 +361,7 @@ if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
     ngauss = np.int(sys.argv[2])
+    contourColor = sys.argv[3]
     if ngauss == 128: iter='10th'
     if ngauss == 512: iter='4th'
     if ngauss == 2048: iter='1st'
@@ -371,6 +372,6 @@ if __name__ == '__main__':
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
-    compareSimpleGaia()
+    compareSimpleGaia(contourColor=contourColor)
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples)
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor)
