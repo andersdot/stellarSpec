@@ -117,7 +117,7 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
                             wspace=0.1, hspace=0.1)
 
     ax1 = figData.add_subplot(121)
-    levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 3.1, 1.0) ** 2)
+    levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
     cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
     #ax1.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
     im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor)
