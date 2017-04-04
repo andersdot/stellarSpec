@@ -151,9 +151,10 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         notnans = ~np.isnan(parallax) & ~np.isnan(parallax_err)
         parallax = parallax[notnans]
         parallax_err = parallax_err[notnans]
+        apparentMagnitudeGood = apparentMagnitude[notnans]
         c = np.log(data['var']) - np.log(tgas['parallax_error']**2.)
-        absMagKinda = parallax*10.**(0.2*apparentMagnitude)
-        absMagKinda_err = parallax_err*10.**(0.2*apparentMagnitude)
+        absMagKinda = parallax*10.**(0.2*apparentMagnitudeGood)
+        absMagKinda_err = parallax_err*10.**(0.2*apparentMagnitudeGood)
         y = absMagKinda
         yplus  = y + absMagKinda_err
         yminus = y - absMagKinda_err
