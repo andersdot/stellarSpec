@@ -157,11 +157,13 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         parallaxErrGoesNegative = yminus < 0
         absMagYMinus = testXD.absMagKinda2absMag(yminus)
         absMagYMinus[parallaxErrGoesNegative] = -50.
-        yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
-        yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
-        dp.plot_sample(color, testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
-                    xdgmm, xerr=color_err, yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
-                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='plasma')
+        absMag = testXD.absMagKinda2absMag(y)
+        yerr_minus = absMag - absMagYMinus
+        yerr_plus = testXD.absMagKinda2absMag(yplus) - absMag
+        notnans = ~np.isnan(color) & ~np.isnan(absMag)
+        dp.plot_sample(color[notnans], absMag[notnans], sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
+                    xdgmm, xerr=color_err[notnans], yerr=[yerr_minus[notnans], yerr_plus[notnans]], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
+                    ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, c=c[notnans], norm=cNorm, cmap='plasma')
 
         dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
         priorFile = 'prior_' + str(ngauss) +'gauss.png'
