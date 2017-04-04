@@ -382,7 +382,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
 
         ax = [ax1, ax2]
 
-        for i in range(4):
+        for i in range(2):
             ax[i].set_xlim(xlim)
             ax[i].set_ylim(ylim[0], ylim[1]*1.1)
 
