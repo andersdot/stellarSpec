@@ -292,12 +292,13 @@ def examplePosterior(nexamples=100, postFile='posteriorSimple.npz', dustFile='du
 
 
 def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', dataFilename='All.npz', contourColor='k'):
+    setup_text_plots(fontsize=16, usetex=True)
     tgas, twoMass, Apass, bandDictionary, indices = testXD.dataArrays()
     xdgmm = XDGMM(filename=xdgmmFilename)
     absmag = 'J'
     mag1 = 'J'
     mag2 = 'K'
-    xlabel = 'J-K$_s$'
+    xlabel = '$(J-K)^C$'
     ylabel = r'M$_\mathrm{J}$'
     xlim = [-0.25, 1.25]
     ylim = [6, -6]
@@ -350,7 +351,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         #axcounts.hist(np.log10(counts[nonzero]), log=True)
         #axcounts.set_xlabel('log counts')
         #figcount.savefig('counts.png')
-        norm = plt.matplotlib.colors.Normalize(vmin=-1, vmax=1)
+        norm = plt.matplotlib.colors.Normalize(vmin=-1.5, vmax=1)
         cmap = 'inferno'
         ax[0].scatter(x, y, c=y, s=1, lw=0, alpha=0.05, norm=norm, cmap=cmap)
         corner.hist2d(x, y, bins=200, ax=ax[0], levels=levels, no_fill_contours=True, plot_density=False, plot_data=False, color=contourColor)
@@ -373,7 +374,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         fig.savefig('deltaLogVariance_' + file.split('.')[0] + '.png')
 
         figVarDiff = plt.figure(figsize=(12,5.5))
-        setup_text_plots(fontsize=16, usetex=True)
+
         ax1 = figVarDiff.add_subplot(121)
         ax2 = figVarDiff.add_subplot(122)
 
