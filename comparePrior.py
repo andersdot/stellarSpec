@@ -73,7 +73,7 @@ def dustViz(ngauss=128, quantile=0.5, iter='8th', survey='2MASS', dataFilename='
     cb.set_label(r'E($B-V$ )')
     fig.savefig('dustViz.dQ' + str(quantile) + '.png')
 
-def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5, contourColor='k'):
+def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5, contourColor='k', dustFile='dust.npz'):
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -143,6 +143,11 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     os.rename('plot_sample.data.png', dataFile)
     os.rename('plot_sample.prior.png', priorFile)
     #import pdb; pdb.set_trace()
+    data = np.load(dustFile)
+    dustEBV = data['ebv']
+    color = testXD.colorArray(mag1, mag2, dustEBV, bandDictionary)
+    absMagKinda, apparentMagnitude = testXD.absMagKindaArray(absmag, dustEBV, bandDictionary, tgas['parallax'])
+
     cNorm  = plt.matplotlib.colors.Normalize(vmin=-6, vmax=2)
     posteriorFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     for file in [posteriorFile, 'posteriorSimple.npz']:
@@ -420,4 +425,4 @@ if __name__ == '__main__':
     #dustViz(quantile=quantile)
     compareSimpleGaia(contourColor=contourColor)
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor)
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile)
