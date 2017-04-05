@@ -88,8 +88,8 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         mag1 = 'J'
         mag2 = 'K'
         absmag = 'J'
-        xlabel = 'J-K$_s$'
-        ylabel = r'M$_\mathrm{J}$'
+        xlabel = r'$(J-K)^C$'
+        ylabel = r'$M_J^C$'
         xlim = [-0.25, 1.25]
         ylim = [6, -6]
 
