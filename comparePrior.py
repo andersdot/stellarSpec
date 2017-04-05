@@ -416,7 +416,7 @@ if __name__ == '__main__':
     if ngauss == 128: iter='10th'
     if ngauss == 512: iter='4th'
     if ngauss == 2048: iter='1st'
-    Nsamples=1.2e5
+    Nsamples=1.2e6
     survey='2MASS'
     dataFilename = 'All.npz'
     xdgmmFilename = 'xdgmm.'             + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename + '.fit'
