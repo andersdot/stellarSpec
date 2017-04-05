@@ -83,6 +83,8 @@ def plot(fig, axes, figNoise, axesNoise, xns, yns, sigmans, yntrues, m, b, t, mt
     axes[2].errorbar(xns, ydns, yerr=sigmadns, fmt="None", mew=0, color='black', alpha=0.25, elinewidth=0.5)
     #axes[2].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color="b", zorder=37, alpha=alpha_chosen, mew=0)
     for ax in axes:
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         ax.set_xticks((-1, -0.5, 0, 0.5, 1))
@@ -154,6 +156,8 @@ def exampleParallax():
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    xlim = (-1, 1)
+    ylim = (-5, 5)
 
     nexamples =  np.int(sys.argv[1])
     mtrue, btrue, ttrue = -1.37, 0.2, 0.8
@@ -178,6 +182,23 @@ if __name__ == "__main__":
         axes = axes.flatten()
         figNoise, axesNoise = plt.subplots(2,2, figsize=(8,8))
         axesNoise = axesNoise.flatten()
+
+        figTrue, axesTrue = plt.subplots(1, 2, figsize=(15, 5))
+        xp = np.array(xlim)
+        for ax in axesTrue:
+            ax.plot(xp, mtrue*xp + btrue + ttrue, color='red', linewidth=2, alpha=0.75, label=r'$y=m_{true}\,x+b_{true}\pm t$')
+            ax.plot(xp, mtrue*xp + btrue - ttrue, color='red', linewidth=2, alpha=0.75)
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
+        axesTrue[0].scatter(xns, yntrues, c='red', lw=0, alpha=0.5, label=r'$y_{true,n}$: true y values')
+        axesTrue[1].scatter(xns, yns, c='black', lw=0, alpha=0.5, label=r'$y_n$: noisy y values')
+        axesTrue[1].errorbar(xns, yns, yerr=sigmans, c='black', fmt='None', alpha=0.5)
+        axesTrue[0].legend(loc='best', fontsize=15)
+        axesTrue[1].legend(loc='best', fontsize=15)
+        figTrue.tight_layout()
+        figTrue.savefig('toyTrue.png')
 
         fig, axes, figNoise, axesNoise = plot(fig, axes, figNoise, axesNoise, xns, yns, sigmans, yntrues, m, b, t, mtrue, btrue, ttrue, ydns, sigmadns, nexamples=nexamples)
         figNoise.tight_layout()

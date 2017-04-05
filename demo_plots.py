@@ -103,7 +103,7 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     #fig.colorbar(im)
     return ax
 
-def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k'):
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False):
     prng = np.random.RandomState(1234567890)
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
@@ -151,7 +151,10 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     titles = ["Observed Distribution", "Obs+Noise Distribution",
               "Extreme Deconvolution\n  resampling",
               "Extreme Deconvolution\n  cluster locations"]
-
+    if posterior:
+        titles = ["De-noised Expectation Values", "Posterior Distributions",
+                  "Extreme Deconvolution\n  resampling",
+                  "Extreme Deconvolution\n  cluster locations"]
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
