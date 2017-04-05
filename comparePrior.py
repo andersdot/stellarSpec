@@ -406,7 +406,8 @@ if __name__ == '__main__':
     #comparePrior()
     quantile = np.float(sys.argv[1])
     ngauss = np.int(sys.argv[2])
-    contourColor = sys.argv[3]
+    try: contourColor = sys.argv[3]
+    except IndexError: contourColor = '#1f77b4'
     if ngauss == 128: iter='10th'
     if ngauss == 512: iter='4th'
     if ngauss == 2048: iter='1st'
