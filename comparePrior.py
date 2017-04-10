@@ -24,6 +24,60 @@ def dustFilename(ngauss, quantile, iter, survey, dataFilename):
     return 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
 
 
+def priorSample(ngauss=128, quantile=0.5, iter='8th', survey='2MASS', dataFilename='All.npz', Nsamples=1.2e6, xdgmmFilename='xdgmm.fit', xlabel='X', ylabel='Y', contourColor='k'):
+
+    setup_text_plots(fontsize=16, usetex=True)
+
+    xdgmm = XDGMM(filename=xdgmmFilename)
+    figPrior = plt.figure(figsize=(12, 5.5))
+    figPrior.subplots_adjust(left=0.1, right=0.95,
+                            bottom=0.15, top=0.95,
+                            wspace=0.1, hspace=0.1)
+    sample = xdgmm.sample(Nsamples)
+    negParallax = sample[:,1] < 0
+    nNegP = np.sum(negParallax)
+    while nNegP > 0:
+        sampleNew = xdgmm.sample(nNegP)
+        sample[negParallax] = sampleNew
+        negParallax = sample[:,1] < 0
+        nNegP = np.sum(negParallax)
+
+    samplex = sample[:,0]
+    sampley = testXD.absMagKinda2absMag(sample[:,1])
+    ax3 = figPrior.add_subplot(121)
+    alpha = 0.1
+    xlim = [-0.25, 1.25]
+    ylim = [6, -6]
+
+    levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
+    corner.hist2d(samplex, sampley, ax=ax3, levels=levels, bins=200, plot_datapoints=False, no_fill_contours=True, plot_density=False, color=contourColor)
+    ax3.scatter(samplex, sampley, s=1, lw=0, c='k', alpha=alpha)
+
+    ax4 = figPrior.add_subplot(122)
+    for i in range(xdgmm.n_components):
+        points = drawEllipse.plotvector(xdgmm.mu[i], xdgmm.V[i])
+        ax4.plot(points[0, :], testXD.absMagKinda2absMag(points[1,:]), 'k-', alpha=xdgmm.weights[i]/np.max(xdgmm.weights))
+
+    titles = ["Extreme Deconvolution\n  resampling",
+              "Extreme Deconvolution\n  cluster locations"]
+
+    ax = [ax3, ax4]
+
+    for i in range(2):
+        ax[i].set_xlim(xlim)
+        ax[i].set_ylim(ylim[0], ylim[1]*1.1)
+        ax[i].text(0.05, 0.95, titles[i],
+                   ha='left', va='top', transform=ax[i].transAxes, fontsize=18)
+
+        ax[i].set_xlabel(xlabel, fontsize = 18)
+        if i in (1, 3):
+            ax[i].yaxis.set_major_formatter(plt.NullFormatter())
+        else:
+            ax[i].set_ylabel(ylabel, fontsize = 18)
+
+    figPrior.savefig('prior_ngauss' + str(ngauss) +'.png')
+
+
 def comparePrior():
     ngauss = [512, 128]
     iter = ['1st', '6th']
@@ -423,6 +477,7 @@ if __name__ == '__main__':
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
-    compareSimpleGaia(contourColor=contourColor)
+    priorSample(ngauss=ngauss, quantile=quantile, iter=iter, survey=survey, dataFilename=dataFilename, Nsamples=Nsamples, xdgmmFilename=xdgmmFilename, xlabel=r'$(J-K)^C$', ylabel='$M_J^C$', contourColor=contourColor)
+    #compareSimpleGaia(contourColor=contourColor)
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile)
+    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile)

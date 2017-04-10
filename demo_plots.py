@@ -103,7 +103,7 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     #fig.colorbar(im)
     return ax
 
-def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False):
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False, ind=None):
     prng = np.random.RandomState(1234567890)
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
@@ -124,7 +124,7 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     #im = ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha, norm=norm, cmap=cmap)
 
     ax2 = figData.add_subplot(122)
-    ind = prng.randint(0, len(x), size=errSubsample)
+    if ind is None: ind = prng.randint(0, len(x), size=errSubsample)
     #ax2.scatter(x[ind], y[ind], s=1, lw=0, c='black', alpha=alpha_points)
     ax2.errorbar(x[ind], y[ind], xerr=xerr[ind], yerr=[yerr[0][ind], yerr[1][ind]], fmt="none", zorder=0, mew=0, ecolor='black', alpha=0.5, elinewidth=0.5)
 

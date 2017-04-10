@@ -66,13 +66,24 @@ projectedDimension = 1  #which dimension to project the prior onto
 ndim = 2
 xparallaxMAS = np.linspace(0, 10, nPosteriorPoints)
 
+
+y = absMagKinda
+yplus  = y + absMagKinda_err
+yminus = y - absMagKinda_err
+parallaxErrGoesNegative = yminus < 0
+absMagYMinus = testXD.absMagKinda2absMag(yminus)
+absMagYMinus[parallaxErrGoesNegative] = -50.
+yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
+yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
+
+
 #plot likelihood and posterior in each axes
 for iteration in np.arange(20, 40):
-    fig, ax = plt.subplots(2, 3, figsize=(15, 7))
+    fig, ax = plt.subplots(2, 3, figsize=(15, 9))
     ax = ax.flatten()
     fig.subplots_adjust(left=0.1, right=0.9,
                                 bottom=0.1, top=0.9,
-                                wspace=0.4, hspace=0.4)
+                                wspace=0.4, hspace=0.5)
 
     #plot prior in upper left
     xdgmmFilename = 'xdgmm.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.2MASS.All.npz.fit'
@@ -80,26 +91,17 @@ for iteration in np.arange(20, 40):
     testXD.plotPrior(xdgmm, ax[0], c='k', lw=1)
     ax[0].set_xlim(xlim)
     ax[0].set_ylim(ylim)
-    ax[0].set_xlabel('$(J-K)^C$')
-    ax[0].set_ylabel('$M_J^C$')
+    ax[0].set_xlabel('$(J-K)^C$', fontsize=18)
+    ax[0].set_ylabel('$M_J^C$', fontsize=18)
 
     for i in range(np.max(digit)):
-        currentInd = np.where((digit == i) & (tgas['parallax_error'] > 0.75))[0]
+        currentInd = np.where((digit == i))[0]
         index = currentInd[np.random.randint(0, high=len(currentInd))]
-        y = absMagKinda
-        yplus  = y + absMagKinda_err
-        yminus = y - absMagKinda_err
-        absMagYMinus = testXD.absMagKinda2absMag(yminus)
-        absMagYMinus[yminus <0] = -50.
-        yerr_minus = testXD.absMagKinda2absMag(y) - absMagYMinus
-        yerr_plus = testXD.absMagKinda2absMag(yplus) - testXD.absMagKinda2absMag(y)
 
-        #yerr_minus = testXD.absMagKinda2absMag(absMagKinda[index]+absMagKinda_err[index]) - testXD.absMagKinda2absMag(absMagKinda[index])
-        #yerr_plus = testXD.absMagKinda2absMag(absMagKinda[index]) - testXD.absMagKinda2absMag(absMagKinda[index]-absMagKinda_err[index])
-        #print yerr_minus, yerr_plus
+        print 'yerr minus: ' + str(yerr_minus[index]) + ' yerr plus: ' + str(yerr_plus[index])
         ax[0].scatter(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), c='black')
-        ax[0].errorbar(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), xerr=[[color_err[index], color_err[index]]], yerr=[[yerr_minus, yerr_plus]], fmt="none", zorder=0, lw=0.5, mew=0, alpha=1.0, color='black', ecolor='black')
-        ax[0].annotate(str(i+1), (color[index]+0.02, testXD.absMagKinda2absMag(absMagKinda[index])+0.02))
+        ax[0].errorbar(color[index], testXD.absMagKinda2absMag(absMagKinda[index]), xerr=[[color_err[index], color_err[index]]], yerr=[[yerr_minus[index], yerr_plus[index]]], fmt="none", zorder=0, lw=2.0, mew=0, alpha=1.0, color='black', ecolor='black')
+        ax[0].annotate(str(i+1), (color[index]+0.05, testXD.absMagKinda2absMag(absMagKinda[index])+0.15), fontsize=18)
         meanData, covData = testXD.matrixize(color[index], absMagKinda[index], color_err[index], absMagKinda_err[index])
         meanPrior, covPrior = testXD.matrixize(color[index], absMagKinda[index], color_err[index], 1e5)
         meanData = meanData[0]
@@ -120,7 +122,7 @@ for iteration in np.arange(20, 40):
                 print str(index) + ' has no positive distance values'
                 continue
             logDistance = np.log10(1./xparallaxMAS[positive])
-        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
+        allMeans, allAmps, allCovs, summedPosteriorAbsmagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanData, covData, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
         allMeansPrior, allAmpsPrior, allCovsPrior, summedPriorAbsMagKinda = testXD.absMagKindaPosterior(xdgmm, ndim, meanPrior, covPrior, xabsMagKinda, projectedDimension=1, nPosteriorPoints=nPosteriorPoints)
         print np.min(summedPriorAbsMagKinda), np.max(summedPriorAbsMagKinda)
         posteriorParallax = summedPosteriorAbsmagKinda*10.**(0.2*apparentMagnitude[index])
@@ -131,7 +133,7 @@ for iteration in np.arange(20, 40):
         l2, = ax[i+1].plot(xparallaxMAS, priorParallax*np.max(posteriorParallax)/np.max(priorParallax), lw=0.5, color='black')
         l3, = ax[i+1].plot(xparallaxMAS, posteriorParallax, lw=2, color='black')
         ax[i+1].set_title(str(i+1))
-        ax[i+1].set_xlabel(r'$\varpi$ [mas]')
+        ax[i+1].set_xlabel(r'$\varpi$ [mas]', fontsize=18)
         ax[i+1].tick_params(
             axis='y',          # changes apply to the x-axis
             which='both',      # both major and minor ticks are affected

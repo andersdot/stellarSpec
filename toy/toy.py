@@ -10,7 +10,7 @@ def make_fake_data(parsTrue, N=512):
     tns = np.random.normal(scale=ttrue, size=N)
     #tns = np.random.normal(size=N) * ttrue
     yntrues = mtrue * xns + btrue + tns
-    sigmans = (np.random.uniform(size=N) * 2.) ** 3.
+    sigmans = (np.random.uniform(size=N)*1.5) ** 3.
     #yns = yntrues + np.random.normal(size=N) * sigmans
     yns = yntrues + np.random.normal(scale=sigmans)
     fig, ax = plt.subplots(1,3)
@@ -53,34 +53,39 @@ def plot(fig, axes, figNoise, axesNoise, xns, yns, sigmans, yntrues, m, b, t, mt
     trueMap = mpl.cm.get_cmap('Reds')
     trueColor = trueMap(0.75)
 
-    for ax in axes[:-1]:
+    for ax in axes[1:-1]:
         ax.errorbar(xns, yns, yerr=sigmans, fmt="o", color="k", alpha=alpha_all ,mew=0)
         ax.errorbar(xns[0:nexamples], yns[0:nexamples], yerr=sigmans[0:nexamples], fmt="o", color="k", zorder=37, alpha=alpha_chosen, mew=0)
 
     xp = np.array(xlim)
-    axes[1].plot(xp, m * xp + b + t, color=dataColor)
-    axes[1].plot(xp, m * xp + b - t, color=dataColor)
-    axes[1].scatter(xns[0:nexamples], yntrues[0:nexamples], c=trueColor, lw=2, zorder=36, alpha=alpha_chosen, facecolors='None')
-    axes[1].plot(xp, mtrue*xp + btrue + ttrue, color=trueColor, zorder=35)
-    axes[1].plot(xp, mtrue*xp + btrue - ttrue, color=trueColor, zorder=34)
-    r1 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color='black', alpha=alpha_chosen))
-    r2 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=trueColor, alpha=alpha_chosen))
-    r3 = axes[1].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=dataColor, alpha=alpha_chosen))
-    axes[1].legend((r1,r2,r3), ('data', 'truth', 'denoised'), loc='best', fontsize=12)
+    axes[0].plot(xp, mtrue*xp + btrue + ttrue, color='red', linewidth=2, alpha=0.75, label=r'$y=m_{true}\,x+b_{true}\pm t$')
+    axes[0].plot(xp, mtrue*xp + btrue - ttrue, color='red', linewidth=2, alpha=0.75)
+    axes[0].scatter(xns, yntrues, c='red', lw=0, alpha=0.5, label=r'$y_{true,n}$')
+    axes[0].legend(loc='best', fontsize=15)
 
-    axes[1].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color=dataColor, zorder=37, alpha=alpha_chosen, mew=0)
+    axes[2].plot(xp, m * xp + b + t, color=dataColor)
+    axes[2].plot(xp, m * xp + b - t, color=dataColor)
+    axes[2].scatter(xns[0:nexamples], yntrues[0:nexamples], c=trueColor, lw=2, zorder=36, alpha=alpha_chosen, facecolors='None')
+    axes[2].plot(xp, mtrue*xp + btrue + ttrue, color=trueColor, zorder=35)
+    axes[2].plot(xp, mtrue*xp + btrue - ttrue, color=trueColor, zorder=34)
+    r1 = axes[2].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color='black', alpha=alpha_chosen))
+    r2 = axes[2].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=trueColor, alpha=alpha_chosen))
+    r3 = axes[2].add_patch(mpl.patches.Rectangle((-10,-10), 0.1, 0.1, color=dataColor, alpha=alpha_chosen))
+    axes[2].legend((r1,r2,r3), ('data', 'truth', 'denoised'), loc='best', fontsize=12)
+
+    axes[2].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color=dataColor, zorder=37, alpha=alpha_chosen, mew=0)
 
     norm = mpl.colors.Normalize(vmin=0, vmax=9)
-    im = axes[2].scatter(xns,  ydns,  c=sigmans**2., cmap='Blues', norm=norm, alpha=0.5, lw=0)
-    fig.subplots_adjust(left=0.05, right=0.89)
-    cbar_ax = fig.add_axes([0.9, 0.125, 0.02, 0.75])
+    im = axes[3].scatter(xns,  ydns,  c=sigmans**2., cmap='Blues', norm=norm, alpha=0.5, lw=0)
+    fig.subplots_adjust(left=0.1, right=0.89)
+    cbar_ax = fig.add_axes([0.9, 0.1, 0.02, 0.35])
     cb = fig.colorbar(im, cax=cbar_ax)
     #cb = plt.colorbar(im, ax=axes[2])
     cb.set_label(r'$\sigma_n^2$', fontsize=20)
     cb.set_clim(-4, 9)
 
 
-    axes[2].errorbar(xns, ydns, yerr=sigmadns, fmt="None", mew=0, color='black', alpha=0.25, elinewidth=0.5)
+    axes[3].errorbar(xns, ydns, yerr=sigmadns, fmt="None", mew=0, color='black', alpha=0.25, elinewidth=0.5)
     #axes[2].errorbar(xns[0:nexamples], ydns[0:nexamples], yerr=sigmadns[0:nexamples], fmt="o", color="b", zorder=37, alpha=alpha_chosen, mew=0)
     for ax in axes:
         ax.set_xlabel('X')
@@ -178,7 +183,7 @@ if __name__ == "__main__":
         plt.style.use(style)
         mpl.rcParams['xtick.labelsize'] = 18
         mpl.rcParams['ytick.labelsize'] = 18
-        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        fig, axes = plt.subplots(2, 2, figsize=(15, 11))
         axes = axes.flatten()
         figNoise, axesNoise = plt.subplots(2,2, figsize=(8,8))
         axesNoise = axesNoise.flatten()
@@ -203,4 +208,5 @@ if __name__ == "__main__":
         fig, axes, figNoise, axesNoise = plot(fig, axes, figNoise, axesNoise, xns, yns, sigmans, yntrues, m, b, t, mtrue, btrue, ttrue, ydns, sigmadns, nexamples=nexamples)
         figNoise.tight_layout()
         figNoise.savefig('toyNoise.' + label + '.png')
+        #fig.tight_layout()
         fig.savefig("toy." + label + ".png")
