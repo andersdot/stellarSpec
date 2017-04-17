@@ -232,7 +232,7 @@ commitment to---or even use of---physical models of stars or the Milky Way.
 In this paper we use the noise deconvolved observed \cmd\ as a prior to infer more precise parallax pdfs from \gaia\ measurements.
 Here we will demonstrate this method with a simpler toy model. Instead of using the 2D distribution of the \cmd\ as our prior, for this simpler model we use a 2D distribution that is a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$, as our prior. The $1\sigma$ contours as well as (noise free) samples from the distribution are shown in Figure \ref{fig:toy}, upper left panel.
 Noisy samples from this distribution are shown in the upper right panel.
-Using a representation of this distribution as our prior we can infer some posterior belief of $y_{\true,n}$, a true sample from the distribution, from $y_n$, a noisy sample of the distribution.
+Using a representation of this distribution as our prior we can infer some posterior belief of $y_{\true,n}$, a true sample of the distribution, from $y_n$, a noisy sample of the distribution.
 Here the thickness of the distribution mimics the true thickness of the \cmd\ due to age, mass and metallicity.
 To set up the problem, we have the true underlying distribution of points and the noisy data
 
@@ -242,15 +242,15 @@ y_n \, &=& \, y_{true,n} + \epsilon_n
 \label{eq:ytrue}
 \end{eqnarray}
 
-where $\Delta_n$ is drawn from the Gaussian function $\mathcal{N}(\Delta_n \given 0, t^2)$, and $\epsilon_n$ is drawn from the Gaussian function $\mathcal{N}(\epsilon_n \given 0, \sigma_n^2)$, so we quote $\sigma_n$ as the measurement uncertainty.
-These represent true and noisy draws from a distribution that is a straight line with some thickness $t$, and are visualized the upper panels of Figure \ref{fig:toy}
+where $\Delta_n$ is drawn from the Gaussian function $\mathcal{N}(\Delta_n \given 0, t^2)$, and $\epsilon_n$ is drawn from the Gaussian function $\mathcal{N}(\epsilon_n \given 0, \sigma_n^2)$, so $\sigma_n$ is the measurement uncertainty.
+These represent true and noisy draws from a distribution that is a straight line with some thickness $t$, and are visualized in the upper panels of Figure \ref{fig:toy}
 
 First we determine the underlying distribution that the noisy data $y_n$ are drawn from, shown as the blue lines in the lower left panel of Figure \ref{fig:toy}
 This denoised distribution becomes our prior.
-We then use this pior to infer a posterior belief about the true values, $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$, shown as the blue points in the lower panels of Figure \ref{fig:toy}
+We then use this pior to infer a posterior belief about the true values, $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$, whose expectation value is shown as the blue points in the lower panels of Figure \ref{fig:toy}
 When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance $t^2$ and the measurement variance $\sigma_n^2$.
 Figure \ref{fig:toy}, upper right, shows 1024 realizations of the noisy values $y_n$ and their associated measurement uncertainties $\sigma_n$ as the grey points. Here we highlight 5 random points in black to highlight the method, but the same method is being applied to all the data.
-We denoise these points using marginalized maximum likelihood estimation (MML), which marginalizes over the true data values (we never need to know them) and maximizes the likelihood of the data. Here our likelihood for each individual datum is
+We learn the noise-deconvolved distribution using marginalized maximum likelihood estimation (MML), which marginalizes over the true data values (we never need to know them) and maximizes the likelihood of the data. Here our likelihood for each individual datum is
 
 \begin{equation}
 p(y_n \given m, b, t^2, \sigma_n^2) = \mathcal{N}(y_n \given m\,x_n + b, t^2 + \sigma_n^2)
@@ -271,9 +271,9 @@ Maximizing this likelihood is the same as minimizing
 \label{eq:chisq}
 \end{equation}
 
-This MML gives us the best fit parameters $\hat{m}$, $\hat{b}$, and $\hat{t}$. In Figure \ref{fig:toy}, center panel, the true functions $y_{\true} = m_{\true}\,x + b_{\true} \pm t_{\true}$ are shown as the red lines, and the best fit MML functions $\hat{y}_{\true} = \hat{m}\, x + \hat{b} \pm \hat{t}$ are shown as the blue lines. Now that we have an estimate of the true underlying distribution $\hat{y}_{\true}$, we use this as a prior to infer a posterior belief of the true values for each datum $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$.
+This MML gives us the best fit parameters $\hat{m}$, $\hat{b}$, and $\hat{t}$. In Figure \ref{fig:toy}, lower left panel, the true functions $y_{\true} = m_{\true}\,x + b_{\true} \pm t_{\true}$ are shown as the red lines, and the best fit MML functions $\hat{y}_{\true} = \hat{m}\, x + \hat{b} \pm \hat{t}$ are shown as the blue lines. Now that we have an estimate of the true underlying distribution $\hat{y}_{\true}$, we use this as a prior to infer a posterior belief of the true values for each datum $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$.
 
-Here is a good point to step back and acknowledge that our method is odd/strange/different/new (which maybe you're also currently thinking but can't quite express why yet). We are using the set of data to determine the denoised distribution, and then using that denoised distribution to make inferences on the data. We are technically using the data twice! If we were going to be fully, technically correct, we should denoise the distribution, but leave one datum out; the one datum we want to infer the true y value for\footnote{DWH: Remember what this brain dump is for}. Leaving one out, and then estimating the prior and then inferring the posterior for each data point is way too expensive for the 1024 points in our toy model, and also for the 1.2 million stars in our actual data set. Luckily with large data sets, even at 1024, 1 datum is $\sim0.1\%$ of your dataset and therefore leaving that point out will not change the MML parameters of your denoised distribution, and with the \gaia\ dataset of over a million stars, we can safely step into the Empirical Bayes regime.
+Here is a good point to step back and acknowledge that our method is odd/strange/different/new (which maybe you're also currently thinking but can't quite express why yet). We are using the set of data to determine the noise-deconvolved distribution, and then using that noise-deconvolved distribution to make inferences on the data. We are technically using the data twice! If we were going to be fully, technically correct, we should learn the distribution, but leave one datum out; the one datum we want to infer the true y value for\footnote{DWH: Remember what this brain dump is for}. Leaving one out, and then estimating the prior and then inferring the posterior for each data point is way too expensive for the 1024 points in our toy model, and also for the 1.2 million stars in our actual data set. Luckily with large data sets, even at 1024, 1 datum is $\sim0.1\%$ of your dataset and therefore leaving that point out will not change the MML parameters of your noise-deconvolved distribution, and with the \gaia\ dataset of over a million stars, we can safely step into the Empirical Bayes regime.
 
 So using Bayes theorem
 \begin{eqnarray}
@@ -283,9 +283,7 @@ p(y_{\true,n}) &=& \mathcal{N}(y_{\true,n} \given \hat{m}\, x_n + \hat{b}, \hat{
 \label{eq:toyBayes}
 \end{eqnarray}
 
-Since everything is Gaussian, this can be done analytically by multiplying Gaussians together. The blue points in Figure \ref{fig:toy}, lower right panel, represent the posterior belief of the true value $p(y_{\true,n} \given y_n, \tilde{\sigma}_n)$ for the highlighted black points. Finally, Figure \ref{fig:toy}, right panel, shows the full set of posterior beliefs for each $y_n$. The points are colored by their measurement variance $\sigma_n^2$ to show that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior, while more certain measurements remain closer to their measured values $y_n$. By doing this we have better estimates of the true y value for each point. Bringing the toy model back to our original problem, using the noise-deconvolved CMD as our prior allows us to get better estimates of the parallax for each star.
-
-LA: Conclusions and stuff about why this stuff is good
+Since everything is Gaussian, this can be done analytically by multiplying Gaussians together. The blue points in Figure \ref{fig:toy}, lower right panel, represent the posterior belief of the true value $p(y_{\true,n} \given y_n, \tilde{\sigma}_n)$ for the highlighted black points. Finally, Figure \ref{fig:toy}, lower right panel, shows the full set of posterior beliefs for all $y_n$. The points are colored by their measurement variance $\sigma_n^2$ to show that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior, while more certain measurements remain closer to their measured values $y_n$. By doing this we have better estimates of the true y value for each point. Bringing the toy model back to our original problem, using the noise-deconvolved CMD as our prior allows us to get better estimates of the parallax for each star.
 
 \section{Assumptions and methods}
 
@@ -452,7 +450,7 @@ We use stars crossmatched in TGAS, 2MASS and within the observing footprint of \
 \end{figure}
 
 
-We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from iteratively sampling our posterior distances. Dust corrections are non trivial for stars with poor signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. To apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior we infer more precise distances to all the stars which we can use to get a measurement of dust. This approach minimizes severe distances from the likelihoods alone and their associated severe dust corrections. With more these more precise distance posteriors, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. For each distance we take the median of the samples of the dust model. We apply each dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution (Do we want to change this and add in the covariance for the dust?). We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. Should I quote some statistics about the dust corrections? mostly small? maybe difference before after correcting for distance?
+We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from iteratively sampling our posterior distances. Dust corrections are non trivial for stars with poor signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. To apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior we infer more precise distances to all the stars. We then use this more precise distance posterior to get a measurement of dust in the 3D dust map. This approach minimizes severe distances from the likelihoods alone and their associated severe dust corrections. In detail, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. We take the $5\%$ quantile, as apposed to the median for example, to do a light dust correction because over correcting for dust can shoot you into a different space of the CMD and then bias your distance inference. For each distance we sample the median of the probabilistic dust model. We apply each dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the lightly dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution (Do we want to change this and add in the covariance for the dust?). We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. The iterative process allows for possibly slightly high dust values to be corrected to slightly too low dust values until a distance and corresponding dust value is more consistent with the CMD. Should I quote some statistics about the dust corrections? mostly small? maybe difference before after correcting for distance?
 
 \subsection{Prior}
 
@@ -623,6 +621,21 @@ for subsequent inferences (\citealt{hogg08}; \citealt{dfm14}); we
 encourage power-users to consult those methodological
 contributions before engaging with these outputs.
 
+\subsection{What's That Feature?}
+We used cross validation to show that the likelihood of the data continued to increase from 16 Gaussians to 2048 Gaussians. We chose to do our inference using 128 Gaussians, but increasing the number of Gaussians was also a good check to see what features in the CMD appeared to be real, and which ones smoothed out with increasing numbers of Gaussians. The most obvious structures that persisted to our maximum number of Gaussians are:
+\begin{itemize}
+\item Main Sequence
+\item Binary Sequence
+\item Possible metallicity variation in MS lifetime
+\item Red clump
+\item Red bump
+\item Red Giant Branch
+\item Asymptotic Giant Branch
+\item planetary nebula
+\end{itemize}
+Fraction of stars in various parts of the diagram?
+
+
 Come back to the assumptions. What happens if we change or violate them?
 
 Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
@@ -632,9 +645,6 @@ Long discussion of dust.
 Some discussion of possible failure modes. Including very rare kinds of stars. Should we add gaussians to prior where we know stars exist that aren't well sampled in Gaia (ie WD)
 
 Number of gaussians in \xd, and the w parameter. That we set them heuristically.
-
-Talk about structures in CMD; red bump - acknowledge Ana ! s
-What's That Feature? Similarly; Fraction of stars in various parts of the diagram?
 
 Compare with literature stellar models
 
