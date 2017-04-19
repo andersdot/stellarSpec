@@ -3,7 +3,7 @@ CHECK_RERUN = grep "Rerun to get" $*.log
 
 all: paper.pdf
 
-%.pdf: %.tex gaia.bib
+%.pdf: %.tex gaia.bib *.png
 	${LATEX} $*
 	bibtex $*
 	${LATEX} $*
