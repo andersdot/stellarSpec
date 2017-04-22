@@ -463,7 +463,9 @@ We use stars crossmatched in TGAS, 2MASS and within the observing footprint of \
 \end{figure}
 
 
-We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from iteratively sampling our posterior distances. Dust corrections are non trivial for stars with poor signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. To apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior we infer more precise distances to all the stars. We then use this more precise distance posterior to get a measurement of dust in the 3D dust map. This approach minimizes severe distances from the likelihoods alone and their associated severe dust corrections. In detail, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. We take the $5\%$ quantile, as apposed to the median for example, to do a light dust correction because over correcting for dust can shoot you into a different space of the CMD and then bias your distance inference. For each distance we sample the median of the probabilistic dust model. We apply each dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the lightly dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution (Do we want to change this and add in the covariance for the dust?). We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. The iterative process allows for possibly slightly high dust values to be corrected to slightly too low dust values until a distance and corresponding dust value is more consistent with the CMD. Should I quote some statistics about the dust corrections? mostly small? maybe difference before after correcting for distance?
+We correct for dust using 3D Bayestar (Schlafly+Finkbeiner) with an estimate of the distance from iteratively sampling our posterior distances. Dust corrections are non trivial for stars with poor signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. To apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior we infer more precise distances to all the stars. We then use this more precise distance posterior to get a measurement of dust in the 3D dust map. This approach minimizes severe distances from the likelihoods alone and their associated severe dust corrections. In detail, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. We take the $5\%$ quantile, as apposed to the median for example, to do a light dust correction because over correcting for dust can shoot the likelihood into an unphysical, different space of the CMD and then bias the distance inference. For each distance we sample the median of the probabilistic dust model. We apply each light dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the lightly dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution. We could add the covariance of the dust to our likelihoods, but this is beyond the scope of this demonstration of concept. We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. The iterative process allows for slight variations in distance and corresponding dust to become more consistent with the \cmd. Within our probabilistic framework this handling of dust is not proper. We are taking a point estimate of the probabilistic dust model at a quantile distance of our posterior. A full, proper account would sample the dust model at distances sampled from the posterior and propagate those samples back into \xd during the iterative proccess. The issues is that this dust sample distribution would not be a Gaussian distribution which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
+
+Should I quote some statistics about the dust corrections? mostly small? maybe difference before/after applying prior to distance?
 
 \subsection{Prior}
 
@@ -646,18 +648,16 @@ There are other prior information options when inferring distances to stars. A c
 
 
 \subsection{What's That Feature?}
-We used cross validation to show that the likelihood of the data continued to increase from 16 Gaussians to 2048 Gaussians. We chose to do our inference using 128 Gaussians, but increasing the number of Gaussians was also a good check to see what features in the CMD appeared to be real, and which ones smoothed out with increasing numbers of Gaussians. The most obvious structures that persisted to our maximum number of Gaussians are:
+The denoised expectation values of the parallax projected into the \cmd\ show interest features.
 \begin{itemize}
-\item Main Sequence
-\item Binary Sequence
-\item Possible metallicity variation in MS lifetime
-\item Red clump
-\item Red bump
-\item Red Giant Branch
-\item Asymptotic Giant Branch
-\item planetary nebula
+\item (1) Narrow Lower Main Sequence
+\item (2) Wide Upper Main Sequence
+\item (3) Plausible Binary Sequence
+\item (4) Prominent Red clump
+\item (5) Narrow Red Giant Branch
+\item (6) Noticeable turn off
 \end{itemize}
-Fraction of stars in various parts of the diagram?
+The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of only seeing a very small volume of lower main sequence stars but a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is straight/narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
 Come back to the assumptions. What happens if we change or violate them? Long discussion of the noise model. We took serious short-cuts. Call out to Boris. 
 
