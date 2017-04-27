@@ -57,19 +57,19 @@
 \affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
 
 \begin{abstract}\noindent % trust me
-The \gaia\ \tgas\ \project{Catalog} contains more than 2 million parallax measurements.
+
 Conversion of a noisy parallax measurement into a posterior belief over distances requires inference with a prior.
 Usually this prior represents some kind of belief about the Milky Way.
-However, there is multi-band photometry for the \tgas\ stars from imaging surveys;
+However, there is multi-band photometry for a large fractino of the \gaia\ \tgas\ catalog from imaging surveys;
 this imaging is incredibly informative about stellar distances.
-Here we use color information on \tgas\ stars from \tmass\ to build a noise-deconvolved empirical prior distribution of stars in color--magnitude space.
+Here we use color information on $1.2$ million \tgas\ stars from \tmass\ to build a noise-deconvolved empirical prior distribution for stars in color--magnitude space.
 This data-driven model contains no knowledge of the physics of stellar interiors or photospheres, nor of the Milky Way, but rather derives its precision from its generative model of noisy parallax measurements and an assumption of stationarity.
 We use the Extreme Deconvolution (\xd) algorithm, which is an Empirical Bayes approximation to a full hierarchical model of the true parallax and photometry of every star.
 The algorithm is run not in absolute-magnitude space but in a transformed space where the measurement uncertainty is closer to Gaussian.
 The \xd-optimized prior is used to perform parallax and distance inferences for every star, yielding a precise stellar distance estimate and uncertainty (and full posterior) for every star.
-Our posterior parallax estimates are more precise than the Gaia catalog outputs by a factor of [XXX] for the median \tgas\ star; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
+Our posterior parallax estimates are more precise than the \tgas\ catalog entries by a median factor of [XXX]; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
 The precision can be attributed to the statistics concept of shrinkage.
-We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible at all in the \tgas\ parallax estimates, but appears clearly in our posterior parallax estimates.
+We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible as a cluster in the \tgas\ parallax estimates, but appears clearly in our posterior parallax estimates.
 All our results, including a posterior parallax and distance sampling for [ZZZ] \tgas\ stars, are available in companion electronic tables.
 \end{abstract}
 
@@ -91,9 +91,9 @@ All our results, including a posterior parallax and distance sampling for [ZZZ] 
 
 The \gaia\ Mission (\citealt{gaia16}) will deliver more than a billion stellar distances.
 Only a small fraction (but large number) of these distance
-measurements will be purely astrometric:
+measurements will be both precise and purely astrometric:
 \gaia\ uses astrometric parallax to determine the distances of the closer
-stars, and calibrate spectrophotometric models.
+stars, and calibrate to spectrophotometric models.
 These spectrophotometric models, in turn, along with \gaia's on-board
 low-resolution $B_p\,R_p$ spectrophotometry, are used to provide
 distance estimates to more distant stars.
@@ -128,7 +128,7 @@ Most stellar models used to generate photometric distances or photometric
 parallaxes have been physical models, based on gravity, fluid mechanics,
 radiative transfer, nuclear reactions, and atomic and molecular transitions.
 Because there are small issues with each of these components, there are small
-color and luminosity differences with the data---the models are wrong in detail---and
+color and luminosity differences with the data---the models are inaccurate in detail---and
 the physical models therefore produce distance estimates that are biased.
 Besides, they build a long list of physical assumptions (about
 nuclear reactions, convection, and thermal timescales, for example)
@@ -137,7 +137,7 @@ That is, it is impossible, when using physical models,
 to deliver photometric distance estimates that involve minimal assumptions.
 
 However, the use of physical models for distance estimation is not necessary.
-Because there are stars at all luminosities with good parallax information,
+Because there are stars at all luminosities with useful parallax information,
 it is possible to build a stellar photometric model from the data themselves.
 Different stars are observed at different levels of parallax precision,
 so it requires relatively high technology to build this data-driven model
@@ -146,8 +146,8 @@ We have this technology!
 
 Here we build and use just such a data-driven model. In particular,
 we use all of the \gaia\ \tgas\ data (\citealt{tgas};
-these data were generated by the methodology of \citealt{michalik15}), matched to the
-\tmass\ photometry (\citealt{skrutskie06}), and in the footprint of
+these data were generated by the methodology of \citealt{michalik15}), that match to the
+\tmass\ photometry (\citealt{skrutskie06}) and lie in the footprint of
 the \panstarrs\ Dust Map (\citealt{green15}), to make a model of the
 noise-free (or low-noise) color--magnitude diagram (\cmd) of stars.
 We use an Empirical-Bayes approach known as Extreme Deconvolution (XD;
@@ -176,8 +176,7 @@ That is, we are using the \xd\ model to de-noise the \gaia\ parallax
 measurements.
 Technically, since \xd\ produces a maximum-marginalized-likelihood estimator
 of the deconvolved distribution,
-its use as a prior is only approximately valid; it constitutes using the
-data twice.
+its use as a prior is only approximately valid.
 However, since the data set is large, the \xd\ approximation is not bad; it is
 sometimes known as the ``empirical Bayes'' method, and is well studied\footnote{For a start, try \url{https://en.wikipedia.org/wiki/Empirical_Bayes_method}.}.
 
@@ -206,17 +205,17 @@ stars.
 The strongest new assumption made in this work is that for every star
 in \tgas, there are other, photometrically (and bolometrically)
 similar stars.
-That is a much weaker assumption than has been made in other Bayesian
+That is a much weaker assumption than has been made in most other Bayesian
 distance estimations.
 
 This project is fundamentally a demonstration of concept:
-We are only using the ``small'' (relative to the expected final \gaia\ data set)
+We are only using a subset of the ``small'' (relative to the expected final \gaia\ data set)
 \tgas\ Catalog.
 We are performing only an approximation to full Bayesian hierarchical inference.
 We have to use photometry that is ground-based, rather than the full-precision,
 space-based photometry that the \gaia\ Mission will deliver.
 However, as we show below, we get very good results.
-It is promising that we will be able to obtain similar or even better results
+It is promising that we will be able to obtain even better results
 in later \gaia\ data releases, and eventually put distances on $>10^9$
 \gaia\ stars using photometric distance methodologies but without any
 commitment to---or even use of---physical models of stars or the Milky Way.
@@ -245,9 +244,9 @@ y_n \, &=& \, y_{true,n} + \epsilon_n
 where $\Delta_n$ is drawn from the Gaussian function $\mathcal{N}(\Delta_n \given 0, t^2)$, and $\epsilon_n$ is drawn from the Gaussian function $\mathcal{N}(\epsilon_n \given 0, \sigma_n^2)$, so $\sigma_n$ is the measurement uncertainty.
 These represent true and noisy draws from a distribution that is a straight line with some thickness $t$, and are visualized in the upper panels of Figure \ref{fig:toy}
 
-First we determine the underlying distribution that the noisy data $y_n$ are drawn from, shown as the blue lines in the lower left panel of Figure \ref{fig:toy}
-This denoised distribution becomes our prior.
-We then use this pior to infer a posterior belief about the true values, $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$, whose expectation value is shown as the blue points in the lower panels of Figure \ref{fig:toy}
+First we determine the underlying distribution that the noisy data $y_n$ are drawn from. The $1\sigma$ contours of this noise deconvolved distribution are shown as the blue lines in the lower left panel of Figure \ref{fig:toy}.
+This noise deconvolved distribution becomes our prior.
+We then use this pior to infer a posterior belief about the true values, $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$, whose expectation value and $1\sigma$ uncertainty is shown as the blue points in the lower panels of Figure \ref{fig:toy}.
 When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance $t^2$ and the measurement variance $\sigma_n^2$.
 Figure \ref{fig:toy}, upper right, shows 1024 realizations of the noisy values $y_n$ and their associated measurement uncertainties $\sigma_n$ as the grey points. Here we highlight 5 random points in black to highlight the method, but the same method is being applied to all the data.
 We learn the noise-deconvolved distribution using marginalized maximum likelihood estimation (MML), which marginalizes over the true data values (we never need to know them) and maximizes the likelihood of the data. Here our likelihood for each individual datum is
@@ -257,14 +256,14 @@ p(y_n \given m, b, t^2, \sigma_n^2) = \mathcal{N}(y_n \given m\,x_n + b, t^2 + \
 \label{eq:toyLike}
 \end{equation}
 
-and the likelihood of the full data set is
+It is a Gaussian because the noise model is a Gaussian. The likelihood of the full data set is then the product of the individual likelihoods
 
 \begin{equation}
 \prod_n\, p(y_n \given m, b, t^2, \sigma_n^2).
 \label{eq:toyLikeFull}
 \end{equation}
 
-Maximizing this likelihood is the same as minimizing
+Maximizing this joint likelihood of all the data is the same as minimizing
 
 \begin{equation}
 \chi^2 = \sum_n \frac{[y_n - [m\,x_n + b]]^2}{[\sigma_n^2 + t_n^2]} + \sum_n\,ln(2\pi\,[\sigma_n^2 + t^2])
@@ -668,7 +667,7 @@ Long discussion of the noise model. We took serious short-cuts. Call out to Bori
 Within our probabilistic framework, the way we handle dust is not proper. We are taking a point estimate of the probabilistic dust model at a quantile distance of our posterior, correcting our photometry using this point estimate and rederiving the prior in \xd. A full, proper account would sample the dust model at distances sampled from the posterior and propagate those samples back into \xd during the iterative proccess. The issues is that this dust sample distribution would not be a Gaussian distribution which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
 
 \subsection{Stationarity Assumption}
-Both the low and high signal to noise objects are being drawn from the same distribution, independent of noise. This isn't precisely true because most Gaia objects have similar noise but their signal depends on their distance. Nearby stars have higher signal (parallax) because they are closer and the nearby stars are mostly main sequence stars (IMF, timing, malmquist). We can see bright giants to much larger distances and therefore lower signal or parallax and lower signal to noise. So the red giant branch is a population of relatively lower signal to noise objects than the main sequence. But I think this is ok, that the low and high signal to noise objects have to be drawn from the same distribution within some feature or patch of the space. This is all assuming the Gaia noise model is correct. If the uncertainties are over estimated then we could be over deconvolving (generating a tighter distribution than the truth) And in some extreme over estimate of uncertainties the lower signal to noise giants could be pulled to the main sequence. But with the quoted uncertainties this seems unlikely. As you move up the giant branch and probe farther giants the signal to noise will continue to diminish but I think this is okay since the color uncertainties are not large. Possibly a metallicity trend with distance, placing more nearby (higher S/N) objects at slightly different positions on the CMD pulling lower S/N objects to that distribution for our prior. But if something has small error bars is good data is good data both for inference and generating the prior 
+Both the low and high signal to noise objects are being drawn from the same distribution, independent of noise. This isn't precisely true because most Gaia objects have similar noise but their signal depends on their distance. Nearby stars have higher signal (parallax) because they are closer and the nearby stars are mostly main sequence stars (IMF, timing, malmquist). We can see bright giants to much larger distances and therefore lower signal or parallax and lower signal to noise. So the red giant branch is a population of relatively lower signal to noise objects than the main sequence. But I think this is ok, that the low and high signal to noise objects have to be drawn from the same distribution within some feature or patch of the space. This is all assuming the Gaia noise model is correct. If the uncertainties are over estimated then we could be over deconvolving (generating a tighter distribution than the truth) And in some extreme over estimate of uncertainties the lower signal to noise giants could be pulled to the main sequence. But with the quoted uncertainties this seems unlikely. As you move up the giant branch and probe farther giants the signal to noise will continue to diminish but I think this is okay since the color uncertainties are not large. Possibly a metallicity trend with distance, placing more nearby (higher S/N) objects at slightly different positions on the CMD pulling lower S/N objects to that distribution for our prior. But if something has small error bars is good data is good data both for inference and generating the prior
 
 For very rare kinds of stars. Inference with our prior is bad for underrepresented populations in the \cmd. For example, it appears there are only $2$ white dwarfs in \gaia\ DR1. With them being very underrepresented in the prior, the amplitudes of the gaussians representing them is very small, so the WDs are more likely to be pulled to mimic a much farther away MS star.
 
