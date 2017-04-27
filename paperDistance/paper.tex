@@ -229,7 +229,10 @@ commitment to---or even use of---physical models of stars or the Milky Way.
 \end{figure}
 
 In this paper we use the noise deconvolved observed \cmd\ as a prior to infer more precise parallax pdfs from \gaia\ measurements.
-Here we will demonstrate this method with a simpler toy model. Instead of using the 2D distribution of the \cmd\ as our prior, for this simpler model we use a 2D distribution that is a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$, as our prior. The $1\sigma$ contours as well as (noise free) samples from the distribution are shown in Figure \ref{fig:toy}, upper left panel.
+Understanding this method is challenging because we are using the data both for the prior and the likelihood in our inference.
+To ease understanding, both for ourselves and the reader, here we will demonstrate this method with a simpler toy model.
+Instead of inferring more precise parallax pdfs using the 2D distribution of the \cmd\ as our prior, for this simpler model we will infer more precise pdfs of the value $Y$ using a 2D distribution that is a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$, as our prior.
+The $1\sigma$ contours as well as (noise free) samples from the toy model distribution are shown in Figure \ref{fig:toy}, upper left panel.
 Noisy samples from this distribution are shown in the upper right panel.
 Using a representation of this distribution as our prior we can infer some posterior belief of $y_{\true,n}$, a true sample of the distribution, from $y_n$, a noisy sample of the distribution.
 Here the thickness of the distribution mimics the true thickness of the \cmd\ due to age, mass and metallicity.
@@ -658,7 +661,7 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \end{itemize}
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of only seeing a very small volume of lower main sequence stars but a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is straight/narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
-Come back to the assumptions. What happens if we change or violate them? Long discussion of the noise model. We took serious short-cuts. Call out to Boris. 
+Come back to the assumptions. What happens if we change or violate them? Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
 
 <<<<<<< HEAD
 LMA: Some discussion of the inconsistency of how we treat dust within the probabilistic framework.
