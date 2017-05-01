@@ -378,7 +378,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         samples = np.zeros(np.shape(posterior)[0])
         xparallaxMAS = np.logspace(-2, 2, np.shape(posterior)[1])
         for i, p in enumerate(posterior):
-            samples[i] = testXD.samples(xparallaxMAS, posterior[p], 1, plot=False)
+            samples[i] = testXD.samples(xparallaxMAS, p, 1, plot=False)
         mean = data['mean']
         var = data['var']
         absMag = testXD.absMagKinda2absMag(mean*10.**(0.2*apparentMagnitude))
