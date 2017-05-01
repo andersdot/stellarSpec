@@ -374,9 +374,16 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
     yim = (-1, 5)
     for file in ['posteriorSimple.npz', postFile]:
         data = np.load(file)
+        posterior = data['posterior']
+        samples = np.zeros(np.shape(posterior)[0])
+        xparallaxMAS = np.logspace(-2, 2, np.shape(posterior)[1])
+        for i, p in enumerate(posterior):
+            samples[i] = testXD.samples(xparallaxMAS, posterior[p], 1, plot=False)
         mean = data['mean']
         var = data['var']
         absMag = testXD.absMagKinda2absMag(mean*10.**(0.2*apparentMagnitude))
+        absMagSample = testXD.absMagKinda2absMag(samples*10.**(0.2*apparentMagnitude))
+
 
         neg = tgas['parallax'] < 0
         fig, ax = plt.subplots(1, 2)
@@ -438,7 +445,7 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
         ax2 = figVarDiff.add_subplot(122)
 
         ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=norm, cmap=cmap)
-        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, norm=cNorm, cmap=cmap)
+        ax2.scatter(x, absMag[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, cmap=cmap)
 
         titles = ["Colored by change in variance", "Colored by observed variance"]
 
@@ -459,6 +466,33 @@ def compareSimpleGaia(ngauss=128, quantile=0.05, iter='10th', survey='2MASS', da
             ax[i].set_ylabel(ylabel, fontsize = 18)
 
         figVarDiff.savefig('denoisedVariance_' + file.split('.')[0] + '.png')
+        figVarDiff.clf()
+
+        ax1 = figVarDiff.add_subplot(121)
+        ax2 = figVarDiff.add_subplot(122)
+
+        ax1.scatter(x, absMag[notnans], s=1, lw=0, c=y, alpha=0.05, norm=norm, cmap=cmap)
+        ax2.scatter(x, absMagSample[notnans], s=1, lw=0, c=tgas['parallax_error'][notnans]**2., alpha=0.05, cmap=cmap)
+
+        titles = ["Colored by change in variance", "Colored by observed variance"]
+
+        ax = [ax1, ax2]
+
+        for i in range(2):
+            ax[i].set_xlim(xlim)
+            ax[i].set_ylim(ylim[0], ylim[1]*1.1)
+
+            ax[i].text(0.05, 0.95, titles[i],
+                   ha='left', va='top', transform=ax[i].transAxes, fontsize=18)
+
+            ax[i].set_xlabel(xlabel, fontsize = 18)
+
+        #if i in (1, 3):
+            #ax[i].yaxis.set_major_formatter(plt.NullFormatter())
+        #else:
+            ax[i].set_ylabel(ylabel, fontsize = 18)
+
+        figVarDiff.savefig('denoisedVarianceSamples_' + file.split('.')[0] + '.png')
 
 
 if __name__ == '__main__':
@@ -477,7 +511,7 @@ if __name__ == '__main__':
     postFile = 'posteriorParallax.' + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
-    priorSample(ngauss=ngauss, quantile=quantile, iter=iter, survey=survey, dataFilename=dataFilename, Nsamples=Nsamples, xdgmmFilename=xdgmmFilename, xlabel=r'$(J-K)^C$', ylabel='$M_J^C$', contourColor=contourColor)
-    #compareSimpleGaia(contourColor=contourColor)
+    #priorSample(ngauss=ngauss, quantile=quantile, iter=iter, survey=survey, dataFilename=dataFilename, Nsamples=Nsamples, xdgmmFilename=xdgmmFilename, xlabel=r'$(J-K)^C$', ylabel='$M_J^C$', contourColor=contourColor)
+    compareSimpleGaia(contourColor=contourColor)
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
     #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile)
