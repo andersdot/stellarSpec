@@ -46,15 +46,15 @@
 \affil{Center for Data Science, New York University, 60 Fifth Ave, New York, NY 10011, USA}
 \affil{Max-Planck-Institut f\"ur Astronomie, K\"onigstuhl 17, D-69117 Heidelberg}
 
-\author{Jo Bovy}
-\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
-\affil{Department of Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, ON M5S 3H4, Canada}
+%\author{Jo Bovy}
+%\affil{Center for Computational Astrophysics, Flatiron Institute, 162 Fifth Ave, New York, NY 10010, USA}
+%\affil{Department of Astronomy and Astrophysics, University of Toronto, 50 St. George Street, Toronto, ON M5S 3H4, Canada}
 
-\author{Boris Leistedt}
-\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA}
+%\author{Boris Leistedt}
+%\affil{Center for Cosmology and Particle Physics, Department of Physics, New York University, 726 Broadway, New York, NY 10003, USA}
 
-\author{Adrian Price-Whelan}
-\affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
+%\author{Adrian Price-Whelan}
+%\affil{Princeton University Observatory, Princeton University, 4 Ivy Lane, Princeton, NJ 08544, USA}
 
 \begin{abstract}\noindent % trust me
 
@@ -575,9 +575,9 @@ model---which is a model of the \cmd---using
 all the data, not just the data with the highest signal-to-noise or
 largest parallaxes.
 That is, the model for the \cmd\ we have built is representative for
-the \tgas\ Catalog.
+(a subset of) the \tgas\ Catalog.
 Inasmuch as that is true, we expect any (sensible) distance estimates
-we generate from our distance posterior pdfs to be weakly biased.
+we generate from our distance posterior pdfs to be only weakly biased.
 
 The Empirical Bayesian methodology is a good approximation to full
 hierarchical inference in the limit of large numbers of data points.
@@ -589,7 +589,7 @@ However, because there are parts of the \cmd\ that are poorly populated,
 even in \tgas, the Empirical Bayes approximation may be bad for some
 color ranges.
 In particular, there appear to be essentially no white dwarf stars,
-and other classes (like hot main-sequence stars) have few to no exemplars
+and other classes (like bright red giant branch stars) have few to no exemplars
 in the data set at high signal-to-noise (in parallax).
 For all these reasons, we do think that this approximation is not perfectly
 safe, and it is a goal to explore full hierarchical modeling in the coming
@@ -633,7 +633,7 @@ of a likelihood function, whereas our ouptut is a
 representation of a posterior pdf, one per star.
 If used naively, posterior information can lead to serious statistical
 errors, because each data point has had a prior multiplied in.
-Effectively multiplicative uses of the data will effectively take the prior
+Multiplicative uses of the data will effectively take the prior
 pdf to a large power.
 We have (in previous work)
 given examples of correct uses of posterior samplings or pdfs
@@ -649,7 +649,7 @@ contributions before engaging with these outputs.
 \label{fig:otherPrior}
 \end{figure}
 
-There are other prior information options when inferring distances to stars. A commonly used prior for inferring distances (cite: Tri, CBJ) is the exponentially declining spatial density of stars. It is parameterized by a scale length, and has the nice property that it is smooth out to very large distances so the posteriors are also very smooth. It is a fairly weak prior and basically sets a smooth scale at which it's challenging for stars to lie at, and also allows for negative parallaxes. It is a fairly broad prior so the median \gaia\ star has an increased posterior variance. It has the largest affect on the very noisy and neegative parallaxes and has the nice property of bringing these noisy or negative measurements to reasonable distances. Given this prior, what does the observed \cmd\ look like?  The \cmd\ is broad and the red clump highly stretched.
+There are other prior information options when inferring distances to stars. One option is the exponentially declining spatial density of stars (cite: Tri, CBJ). It is parameterized by a scale length, and has the nice property that it is smooth out to very large distances so the posteriors are also very smooth. It is a fairly weak prior and basically sets a smooth scale at which it's challenging for stars to lie at, and also allows for negative parallaxes. It is a fairly broad prior so the median \gaia\ star has an increased posterior variance. It has the largest affect on the most noisy and negative parallaxes and has the nice property of bringing these noisy or negative measurements to reasonable parallaxes. Given this prior, what does the observed \cmd\ look like?  The \cmd\ is broad and the red clump highly stretched.
 
 
 \subsection{What's That Feature?}
@@ -664,17 +664,12 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \end{itemize}
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of only seeing a very small volume of lower main sequence stars but a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is straight/narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
-Come back to the assumptions. What happens if we change or violate them? Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
-
-
-LMA: Some discussion of the inconsistency of how we treat dust within the probabilistic framework.
-=======
 Come back to the assumptions. What happens if we change or violate them?
 
 Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
 
 \subsection{Proper Dust Corrections}
-Within our probabilistic framework, the way we handle dust is not proper. We are taking a point estimate of the probabilistic dust model at a quantile distance of our posterior, correcting our photometry using this point estimate and rederiving the prior in \xd. A full, proper account would sample the dust model at distances sampled from the posterior and propagate those samples back into \xd during the iterative proccess. The issues is that this dust sample distribution would not be a Gaussian distribution which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
+Within our probabilistic framework, we improperly handle dust. We are taking a point estimate of the probabilistic dust model at a quantile distance of our posterior, correcting our photometry using this point estimate and rederiving the prior in \xd. A full, proper account would sample the dust model at distances sampled from the posterior and propagate those samples back into \xd during the iterative proccess. The issues is that this dust sample distribution would not be a Gaussian distribution which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
 
 
 \subsection{Stationarity Assumption}
@@ -695,6 +690,9 @@ assumptions, in fact! What form should this comparison be in?
   Ana Bonaca (Harvard),
   Andy Casey (Monash),
   Dustin Lang (Toronto) for cross matched 2MASS-TGAS catalogue
+  Jo Bovy (Toronto)
+  Boris Leistedt (NYU)
+  Adrian Price-Whelan (Princeton)
 and the attendees at the Stars Group Meeting at the Flatiron Institute
 Center for Computational Astrophysics for comments and input.
 This project was developed in part at the 2016 \acronym{NYC} Gaia Sprint, hosted
