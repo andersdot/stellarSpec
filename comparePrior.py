@@ -229,7 +229,7 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
                     xdgmm, xerr=color_err[notnans], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
                     ylim=ylim, errSubsample=1.2e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='Blues', contourColor=contourColor, posterior=True)
 
-        dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
+        dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.pdf'
         priorFile = 'prior_' + str(ngauss) +'gauss.png'
         os.rename('plot_sample.data.png', dataFile)
         os.rename('plot_sample.prior.png', priorFile)

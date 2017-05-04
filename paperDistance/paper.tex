@@ -60,16 +60,16 @@
 
 Conversion of a noisy parallax measurement into a posterior belief over distances requires inference with a prior.
 Usually this prior represents some kind of belief about the Milky Way.
-However, there is multi-band photometry for a large fractino of the \gaia\ \tgas\ catalog from imaging surveys;
+However, there is multi-band photometry for a large fraction of the \gaia\ \tgas\ catalog from imaging surveys;
 this imaging is incredibly informative about stellar distances.
-Here we use color information on $1.2$ million \tgas\ stars from \tmass\ to build a noise-deconvolved empirical prior distribution for stars in color--magnitude space.
+Here we use color information of $1.2$ million \tgas\ stars from \tmass\ to build a noise-deconvolved empirical prior distribution for stars in color--magnitude space.
 This data-driven model contains no knowledge of the physics of stellar interiors or photospheres, nor of the Milky Way, but rather derives its precision from its generative model of noisy parallax measurements and an assumption of stationarity.
 We use the Extreme Deconvolution (\xd) algorithm, which is an Empirical Bayes approximation to a full hierarchical model of the true parallax and photometry of every star.
 The algorithm is run not in absolute-magnitude space but in a transformed space where the measurement uncertainty is closer to Gaussian.
-The \xd-optimized prior is used to perform parallax and distance inferences for every star, yielding a precise stellar distance estimate and uncertainty (and full posterior) for every star.
-Our posterior parallax estimates are more precise than the \tgas\ catalog entries by a median factor of [XXX]; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
-The precision can be attributed to the statistics concept of shrinkage.
-We independently validate our distances by looking at members of Milky Way star clusters; for example, M67 is not visible as a cluster in the \tgas\ parallax estimates, but appears clearly in our posterior parallax estimates.
+The \xd-optimized prior is used to perform parallax inferences for every star, yielding a precise photometric parallax estimate and uncertainty (and full posterior) for every star.
+Our posterior photometric parallax estimates are more precise than the \tgas\ catalog entries by a median factor of [XXX]; and more precise than previous examples of Bayesian distance estimates by a factor of [YYY].
+%The precision can be attributed to the statistics concept of shrinkage.
+We independently validate our distances by looking at members of a Milky Way star cluster M67, which is not visible as a cluster in the \tgas\ parallax estimates, but appears clearly as a cluster in our posterior parallax estimates.
 All our results, including a posterior parallax and distance sampling for [ZZZ] \tgas\ stars, are available in companion electronic tables.
 \end{abstract}
 
@@ -89,21 +89,22 @@ All our results, including a posterior parallax and distance sampling for [ZZZ] 
 
 \section{Introduction}
 
-The \gaia\ Mission (\citealt{gaia16}) will deliver more than a billion stellar distances.
-Only a small fraction (but large number) of these distance
-measurements will be both precise and purely astrometric:
-\gaia\ uses astrometric parallax to determine the distances of the closer
-stars, and calibrate to spectrophotometric models.
+The \gaia\ Mission (\citealt{gaia16}) will deliver more than a billion stellar parallax measurements.
+Only a small fraction (but large number) of these
+measurements will be both precise and purely astrometric.
+\gaia\ will use astrometric parallax to determine the distances of the more precise
+stars, and then calibrate spectrophotometric models.
 These spectrophotometric models, in turn, along with \gaia's on-board
 low-resolution $B_p\,R_p$ spectrophotometry, are used to provide
-distance estimates to more distant stars.
-The full stack required for these distance inferences is complex.
-It involves modeling not just stars, but also the dust in the Milky Way,
+parallax estimates to less precise stars.
+The full stack required for these parallax inferences is complex.
+It involves modeling the stars, as well as the dust in the Milky Way,
 and the response of the telescope itself.
+It might be possible to eliminate some of this complexity using data driven models which don't rely on physical models.
 
-With projects like \project{The Cannon} (\citealt{ness15}; \citealt{casey17}; \citealt{ho17})
+Projects like \project{The Cannon} (\citealt{ness15}; \citealt{casey17}; \citealt{ho17})
 and \project{Avast} (Bedell et al.\ in preparation),
-we are exploring the extent to which our predictive models of
+explore the extent to which our predictive models of
 stars could be purely data-driven or statistical.
 That is, under what circumstances could the data themselves deliver
 more precise or more accurate information than any theoretical or
@@ -113,44 +114,43 @@ on what data are available, how much data are available, and what
 questions are being asked.
 In general, data-driven models contain fewer assumptions than
 physics-driven models, but they are also usually less interpretable.
-However, the \gaia\ use case is ideal for thinking about purely statistical
+However, the \gaia\ data set is ideal for thinking about purely statistical
 models of stars:
-The distance to a star is a simple latent variable, and the nearby
+The distance to a star is a latent variable, and the nearby
 stars constitute a high signal-to-noise ``training set''.
 These nearby stars can be used to anchor empirical models that can
 then be applied to the more distant stars.
 
-Here we deliver a demonstration-of-concept project that shows that a
+Here we deliver a demonstration-of-concept that shows that a
 data-driven model of the \gaia\ data could in principle deliver very
-precise distances, without any input of the physics or numerical models of stellar
+precise parallaxes, without any input of the physics or numerical models of stellar
 evolution, interiors, or photospheres.
+HOGG:What is a photometric parallax? <Enter here>
 Most stellar models used to generate photometric distances or photometric
 parallaxes have been physical models, based on gravity, fluid mechanics,
 radiative transfer, nuclear reactions, and atomic and molecular transitions.
-Because there are small issues with each of these components, there are small
-color and luminosity differences with the data---the models are inaccurate in detail---and
+Because there are small issues with each of these components, the models are inaccurate in detail, and
 the physical models therefore produce distance estimates that are biased.
-Besides, they build a long list of physical assumptions (about
+In addition, they build a long list of physical assumptions (about
 nuclear reactions, convection, and thermal timescales, for example)
-into the distance estimates.
-That is, it is impossible, when using physical models,
-to deliver photometric distance estimates that involve minimal assumptions.
+into the parallax estimates.
+When using physical models, it is impossible to deliver photometric parallax estimates that involve minimal assumptions.
 
 However, the use of physical models for distance estimation is not necessary.
-Because there are stars at all luminosities with useful parallax information,
-it is possible to build a stellar photometric model from the data themselves.
-Different stars are observed at different levels of parallax precision,
-so it requires relatively high technology to build this data-driven model
+It is possible to build a stellar photometric model from the data themselves,
+because there are stars at all luminosities with useful parallax information,.
+One challenge is that different stars are observed at different levels of parallax precision,
+so it requires relatively sophisticated technology to build this data-driven model
 using all the data available, fairly and responsibly.
-We have this technology!
+Luckily, we have this technology!
 
-Here we build and use just such a data-driven model. In particular,
-we use all of the \gaia\ \tgas\ data (\citealt{tgas};
+Here we build and use just such a data-driven model to infer more precise parallaxes for each star.
+In particular, we use all of the \gaia\ \tgas\ data (\citealt{tgas};
 these data were generated by the methodology of \citealt{michalik15}), that match to the
 \tmass\ photometry (\citealt{skrutskie06}) and lie in the footprint of
 the \panstarrs\ Dust Map (\citealt{green15}), to make a model of the
 noise-free (or low-noise) color--magnitude diagram (\cmd) of stars.
-We use an Empirical-Bayes approach known as Extreme Deconvolution (XD;
+We build the \cmd\ using an Empirical-Bayes approach known as Extreme Deconvolution (XD;
 \citealt{bovy11}).
 This method deconvolves heteroskedastic data to derive an
 estimate of the noise-free or low-noise distribution that \emph{would
@@ -162,13 +162,13 @@ perform quasar target selection
 in \project{Sloan Digital Sky Survey} data (\citealt{xdqso}; \citealt{xdqsoz}).
 Its advantage over other deconvolution methods is that it takes as input,
 and handles in a principled way, heteroskedastic data.
-Its principle disadvantage for the present purposes is that it requires
+Its disadvantage, for the present purposes, is that it requires
 or implies a strictly Gaussian noise model.
-In the below, this requires us to transform the \cmd\ to a space in which
+As we show below, this requires us to transform the \cmd\ to a space in which
 the noise is approximately Gaussian.
 
-The novel use of \xd\ here is to treat its output---the deconvolved \cmd---as
-a prior for use in inference of individual-star distances.
+We then use the novel \xd\ output---the deconvolved \cmd---as
+a prior for use in inference of individual-star parallaxes.
 These inferences, one per star, provide much more precise parallax, distance,
 or absolute magnitude estimates than we get from each star's primary
 \tgas\ parallax measurement alone.
@@ -176,7 +176,7 @@ That is, we are using the \xd\ model to de-noise the \gaia\ parallax
 measurements.
 Technically, since \xd\ produces a maximum-marginalized-likelihood estimator
 of the deconvolved distribution,
-its use as a prior is only approximately valid.
+its use as a prior is technically using the data twice and is therefore only approximately valid.
 However, since the data set is large, the \xd\ approximation is not bad; it is
 sometimes known as the ``empirical Bayes'' method, and is well studied\footnote{For a start, try \url{https://en.wikipedia.org/wiki/Empirical_Bayes_method}.}.
 
@@ -190,7 +190,10 @@ project (Leistedt et al. in preparation), in which we use a slightly less approp
 model for the \cmd, but in which we take a much more principled
 approach to the inference.
 
-On a different tack, there has been some discussion in the literature
+Although not a fully Bayesian hierarchical inference, the methodology presented in this paper makes exceedingly weak assumptions
+about the Milky Way, and similarly weak assumptions about the properties of
+stars.
+To date, there has been some discussion in the literature
 about how to use a parallax responsibly to infer a distance (\citealt{astraatmadja16a}; \citealt{astraatmadja16b}).
 These papers use the \gaia\ measurement to construct a parallax likelihood,
 and combine this with a distance prior.
@@ -199,9 +202,6 @@ these lines build in informative (and known-to-be-wrong) assumptions
 about the line-of-sight distance distribution to \gaia\ stars.
 That is, they build in strong and informative assumptions about the Milky
 Way.
-The methodology presented in this paper makes exceedingly weak assumptions
-about the Milky Way, and similarly weak assumptions about the properties of
-stars.
 The strongest new assumption made in this work is that for every star
 in \tgas, there are other, photometrically (and bolometrically)
 similar stars.
@@ -214,10 +214,10 @@ We are only using a subset of the ``small'' (relative to the expected final \gai
 We are performing only an approximation to full Bayesian hierarchical inference.
 We have to use photometry that is ground-based, rather than the full-precision,
 space-based photometry that the \gaia\ Mission will deliver.
-However, as we show below, we get very good results.
+However, as we show below, we get very good results in terms of parallax precision.
 It is promising that we will be able to obtain even better results
 in later \gaia\ data releases, and eventually put distances on $>10^9$
-\gaia\ stars using photometric distance methodologies but without any
+\gaia\ stars using photometric parallax methodologies but without any
 commitment to---or even use of---physical models of stars or the Milky Way.
 
 \section{Why does this work?}
@@ -232,7 +232,7 @@ In this paper we use the noise deconvolved observed \cmd\ as a prior to infer mo
 Understanding this method is challenging because we are using the data both for the prior and the likelihood in our inference.
 To ease understanding, here we will demonstrate this method with a simpler toy model.
 Instead of inferring more precise parallax pdfs using the 2D distribution of the \cmd\ as our prior, for this simpler model we will infer more precise pdfs of the value $Y$.
-We will do this simpler inference using a 2D distribution that is a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$, as our prior.
+We will do this simpler inference using a prior that is also a 2D distribution: a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$.
 Here the thickness of the distribution mimics the true thickness of the \cmd\ due to age, mass and metallicity.
 The $1\sigma$ contours as well as (noise free) samples from the toy model distribution are shown in Figure \ref{fig:toy}, upper left panel.
 Similarly, noisy samples from this distribution are shown in the upper right panel.
