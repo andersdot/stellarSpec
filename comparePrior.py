@@ -13,6 +13,7 @@ import stellarTwins as st
 import scipy.integrate
 import corner
 from astroML.plotting import setup_text_plots
+from astropy.io import ascii
 
 def prior(xdgmm, ax):
     for gg in range(xdgmm.n_components):
@@ -225,16 +226,17 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         yerr_minus = absMag - absMagYMinus
         yerr_plus = testXD.absMagKinda2absMag(yplus) - absMag
         #notnan = ~np.isnan(color[notnans]) & ~np.isnan(absMag)
+
+        ascii.write([color[notnans], absMag, color_err[notnans], yerr_minus, yerr_plus, c], 'cmdExpectation.txt', names=['color', 'absMag', 'color_err', 'absMag_errMinus', 'absMag_errPlus', 'logDeltaVar'])
         dp.plot_sample(color[notnans], absMag, sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
                     xdgmm, xerr=color_err[notnans], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
                        ylim=ylim, errSubsample=1.2e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='Blues', contourColor=contourColor, posterior=True, sdss5=sdss5)
 
         dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.pdf'
+
         priorFile = 'prior_' + str(ngauss) +'gauss.pdf'
         os.rename('plot_sample.data.pdf', dataFile)
         os.rename('plot_sample.prior.pdf', priorFile)
-
-
 
 def comparePosterior():
     ngauss = 128
