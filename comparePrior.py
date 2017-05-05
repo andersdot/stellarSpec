@@ -127,7 +127,7 @@ def dustViz(ngauss=128, quantile=0.5, iter='8th', survey='2MASS', dataFilename='
     cb.set_label(r'E($B-V$ )')
     fig.savefig('dustViz.dQ' + str(quantile) + '.png')
 
-def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5, contourColor='k', dustFile='dust.npz'):
+def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', iter='10th', Nsamples=3e5, contourColor='k', dustFile='dust.npz', sdss5=False):
 
     if survey == 'APASS':
         mag1 = 'B'
@@ -192,10 +192,10 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
     """
     dp.plot_sample(color[positive], testXD.absMagKinda2absMag(y), sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
                 xdgmm, xerr=color_err[positive], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, errSubsample=2.4e3, thresholdScatter=2., binsScatter=200, contourColor=contourColor)
-    dataFile = 'data_noDust.png'
-    priorFile = 'prior_' + str(ngauss) +'gauss.png'
-    os.rename('plot_sample.data.png', dataFile)
-    os.rename('plot_sample.prior.png', priorFile)
+    dataFile = 'data_noDust.pdf'
+    priorFile = 'prior_' + str(ngauss) +'gauss.pdf'
+    os.rename('plot_sample.data.pdf', dataFile)
+    os.rename('plot_sample.prior.pdf', priorFile)
     #import pdb; pdb.set_trace()
     data = np.load(dustFile)
     dustEBV = data['ebv']
@@ -227,12 +227,12 @@ def dataViz(survey='2MASS', ngauss=128, quantile=0.05, dataFilename='All.npz', i
         #notnan = ~np.isnan(color[notnans]) & ~np.isnan(absMag)
         dp.plot_sample(color[notnans], absMag, sample[:,0], testXD.absMagKinda2absMag(sample[:,1]),
                     xdgmm, xerr=color_err[notnans], yerr=[yerr_minus, yerr_plus], xlabel=xlabel, ylabel=ylabel, xlim=xlim,
-                    ylim=ylim, errSubsample=1.2e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='Blues', contourColor=contourColor, posterior=True)
+                       ylim=ylim, errSubsample=1.2e3, thresholdScatter=2., binsScatter=200, c=c, norm=cNorm, cmap='Blues', contourColor=contourColor, posterior=True, sdss5=sdss5)
 
-        dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.png'
-        priorFile = 'prior_' + str(ngauss) +'gauss.png'
-        os.rename('plot_sample.data.png', dataFile)
-        os.rename('plot_sample.prior.png', priorFile)
+        dataFile = 'inferredDistances_data_' + file.split('.')[0] + '.pdf'
+        priorFile = 'prior_' + str(ngauss) +'gauss.pdf'
+        os.rename('plot_sample.data.pdf', dataFile)
+        os.rename('plot_sample.prior.pdf', priorFile)
 
 
 
@@ -513,6 +513,6 @@ if __name__ == '__main__':
     dustFile      = 'dustCorrection.'    + str(ngauss) + 'gauss.dQ' + str(quantile) + '.' + iter + '.' + survey + '.' + dataFilename
     #dustViz(quantile=quantile)
     #priorSample(ngauss=ngauss, quantile=quantile, iter=iter, survey=survey, dataFilename=dataFilename, Nsamples=Nsamples, xdgmmFilename=xdgmmFilename, xlabel=r'$(J-K)^C$', ylabel='$M_J^C$', contourColor=contourColor)
-    compareSimpleGaia(contourColor=contourColor)
+    #compareSimpleGaia(contourColor=contourColor)
     #examplePosterior(postFile=postFile, nexamples=20, dustFile=dustFile, xdgmmFilename=xdgmmFilename)
-    #dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile)
+    dataViz(ngauss=ngauss, quantile=quantile, iter=iter, Nsamples=Nsamples, contourColor=contourColor, dustFile=dustFile, sdss5=True)

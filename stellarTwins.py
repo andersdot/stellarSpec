@@ -1,5 +1,5 @@
 from astropy.io import fits
-import h5py
+#import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ckdtree as kdtree
