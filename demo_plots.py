@@ -103,7 +103,7 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     #fig.colorbar(im)
     return ax
 
-def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False, ind=None):
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False, ind=None, rasterized=True):
     prng = np.random.RandomState(1234567890)
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
@@ -120,7 +120,7 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
     cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
     #ax1.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
-    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor)
+    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor, rasterized=rasterized, plot_contours=False)
     #im = ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha, norm=norm, cmap=cmap)
 
     ax2 = figData.add_subplot(122)
@@ -131,7 +131,7 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     ax3 = figPrior.add_subplot(121)
     #ax3.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
     #kdeDensity(ax3, samplex, sampley, threshold=thresholdScatter, bins=binsScatter, s=1, lw=0, alpha=alpha)
-    corner.hist2d(samplex, sampley, ax=ax3, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor)
+    corner.hist2d(samplex, sampley, ax=ax3, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor, rasterized=rasterized, plot_contours=False)
     ax3.scatter(samplex, sampley, s=1, lw=0, c='k', alpha=alpha)
 
     ax4 = figPrior.add_subplot(122)
@@ -196,8 +196,8 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
         cb.set_clim(-7, 2)
     """
 
-    figData.savefig('plot_sample.data.png')
-    figPrior.savefig('plot_sample.prior.png')
+    figData.savefig('plot_sample.data.pdf')
+    figPrior.savefig('plot_sample.prior.pdf')
 
 
 
