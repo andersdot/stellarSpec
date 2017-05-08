@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib
 matplotlib.use('pdf')
+#from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import pyplot as plt
 from astroML.plotting.tools import draw_ellipse
 from astroML.plotting import setup_text_plots
@@ -103,7 +104,9 @@ def kdeDensity(ax, x, y, threshold=0.01, bins=100, s=1, lw=0, alpha=1):
     #fig.colorbar(im)
     return ax
 
-def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False, ind=None, rasterized=True):
+
+def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None, yerr=None, ylim=(6, -6), xlim=(0.5, 1.5), errSubsample=1.2e6, thresholdScatter=0.1, binsScatter=200, c='black',  norm=None, cmap=None, contourColor='k', posterior=False, ind=None, plot_contours=True, sdss5=False):
+
     prng = np.random.RandomState(1234567890)
     setup_text_plots(fontsize=16, usetex=True)
     plt.clf()
@@ -120,7 +123,10 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
     levels = 1.0 - np.exp(-0.5 * np.arange(1.0, 2.1, 1.0) ** 2)
     cNorm  = plt.matplotlib.colors.LogNorm(vmin=3, vmax=1e5)
     #ax1.hist2d(x, y, bins=100, norm=cNorm, cmap='Greys')
-    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor, rasterized=rasterized, plot_contours=False)
+
+    if sdss5: plot_contours=False
+    im = corner.hist2d(x, y, ax=ax1, levels=levels, bins=200, no_fill_contours=True, plot_density=False, color=contourColor, rasterized=rasterized, plot_contours=plot_contours)
+
     #im = ax1.scatter(x, y, s=1, lw=0, c=c, alpha=alpha, norm=norm, cmap=cmap)
 
     ax2 = figData.add_subplot(122)
@@ -155,6 +161,8 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
         titles = ["De-noised Expectation Values", "Posterior Distributions",
                   "Extreme Deconvolution\n  resampling",
                   "Extreme Deconvolution\n  cluster locations"]
+    if sdss5:
+        titles=['','','','']
     ax = [ax1, ax2, ax3, ax4]
 
     for i in range(4):
@@ -196,8 +204,9 @@ def plot_sample(x, y, samplex, sampley, xdgmm, xlabel='x', ylabel='y', xerr=None
         cb.set_clim(-7, 2)
     """
 
-    figData.savefig('plot_sample.data.pdf')
-    figPrior.savefig('plot_sample.prior.pdf')
+    figData.savefig('plot_sample.data.pdf', format='pdf')
+    figPrior.savefig('plot_sample.prior.pdf', format='pdf')
+
 
 
 
