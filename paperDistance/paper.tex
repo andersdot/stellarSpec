@@ -233,12 +233,12 @@ Understanding this method is challenging because we are using the data both for 
 To ease understanding, here we will demonstrate this method with a simpler toy model.
 Instead of inferring more precise parallax pdfs using the 2D distribution of the \cmd\ as our prior, for this simpler model we will infer more precise pdfs of the value $Y$.
 We will do this simpler inference using a prior that is also a 2D distribution: a 1D Gaussian in the y-direction, with a running mean $\mu = mx + b$ and some thickness $t$.
-Here the thickness of the distribution mimics the true thickness of the \cmd\ due to age, mass and metallicity.
+Here the thickness of the toy distribution mimics the true thickness of the \cmd\ due to age, mass and metallicity.
 The $1\sigma$ contours as well as (noise free) samples from the toy model distribution are shown in Figure \ref{fig:toy}, upper left panel.
 Similarly, noisy samples from this distribution are shown in the upper right panel.
-Using a representation of the true distribution (which we learn from the noisy data) as our prior, we can infer some posterior belief of $y_{\true,n}$, a true sample of the distribution, from $y_n$, a noisy sample of the distribution.
+Using a representation of the true distribution (which we learn from the noisy data) as our prior, we can infer some posterior belief over $y_{\true,n}$, a true sample of the distribution, from $y_n$, a noisy sample of the distribution.
 
-Setting up the problem in more detail, we have the true underlying distribution of points and the noisy data
+Setting up the problem in more detail, we have the true samples from the underlying distribution and the noisy samples
 
 \begin{eqnarray}
 y_{\true, n} \, &=& \, m_{\true}\,x_n + b_{\true} + \Delta_n \\
@@ -274,28 +274,26 @@ Maximizing this joint likelihood of all the data is the same as minimizing
 
 This MML gives us the best fit parameters $\hat{m}$, $\hat{b}$, and $\hat{t}$. In Figure \ref{fig:toy}, lower left panel, the true functions $y_{\true} = m_{\true}\,x + b_{\true} \pm t_{\true}$ are shown as the red lines, and the best fit MML functions $\hat{y}_{\true} = \hat{m}\, x + \hat{b} \pm \hat{t}$ are shown as the blue lines. Now that we have an estimate of the true underlying distribution $\hat{y}_{\true}$, we use this as a prior to infer a posterior belief of the true values for each datum $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$.
 
-Here is a good point to step back and acknowledge that our method is odd/strange/different/new (which maybe you're also currently thinking but can't quite express why yet). We are using the set of data to determine the noise-deconvolved distribution, and then using that noise-deconvolved distribution to make inferences on the data. We are technically using the data twice! If we were going to be fully, technically correct, we should learn the distribution, but leave one datum out; the one datum we want to infer the true y value for\footnote{DWH: Remember what this brain dump is for}. Leaving one datum out to estimate the prior and then inferring the posterior for that datum is way too expensive for the 1024 points in our toy model, and also for the 1.2 million stars in our actual data set. Luckily with large data sets, even at 1024, 1 datum is $\sim0.1\%$ of your dataset and therefore leaving that point out will not change the MML parameters of your noise-deconvolved distribution, and with the \gaia\ dataset of over a million stars, we can safely step into the Empirical Bayes regime. (Talk more about emperical bayes here?)
+Here is a good point to step back and acknowledge that our method is a bit strange. We are using the set of data to determine the noise-deconvolved distribution, which is an estimate of the true distribution, and then using that noise-deconvolved distribution to make inferences on the data. We are technically using the data twice!To be fully, technically correct, we should learn the true distribution while leaving one datum out, the one datum we want to infer the true y value for\footnote{DWH: Remember what this brain dump is for}. Leaving one datum out to estimate the prior and then inferring the posterior for that datum is way too expensive for the 1024 points in our toy model, and also for the 1.2 million stars in our actual data set. Luckily with large data sets, even at 1024, 1 datum is $\sim0.1\%$ of your dataset and therefore leaving that point out will not change the MML parameters of your noise-deconvolved distribution. With the \gaia\ dataset of over a million stars, we can safely step into the Empirical Bayes regime. (Talk more about emperical bayes here?)
 
-So using Bayes theorem
+So, returning the inference, we use Bayes theorem to turn the likelihood of the noisy data into a posterior believe over the true y value.
 \begin{eqnarray}
 p(y_{\true,n} \given y_n, \tilde{\sigma}_n) &=& p(y_n \given y_{\true,n}, \sigma_n)\,p(y_{\true,n}) \\
-p(y_n \given y_{\true,n}, \sigma_n) &=& \mathcal{N}(y_n \given y_{\true,n}, \sigma_n) \\
-p(y_{\true,n}) &=& \mathcal{N}(y_{\true,n} \given \hat{m}\, x_n + \hat{b}, \hat{t})
+\mathrm{where}\;p(y_n \given y_{\true,n}, \sigma_n) &=& \mathcal{N}(y_n \given y_{\true,n}, \sigma_n) \\
+\mathrm{and}\;p(y_{\true,n}) &=& \mathcal{N}(y_{\true,n} \given \hat{m}\, x_n + \hat{b}, \hat{t})
 \label{eq:toyBayes}
 \end{eqnarray}
-
-Since everything is Gaussian, this can be done analytically by multiplying Gaussians together. In Figure \ref{fig:toy} lower left panel, the blue points represent the posterior belief of the true value $p(y_{\true,n} \given y_n, \tilde{\sigma}_n)$ for the highlighted black points. The red points are the true y values.
-The blue points in Figure \ref{fig:toy}, lower right panel, show the expectation value and $1\sigma$ uncertainty of the posterior belief for all 1024 $y_n$.
-When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance $t^2$ and the measurement variance $\sigma_n^2$.
-The points are colored by their measurement variance $\sigma_n^2$ which shows that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior. In contrast, more certain measurements remain closer to their measured values $y_n$.
-By inferring the true y value from the measured y value in addition to the prior information of the distribution the y value was drawn from, this we have better estimates of the true y value for each point. Bringing the toy model back to our original problem, using the noise-deconvolved CMD as our prior allows us to get better estimates of the parallax for each star.
+Since everything is Gaussian, this can be done analytically by multiplying Gaussians together. In Figure \ref{fig:toy} lower left panel, the blue points represent the posterior belief of the true value $p(y_{\true,n} \given y_n, \tilde{\sigma}_n)$ for the highlighted black points. The red points are the associated true y values.
+In Figure \ref{fig:toy}, lower right panel, the blue points show the expectation value and $1\sigma$ uncertainty of the posterior belief for all 1024 $y_n$.
+When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance, $t^2$, and the measurement variance, $\sigma_n^2$.
+The points are colored by their measurement variance $\sigma_n^2$, which shows that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior. In contrast, more certain measurements remain closer to their measured values, $y_n$. We now have better estimates of each true y value by inferring each true y value from the measured y value and using an estimate of the true distribution the measured y value was drawn from as the prior. Bringing the toy model back to our original problem, we can get better estimates of the true parallax for each star by inferring the true parallax from the measured parallax and using the noise-deconvolved \cmd, an estimate of the true \cmd, as our prior.
 
 \section{Assumptions and methods}
 
-We make the following assumptions. The method we present is correct
+To infer the true parallax to a star using the noise-deconvolved \cmd\ as a prior, we make the following assumptions. The method we present is correct
 and justifiable under these assumptions, each of which is questionable
 in its own right. We return to criticize these assumptions---and the
-method that flows from them---in the Discussion below.
+method that flows from them---in the discussion section below.
 \begin{description}
 \item[stationarity] We make an assumption of \emph{stationarity}; that is, that the
   stars measured at lower signal-to-noise have analogs measured at
