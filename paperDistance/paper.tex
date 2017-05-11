@@ -624,10 +624,20 @@ contributions before engaging with these outputs.
 \label{fig:otherPrior}
 \end{figure}
 
+%How this compares to other Bayesian attempts at inferring distances,
+%like, eg, the Tri--Coryn papers. Favorably! And with \emph{fewer}
+%assumptions, in fact! What form should this comparison be in?
 There are other options for prior information when inferring distances to stars. One option is the exponentially declining spatial density of stars (cite: Tri, CBJ). It is parameterized by a scale length, and has the nice property that it is smooth out to very large distances so the posteriors are also very smooth. It is a fairly weak prior. It sets a smooth scale distance beyond which the posterior struggles to maintain much probability, and also converts a negative parallax likelihood into a posterior of very small parallax. It is a fairly broad prior so the median \gaia\ star has an increased posterior variance of XXX. It has the largest effect on the most noisy and negative parallaxes, and has the nice property of bringing these noisy or negative measurements to reasonable parallaxes. Given this prior, what does the observed \cmd\ look like?  The \cmd\ is broad and the red clump highly stretched.
 
 
 \subsection{What's That Feature?}
+\begin{figure}
+\centering
+  \includegraphics[width=\textwidth]{whatsThatFeature.pdf}
+\caption{Features in the \cmd: The expectation values from the posterior pdfs of the true parallax}
+\label{fig:wtf}
+\end{figure}
+
 The denoised expectation values of the parallax projected into the \cmd\ show interest features.
 \begin{itemize}
 \item (1) Narrow Lower Main Sequence
@@ -640,7 +650,7 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of seeing a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is fairly straight and narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
 Come back to the assumptions. What happens if we change or violate them?
-
+Put in citations
 Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
 
 \subsection{Proper Dust Corrections}
@@ -657,9 +667,6 @@ For generating our prior, we use a mixture of 128 Gaussians. This number, 128, w
 
 Compare with literature stellar models
 
-How this compares to other Bayesian attempts at inferring distances,
-like, eg, the Tri--Coryn papers. Favorably! And with \emph{fewer}
-assumptions, in fact! What form should this comparison be in?
 
 \acknowledgments It is a pleasure to thank
   Ana Bonaca (Harvard),
