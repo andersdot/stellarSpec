@@ -453,11 +453,14 @@ We use stars crossmatched in \tgas\ and \tmass\, that also lie within the observ
 \end{figure}
 
 
-We need to correct the photometry used in our method, both for the generation of the prior and the likelihood, for dust. With the emergence of 3D dust maps, it is now possible to estimate dust corrections to stars within the Milky Way. The challenge is getting a proper estimate of the distance to the star before inferring $\varpi_{\true}$, since we need a dust correction prior to doing our inference. Dust corrections are particularly non trivial for stars with poor parallax signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. Although the dust model is probabilistic, as well as our distance inference, to move forward, we break from a fully Bayesian framework, in which we might infer the distance and the dust simultaneously (more about this in the discussion). Instead, we correct for dust using a point estimate from 3D dust map (Schlafly+Finkbeiner) sampled at a distance estimated from iteratively sampling our posterior pdf over $\varpi_{\true}$. To apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior, we infer more precise parallaxes to all the stars in our sample. We then use this more precise parallax posterior to get a measurement of dust in the 3D dust map. This approach minimizes severe distances, and their associated severe dust corrections, when using the likelihoods alone. In detail, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the Green et al 3D dust map at that distance. We take the $5\%$ quantile, as apposed to the median for example, to do a light dust correction because over correcting for dust can shoot the likelihood into an unphysical, different space of the CMD and then bias the distance inference. For each distance we sample the median of the probabilistic dust model. We apply each light dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD), and $E(B-V)$ is the output of the Green et al dust models. We then regenerate our prior using the lightly dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads again to a lighter deconvolution. We could add the covariance of the dust to our likelihoods, but this is beyond the scope of this demonstration of concept. We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. The iterative process allows for slight variations in distance and corresponding dust to become more consistent with the \cmd.
+We need to correct the photometry used in our method, both for the generation of the prior and the likelihood, for dust. With the emergence of 3D dust maps, it is now possible to estimate dust corrections to stars within the Milky Way. The challenge is getting a proper estimate of the distance to the star before inferring $\varpi_{\true}$, since we need a dust correction prior to doing our inference. Dust corrections are particularly non trivial for stars with poor parallax signal to noise. Stars with poor signal to noise have a likelihood that is consistent with infinite distance and can therefore have severe dust corrections. This is most obvious in the giant stars, which tend to have the lowest signal to noise, and can therefore have dust corrections $> 2$ magnitudes. Although the dust model is probabilistic, as well as our distance inference, to move forward, we break from a fully Bayesian framework, in which we might infer the distance and the dust simultaneously (more about this in the discussion). Instead, we correct for dust using a point estimate from the 3D dust map (Schlafly+Finkbeiner) sampled at a distance estimated from iteratively inferring and then sampling our posterior pdf over $\varpi_{\true}$. In more detail, to apply a dust correction to the \tmass\ photometry, we first generate our prior using the observed, attenuated photometry. Using this raw prior, we infer more precise parallaxes to all the stars in our sample. We then use this more precise parallax posterior to get a measurement of dust in the 3D dust map for each star. And repeat. This approach minimizes severe distances, and their associated severe dust corrections, which would occur if using the likelihoods alone. In detail, we take the $5\%$ quantile of each distance posterior, so the closest bit of the posterior, and sample the 3D dust map at that distance. We take the $5\%$ quantile, as apposed to the median, for example, to do a light dust correction, because over correcting for dust can shoot the likelihood into an unphysical, different space of the \cmd and bias the parallax inference. For each distance, we sample the median of the probabilistic dust model. We apply each light dust correction to our \tmass\ photometry given by Equation \ref{eq:data} where $Q_{\lambda}$ = [0.709, 0.302] for bands [J, K] respectively, taken from table (REF TABLE SFD). We then regenerate our prior using the lightly dust corrected photometry. We do not update the errors, but keep them the same as before the dust correction, which is wrong and under representing our errors but this leads, again, to a lighter deconvolution. We could add the covariance of the dust to our likelihoods, but this is beyond the scope of this demonstration of concept. We iterate this process 10 times, however the dust values seem to converge after about 2-3 iterations. The iterative process allows for slight variations in distance and corresponding dust to become more consistent with the \cmd.
 
 Should I quote some statistics about the dust corrections? mostly small? maybe difference before/after applying prior to distance?
 
-\subsection{Prior}
+\subsection{Output Data}
+Using a data driven model of the observed \cmd\ we inferred a posterior belief of the true parallax of each star. Given our method, we call our posterior parallax the photometric parallax.
+DWH: Placeholder for the output format for our data products.
+RA, DEC, l, b, tgas source ID, tycho-2 source ID, parallax samples, parallax posterior, flag (some fraction of posterior not in window, negative gaia parallax, ...)
 
 \begin{figure}
 \centering
@@ -466,15 +469,12 @@ Should I quote some statistics about the dust corrections? mostly small? maybe d
 \label{fig:prior}
 \end{figure}
 
-\begin{figure}
-\centering
-  \includegraphics[width=\textwidth]{priorNgaussComparison.png}
-\caption{Prior: the XD generated mixture of gaussians we use as our prior. To determine the number of gaussians we used cross validation, using 70\% of our sample as a training set and 30\% as the test set. Increasing the number of gaussians we used continued to increase the likelihood of the test set of data, showing that we are no over fitting. Using more gaussians as our prior did not substantially change our posterior results, but it did start to highlight the features of the CMD.}
-\label{fig:priorCompare}
-\end{figure}
-
-
-
+%\begin{figure}
+%\centering
+%  \includegraphics[width=\textwidth]{priorNgaussComparison.png}
+%\caption{Prior: the XD generated mixture of gaussians we use as our prior. To determine the number of gaussians we used cross validation, using 70\% of our %sample as a training set and 30\% as the test set. Increasing the number of gaussians we used continued to increase the likelihood of the test set of data, %showing that we are no over fitting. Using more gaussians as our prior did not substantially change our posterior results, but it did start to highlight the %features of the CMD.}
+%\label{fig:priorCompare}
+%\end{figure}
 
 \begin{figure}
 \centering
@@ -500,7 +500,7 @@ Should I quote some statistics about the dust corrections? mostly small? maybe d
 \end{figure}
 
 
-\subsection{Results: Distances to M67}
+\subsection{Distances to M67}
 \begin{figure}
 \centering
   \includegraphics[width=\textwidth]{distancesM67.png}
@@ -508,29 +508,24 @@ Should I quote some statistics about the dust corrections? mostly small? maybe d
 \label{fig:m67}
 \end{figure}
 
-As proof of concept we inferred the distances to stars in the open cluster M67. It is an open cluster in the constellation Cancer and is estimated to be 3-5 billion years old and 800-900 pc away. Previous work (cite CBJ) has estimated that bad things happen if you try to infer a distance as the inverse of the observed (noisy) parallax when the signal to noise of the parallax measurement drops below 5. With \gaia\ parallaxes having a minimum uncertainty of about 0.3 mas, the SN reaches 5 for the most certain parallax measurements at about 700 pc, right where this cluster lies. So it is a great test case for comparing parallax inferences with or without a prior. We made a window of 1 square degree on the sky with the cluster M67 lying in the middle. The cluster is visibly obvious as a clustering of stars in a visualization of the \gaia\ data on the 2D sky. With our converged dust values, and it's associated prior, we calculate the posterior of the true parallaxes to the stars within this window on the sky around M67. Figure \ref{fig:m67} shows the comparison of the likelihoods and posteriors. The vertical lines bracket the parallaxes of, or distances to, the cluster. The likelihoods of the observed parallaxes, shown in the top row, are broad and the cluster is not obvious at all. The posteriors, shown in the bottom row, show a sharp peak in the probability at the previously determined distance to the cluster, the vertical lines, for far more stars than the likelihoods would imply. Our prior is not only making parallaxes more precise but also (possibly) increasing the accuracy. Too strong?
+As proof of concept of our demonstration of concept, we inferred the distances to stars in the open cluster M67. It is an open cluster in the constellation Cancer and is estimated to be 3-5 billion years old and 800-900 pc away. Previous work (cite CBJ) has estimated that bad things happen if you try to infer a distance as the inverse of the observed (noisy) parallax when the signal to noise of the parallax measurement drops below 5. With \gaia\ parallaxes having a minimum uncertainty of about 0.3 mas, the SN reaches 5 for the most certain parallax measurements at about 700 pc, right where this cluster lies. So it is a great test case for comparing parallax inferences with or without a prior. We made a window of 1 square degree on the sky with the cluster M67 lying in the middle. The cluster is visibly obvious as a clustering of stars in a visualization of the \gaia\ data on the 2D sky. With our converged dust values, and its associated prior, we calculate the posterior over $\varpi_{\true}$ for each star within this window on the sky around M67. Figure \ref{fig:m67} shows the comparison of the likelihoods and posteriors. The vertical lines bracket the previously measured parallaxes of, or distances to, the cluster. The likelihoods of the observed parallaxes, shown in the top row, are broad and the cluster is not obvious at all. The posterior pdf, shown in the bottom row, are more sharply peaked at the previously determined distance to the cluster, the vertical lines, for far more stars than the likelihoods. Our prior is not only making parallaxes more precise but also (possibly) increasing the accuracy.
 
-
-\subsection{Output data}
-DWH: Placeholder for the output format for our data products.
-RA, DEC, l, b, tgas source ID, tycho-2 source ID, parallax samples, parallax posterior, flag (some fraction of posterior not in window, negative gaia parallax, ...)
 
 \section{Discussion}
 
 We have shown that it is possible to obtain photometric parallaxes for
 distant stars in the \gaia\ \tgas\ data without any use of physical stellar
 models, nor models of the Milky Way.
-That is, the geometric parallaxes can calibrate a set of photometric
-models that are purely statistical---a model of the data rather than
+We used the geometric parallaxes to calibrate a photometric
+model that is purely statistical, which is a model of the data rather than
 a model of stars \foreign{per se}.
 This opens up the possibility of completing the goals of the \gaia\ Mission
 without building in unnecessary assumptions about the mechanical properties
 of stars or the Galaxy.
 
-We obtained the photometric parallaxes in this project
-by building a data-driven model of the
-color--magnitude diagram (\cmd) of the stars in the \tgas\ data set,
-and using it as a prior pdf for Bayesian interences.
+Transition clause/sentence. We obtained the photometric parallaxes in this project
+by building a data-driven model of \cmd\ of the stars in the \tgas\ data set,
+and using it as a prior pdf for Bayesian inference.
 The posterior pdfs for distance that we obtain are, in general, much
 narrower than the likelihood functions delivered by the
 \gaia\ Mission, and therefore the distance estimates (or,
@@ -545,34 +540,31 @@ showing that the posterior distance estimates to stars in stellar
 clusters [HOGG: Is this too general?] are much more clustered than likelihood-based distance
 estimates.
 
-Although we have not performed principled hierarchical Bayesian inference in this
-project, we built our prior for each star's distance by
+Transition clause/sentence. Although we have not performed principled hierarchical Bayesian inference in this
+project, we built our prior for each star's parallax by
 performing a statistically responsible deconvolution
 of the \gaia\ \tgas\ data that is justifiable under a clear set of
 assumptions.
-This deconvolution makes use of a reasonable noise model and an
-assumption of stationarity to shrink the parallax uncertainties, and
-do so dramatically for the stars measured at lower signal-to-noise.
-Because the method we use (Extreme Deconvolution or \xd, which is
-an Empirical Bayesian maximum-marginalized-likelihood estimator) accounts for
+This deconvolution, using a reasonable noise model and an
+assumption of stationarity, shrinks the parallax uncertainties, most dramatically for the stars measured at lower signal-to-noise.
+Because the method we use, \xd, which is
+an Empirical Bayesian maximum-marginalized-likelihood estimato, accounts for
 heteroskedastic noise, we were able to build our photometric parallax
 model---which is a model of the \cmd---using
-all the data, not just the data with the highest signal-to-noise or
-largest parallaxes.
-That is, the model for the \cmd\ we have built is representative for
-(a subset of) the \tgas\ Catalog.
-Inasmuch as that is true, we expect any (sensible) distance estimates
-we generate from our distance posterior pdfs to be only weakly biased.
+all the data, not just the data with the highest signal-to-noise.
+So, the model for the \cmd\ we built is representative for
+our subset of the \tgas\ Catalog.
+Because our model is representitive of our full subset catalog, we expect any (sensible) parallax estimates
+we generate from our parallax posterior pdfs to be only weakly biased.
 
-The Empirical Bayesian methodology is a good approximation to full
-hierarchical inference in the limit of large numbers of data points.
-That is, when no individual star is carrying a lot of weight in the
+Transition clause/sentence. The empirical Bayesian methodology is a good approximation to full
+hierarchical inference in the limit of large numbers of data points, such that no individual star is carrying a lot of weight in the
 model of the \cmd.
-With its millions of stars, the \tgas\ Catalog may appear to safely
+With its millions of stars, the \tgas\ Catalog appears to safely
 live in this limit.
 However, because there are parts of the \cmd\ that are poorly populated,
-even in \tgas, the Empirical Bayes approximation may be bad for some
-color ranges.
+even in \tgas, the empirical Bayes approximation may be bad for some
+portions of the \cmd.
 In particular, there appear to be essentially no white dwarf stars,
 and other classes (like bright red giant branch stars) have few to no exemplars
 in the data set at high signal-to-noise (in parallax).
@@ -580,30 +572,28 @@ For all these reasons, we do think that this approximation is not perfectly
 safe, and it is a goal to explore full hierarchical modeling in the coming
 years (and see, for example, Leistedt et al. in preparation).
 
-In some sense, the biggest limitation of the data-driven \cmd\ model
-created in this project is that we made no use of any kind of \tgas\ selection
+Transition clause/sentence. The biggest limitation of our method for generating the \cmd\ from the data is that we made no use of any kind of \tgas\ selection
 function or completeness estimate or inverse-selection-volume corrections.
-That is, the model is a model of the \tgas\ Catalog
+This model is a model of the \tgas\ Catalog
 (or really the \tgas--\tmass\ intersection), not of the stars in
 the Milky Way, nor any volume-limited subsample of the Milky Way.
 Importantly, because we used \emph{all} of the stars in the \tgas--\tmass\
-intersection, the model \emph{is} representive of the full catalog,
+intersection, the model \emph{is} representive of the full intersection,
 even the distant parts, where all the parallaxes are measured at low
 signal-to-noise.
 This is in contrast to techniques that might build the model from only
 the high signal-to-noise sources; such a model would be biased towards
-stellar types and compositions found locally, lower-luminosity stars,
+stellar types and compositions found locally, as well as lower-luminosity stars,
 and stars which happened to get good parallaxes.
 However, our use of the entire \tgas--\tmass\ intersection without
 any selection function restricts the use of our \cmd\ model as a prior
 to inferences within that same \tgas--\tmass\ intersection.
-For example, it would be biasing to use this same prior to infer
+It would be biasing to use this same prior to infer
 distances for the full billion-star catalog released in \gaia\ DR1
 alongside \tgas, or for stars fainter or brighter or bluer than those
 included in the \tgas--\tmass\ intersection.
 
-The outputs of this project include posterior pdfs and posterior
-samplings for stellar parallaxes or distances.
+Transition clause/statement. The outputs of this project include posterior pdfs for stellar parallaxes.
 It is tempting to treat these outputs as equivalent to some kind of catalog of
 measurements, as we treated the original parallax measurements from \tgas.
 That is, it is tempting to treat these as simply ``better'' measurements.
@@ -612,11 +602,11 @@ claim that we have de-noised the \tgas\ Catalog.
 However, there are important differences, as there are with all
 probabilistic catalogs (\citealt{hogg11}; \citealt{portillo17}), between the
 measurements and the de-noised measurements.
-The most important difference, for users of our output, between our
-output and the \tgas\ data input, is that the \tgas\ data is the representation
+For users of our output, the most important difference between our
+output and the \tgas\ data input is that the \tgas\ data is the representation
 of a likelihood function, whereas our ouptut is a
 representation of a posterior pdf, one per star.
-If used naively, posterior information can lead to serious statistical
+Posterior information used naively can lead to serious statistical
 errors, because each data point has had a prior multiplied in.
 Multiplicative uses of the data will effectively take the prior
 pdf to a large power.
@@ -634,7 +624,7 @@ contributions before engaging with these outputs.
 \label{fig:otherPrior}
 \end{figure}
 
-There are other prior information options when inferring distances to stars. One option is the exponentially declining spatial density of stars (cite: Tri, CBJ). It is parameterized by a scale length, and has the nice property that it is smooth out to very large distances so the posteriors are also very smooth. It is a fairly weak prior and basically sets a smooth scale at which it's challenging for stars to lie at, and also allows for negative parallaxes. It is a fairly broad prior so the median \gaia\ star has an increased posterior variance. It has the largest affect on the most noisy and negative parallaxes and has the nice property of bringing these noisy or negative measurements to reasonable parallaxes. Given this prior, what does the observed \cmd\ look like?  The \cmd\ is broad and the red clump highly stretched.
+There are other options for prior information when inferring distances to stars. One option is the exponentially declining spatial density of stars (cite: Tri, CBJ). It is parameterized by a scale length, and has the nice property that it is smooth out to very large distances so the posteriors are also very smooth. It is a fairly weak prior. It sets a smooth scale distance beyond which the posterior struggles to maintain much probability, and also converts a negative parallax likelihood into a posterior of very small parallax. It is a fairly broad prior so the median \gaia\ star has an increased posterior variance of XXX. It has the largest effect on the most noisy and negative parallaxes, and has the nice property of bringing these noisy or negative measurements to reasonable parallaxes. Given this prior, what does the observed \cmd\ look like?  The \cmd\ is broad and the red clump highly stretched.
 
 
 \subsection{What's That Feature?}
@@ -647,18 +637,18 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \item (5) Narrow Red Giant Branch
 \item (6) Noticeable turn off
 \end{itemize}
-The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of only seeing a very small volume of lower main sequence stars but a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is straight/narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
+The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of seeing a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is fairly straight and narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
 Come back to the assumptions. What happens if we change or violate them?
 
 Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
 
 \subsection{Proper Dust Corrections}
-Within our probabilistic framework, we improperly handle dust. We are taking a point estimate of the probabilistic dust model at a quantile distance of our posterior, correcting our photometry using this point estimate and rederiving the prior. A full, proper account would sample the dust model at distances sampled from the posterior and propagate those samples back into the prior during the iterative proccess. The issue, the reason we don't do a full probabilistic treatment, is that this proper dust distribution would not be a Gaussian distribution which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
+Within our probabilistic framework, we improperly handle dust. We are taking a point estimate of the probabilistic dust model at a quantile of our distance posterior, correcting our photometry using this point estimate, and then re-deriving the prior. A full, proper account would sample the dust model at distances sampled from the posterior, and propagate those samples back into the prior during the iterative process. The reason we don't do a full probabilistic treatment, is that this proper dust distribution would not be a Gaussian distribution, which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
 
 
 \subsection{Stationarity Assumption}
-Stationarity assumes both the low and high signal to noise objects are being drawn from the same distribution, independent of noise. This isn't precisely true because most Gaia objects have similar noise $(\sim 3 mas)$, but their signal (parallax) depends on their distance. Nearby stars have higher signal (parallax) because they are closer and the nearby stars are mostly main sequence stars (IMF, timing, malmquist). However, we can see bright giants to much larger distances and therefore lower signal or parallax, leading to lower signal to noise. So the red giant branch is a population of relatively lower signal to noise objects compared with the main sequence. But I think this is ok, that the low and high signal to noise objects have to be drawn from the same distribution within some feature or patch of the space. This is all assuming the Gaia noise model is correct. If the uncertainties are over estimated then we could be over deconvolving (generating a tighter distribution than the truth) And in some extreme over estimate of uncertainties the lower signal to noise giants could be pulled to the main sequence. But with the quoted uncertainties this seems unlikely. As you move up the giant branch and probe farther giants the signal to noise will continue to diminish but I think this is okay since the color uncertainties are not large. Possibly a metallicity trend with distance, placing more nearby (higher S/N) objects at slightly different positions on the CMD pulling lower S/N objects to that distribution for our prior. But if something has small error bars is good data is good data both for inference and generating the prior
+Stationarity assumes both the low and high signal to noise objects are being drawn from the same distribution, independent of noise. This isn't precisely true because most \gaia\ objects have similar noise $(\sim 3 \, \mathrm{mas})$, but their signal (parallax) depends on their distance. Nearby stars have higher signal (parallax) because they are closer and the nearby stars are mostly main sequence stars due to the IMF, timing, and malmquist bias. However, we can see bright giants to much larger distances, and therefore lower signal or parallax, leading to lower signal to noise. So the red giant branch is a population of relatively lower signal to noise objects compared with the main sequence. But this does not violate the stationarity assumption in detail, because the low and high signal to noise objects have to be drawn from the same distribution within some feature or patch of the space. This is all assuming the Gaia noise model is correct. If the uncertainties are over estimated then we could be over deconvolving (generating a tighter distribution than the truth) And in some extreme over estimate of uncertainties the lower signal to noise giants could be pulled to the main sequence. But with the quoted uncertainties this seems unlikely. As you move up the giant branch, and probe farther giants, the signal to noise will continue to diminish, but because the color uncertainties are not large, the S/N spread within a patch of the \cmd\ is well mixed. Possibly a metallicity trend with distance, placing more nearby (higher S/N) objects at slightly different positions on the CMD pulling lower S/N objects to that distribution for our prior. But if something has small error bars is good data is good data both for inference and generating the prior
 
 For very rare kinds of stars. Inference with our prior is bad for underrepresented populations in the \cmd. For example, it appears there are only $2$ white dwarfs in \gaia\ DR1. With them being very underrepresented in the prior, the amplitudes of the gaussians representing them is very small, so the WDs are more likely to be pulled to mimic a much farther away MS star.
 
