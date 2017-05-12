@@ -286,7 +286,9 @@ p(y_{\true,n} \given y_n, \tilde{\sigma}_n) &=& p(y_n \given y_{\true,n}, \sigma
 Since everything is Gaussian, this can be done analytically by multiplying Gaussians together. In Figure \ref{fig:toy} lower left panel, the blue points represent the posterior belief of the true value $p(y_{\true,n} \given y_n, \tilde{\sigma}_n)$ for the highlighted black points. The red points are the associated true y values.
 In Figure \ref{fig:toy}, lower right panel, the blue points show the expectation value and $1\sigma$ uncertainty of the posterior belief for all 1024 $y_n$.
 When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance, $t^2$, and the measurement variance, $\sigma_n^2$.
-The points are colored by their measurement variance $\sigma_n^2$, which shows that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior. In contrast, more certain measurements remain closer to their measured values, $y_n$. We now have better estimates of each true y value by inferring each true y value from the measured y value and using an estimate of the true distribution the measured y value was drawn from as the prior. Bringing the toy model back to our original problem, we can get better estimates of the true parallax for each star by inferring the true parallax from the measured parallax and using the noise-deconvolved \cmd, an estimate of the true \cmd, as our prior.
+The points are colored by their measurement variance $\sigma_n^2$, which shows that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior. In contrast, more certain measurements remain closer to their measured values, $y_n$. We now have better estimates of each true y value by inferring each true y value from the measured y value and using an estimate of the true distribution the measured y value was drawn from as the prior.
+HOGG: describe why the blue and red points have a different morphology
+Bringing the toy model back to our original problem, we can get better estimates of the true parallax for each star by inferring the true parallax from the measured parallax and using the noise-deconvolved \cmd, an estimate of the true \cmd, as our prior.
 
 \section{Assumptions and methods}
 
@@ -649,9 +651,9 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \end{itemize}
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of seeing a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is fairly straight and narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
-Come back to the assumptions. What happens if we change or violate them?
-Put in citations
-Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
+HOGG: Come back to the assumptions. What happens if we change or violate them?
+Anderson: Put in citations
+HOGG: Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
 
 \subsection{Proper Dust Corrections}
 Within our probabilistic framework, we improperly handle dust. We are taking a point estimate of the probabilistic dust model at a quantile of our distance posterior, correcting our photometry using this point estimate, and then re-deriving the prior. A full, proper account would sample the dust model at distances sampled from the posterior, and propagate those samples back into the prior during the iterative process. The reason we don't do a full probabilistic treatment, is that this proper dust distribution would not be a Gaussian distribution, which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
