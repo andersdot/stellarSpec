@@ -6,7 +6,6 @@
 % # To-do list
 % - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
 % - zeroth draft / re-write the method section
-% - add ORCIDs like Hogg's
 
 \documentclass[modern]{aastex61}
 \usepackage{amsmath}
@@ -125,12 +124,21 @@ Here we deliver a demonstration-of-concept that shows that a
 data-driven model of the \gaia\ data could in principle deliver very
 precise parallaxes, without any input of the physics or numerical models of stellar
 evolution, interiors, or photospheres.
-HOGG:What is a photometric parallax? <Enter here>
-Most stellar models used to generate photometric distances or photometric
-parallaxes have been physical models, based on gravity, fluid mechanics,
+That is, this is a data-driven or purely empirical \emph{photometric
+  parallax} method.
+A photometric parallax is a parallax (or distance) estimate based on
+the photometry (colors and apparent magnitude or magnitudes) of a
+star.
+Fundamentally, photometric parallaxes capitalize on the fact that the
+apparent magnitude of a star is a strong function of distance, and
+that the absolute magnitude is a strong function of color (or surface
+temperature) and evolutionary stage.
+
+Most stellar models used to generate photometric
+parallaxes have been \emph{physical} models, based on gravity, fluid mechanics,
 radiative transfer, nuclear reactions, and atomic and molecular transitions.
 Because there are small issues with each of these components, the models are inaccurate in detail, and
-the physical models therefore produce distance estimates that are biased.
+the physical models therefore produce parallax (and hence distance) estimates that are biased.
 In addition, they build a long list of physical assumptions (about
 nuclear reactions, convection, and thermal timescales, for example)
 into the parallax estimates.
@@ -287,10 +295,24 @@ Since everything is Gaussian, this can be done analytically by multiplying Gauss
 In Figure \ref{fig:toy}, lower right panel, the blue points show the expectation value and $1\sigma$ uncertainty of the posterior belief for all 1024 $y_n$.
 When the true values are inferred in this way, the associated variance $\tilde{\sigma}_n^2$ is the convolution of the true distribution variance, $t^2$, and the measurement variance, $\sigma_n^2$.
 The points are colored by their measurement variance $\sigma_n^2$, which shows that noisier measurements are more influenced by the prior and get pulled closer to the center of the MML distribution, our prior. In contrast, more certain measurements remain closer to their measured values, $y_n$. We now have better estimates of each true y value by inferring each true y value from the measured y value and using an estimate of the true distribution the measured y value was drawn from as the prior.
-HOGG: describe why the blue and red points have a different morphology
-Bringing the toy model back to our original problem, we can get better estimates of the true parallax for each star by inferring the true parallax from the measured parallax and using the noise-deconvolved \cmd, an estimate of the true \cmd, as our prior.
 
-\section{Assumptions and methods}
+In detail, the posterior points shown in the lower-right panel of
+Figure~\ref{fig:toy} look more concentrated (vertically) than the true
+values shown in the upper-left panel.
+This is because the points in the lower-right (posterior) panel show
+not typical values or typical draws from the posterior; they show the
+modes (and, with error bars, the variances) of the posterior pdfs.
+When an original data point has a large variance, the posterior ends
+up close to the prior, which has a mode at the center line; the
+posterior modes therefore concentrate more towards the center line
+than any representative sampling.
+A plot of posterior samplings (as opposed to a plot of posterior modes) would
+show a scatter like that in the upper-left (truth) panel.
+
+Bringing the toy model back to our original problem:
+We can get better estimates of the true parallax for each star by inferring the true parallax from the measured parallax and using the noise-deconvolved \cmd, an estimate of the true \cmd, as our prior.
+
+\section{Assumptions and methods}\label{sec:method}
 
 To infer the true parallax to a star using the noise-deconvolved \cmd\ as a prior, we make the following assumptions. The method we present is correct
 and justifiable under these assumptions, each of which is questionable
@@ -538,8 +560,8 @@ inferences bring in new information that decrease variance (but
 often introduce bias).
 We have shown that, in addition to pure precision improvements, at
 least some aspects of \emph{accuracy} have been improved as well, by
-showing that the posterior distance estimates to stars in stellar
-clusters [HOGG: Is this too general?] are much more clustered than likelihood-based distance
+showing that the posterior distance estimates to stars in (at least one) stellar
+cluster are much more clustered than likelihood-based distance
 estimates.
 
 Transition clause/sentence. Although we have not performed principled hierarchical Bayesian inference in this
@@ -651,29 +673,68 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \end{itemize}
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of seeing a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is fairly straight and narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
-HOGG: Come back to the assumptions. What happens if we change or violate them?
-Anderson: Put in citations
-HOGG: Long discussion of the noise model. We took serious short-cuts. Call out to Boris.
+In Section~\ref{sec:method} we listed a set of assumptions upon which
+the photometric parallax method in this project is based.
+Here we return to these assumptions, and discuss them critically in more
+detail.
+\begin{description}
+\item[stationarity] Stationarity assumes both the low and high
+  signal to noise objects are being drawn from the same distribution,
+  independent of noise. This isn't precisely true because most
+  \gaia\ objects have similar noise $(\sim 3 \, \mathrm{mas})$, but
+  their signal (parallax) depends on their distance. Nearby stars have
+  higher signal (parallax) because they are closer and the nearby
+  stars are mostly main sequence stars due to the IMF, timing, and
+  malmquist bias. However, we can see bright giants to much larger
+  distances, and therefore lower signal or parallax, leading to lower
+  signal to noise. So the red giant branch is a population of
+  relatively lower signal to noise objects compared with the main
+  sequence. But this does not violate the stationarity assumption in
+  detail, because the low and high signal to noise objects have to be
+  drawn from the same distribution within some feature or patch of the
+  space. This is all assuming the Gaia noise model is correct. If the
+  uncertainties are over estimated then we could be over deconvolving
+  (generating a tighter distribution than the truth) And in some
+  extreme over estimate of uncertainties the lower signal to noise
+  giants could be pulled to the main sequence. But with the quoted
+  uncertainties this seems unlikely. As you move up the giant branch,
+  and probe farther giants, the signal to noise will continue to
+  diminish, but because the color uncertainties are not large, the S/N
+  spread within a patch of the \cmd\ is well mixed. Possibly a
+  metallicity trend with distance, placing more nearby (higher S/N)
+  objects at slightly different positions on the CMD pulling lower S/N
+  objects to that distribution for our prior. But if something has
+  small error bars is good data is good data both for inference and
+  generating the prior
 
-\subsection{Proper Dust Corrections}
-Within our probabilistic framework, we improperly handle dust. We are taking a point estimate of the probabilistic dust model at a quantile of our distance posterior, correcting our photometry using this point estimate, and then re-deriving the prior. A full, proper account would sample the dust model at distances sampled from the posterior, and propagate those samples back into the prior during the iterative process. The reason we don't do a full probabilistic treatment, is that this proper dust distribution would not be a Gaussian distribution, which \xd\ requires. We could calculate this more complex dust distribution and estimate it as a Gaussian distribution to feed to \xd, however, this is beyond the scope of this paper.
-
-
-\subsection{Stationarity Assumption}
-Stationarity assumes both the low and high signal to noise objects are being drawn from the same distribution, independent of noise. This isn't precisely true because most \gaia\ objects have similar noise $(\sim 3 \, \mathrm{mas})$, but their signal (parallax) depends on their distance. Nearby stars have higher signal (parallax) because they are closer and the nearby stars are mostly main sequence stars due to the IMF, timing, and malmquist bias. However, we can see bright giants to much larger distances, and therefore lower signal or parallax, leading to lower signal to noise. So the red giant branch is a population of relatively lower signal to noise objects compared with the main sequence. But this does not violate the stationarity assumption in detail, because the low and high signal to noise objects have to be drawn from the same distribution within some feature or patch of the space. This is all assuming the Gaia noise model is correct. If the uncertainties are over estimated then we could be over deconvolving (generating a tighter distribution than the truth) And in some extreme over estimate of uncertainties the lower signal to noise giants could be pulled to the main sequence. But with the quoted uncertainties this seems unlikely. As you move up the giant branch, and probe farther giants, the signal to noise will continue to diminish, but because the color uncertainties are not large, the S/N spread within a patch of the \cmd\ is well mixed. Possibly a metallicity trend with distance, placing more nearby (higher S/N) objects at slightly different positions on the CMD pulling lower S/N objects to that distribution for our prior. But if something has small error bars is good data is good data both for inference and generating the prior
-
-For very rare kinds of stars. Inference with our prior is bad for underrepresented populations in the \cmd. For example, it appears there are only $2$ white dwarfs in \gaia\ DR1. With them being very underrepresented in the prior, the amplitudes of the gaussians representing them is very small, so the WDs are more likely to be pulled to mimic a much farther away MS star.
+  For very rare kinds of stars. Inference with our prior is bad for
+  underrepresented populations in the \cmd. For example, it appears
+  there are only $2$ white dwarfs in \gaia\ DR1. With them being very
+  underrepresented in the prior, the amplitudes of the gaussians
+  representing them is very small, so the WDs are more likely to be
+  pulled to mimic a much farther away MS star.
+\item[big data] HOGG 
+\item[noise model] HOGG
+\item[dust] Within our probabilistic framework, we improperly handle
+  dust. We are taking a point estimate of the probabilistic dust model
+  at a quantile of our distance posterior, correcting our photometry
+  using this point estimate, and then re-deriving the prior. A full,
+  proper account would sample the dust model at distances sampled from
+  the posterior, and propagate those samples back into the prior
+  during the iterative process. The reason we don't do a full
+  probabilistic treatment, is that this proper dust distribution would
+  not be a Gaussian distribution, which \xd\ requires. We could
+  calculate this more complex dust distribution and estimate it as a
+  Gaussian distribution to feed to \xd, however, this is beyond the
+  scope of this paper.
+\item[mixture of Gaussians] HOGG
+\item[no physics] HOGG
+\end{description}
 
 \subsection{Cross Validation}
 For generating our prior, we use a mixture of 128 Gaussians. This number, 128, was chosen heuristically. It makes the method computationally tractable, and is sufficient for this demonstration of concept, but more Gaussians might be desired for a more final data product. We would ideally use the optimal number of Gaussians determined by cross validation, but preliminary tests using cross validation suggest the optimal number of Gaussians is very large.
 
-Compare with literature stellar models
-
-\section{Conclusion}
-Summarizing remarks:
-
-Concluding remarks:
-
+Anderson: Compare with literature stellar models?? This is an enhanced goal; strike this.
 
 \acknowledgments It is a pleasure to thank
   Ana Bonaca (Harvard),
