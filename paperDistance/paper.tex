@@ -673,23 +673,23 @@ The denoised expectation values of the parallax projected into the \cmd\ show in
 \end{itemize}
 The lower main sequence is very narrow while the upper main sequence is much wider. This may be an age variation on the main sequence mixed with a malquist bias of seeing a much larger volume of upper main sequence stars. There is a plausible binary sequence of stars with about twice the brightness as the main sequence. The helium burning red clump is (surprisingly) prominent for the volume DR1 probed, and the red giant branch is fairly straight and narrow. The main sequence turn off is noticeable and also surprisingly narrow, possibly a reflection of the star formation history of the local volume also mixed with a malmquist bias.
 
+\subsection{Critical discussion of assumptions}
+
 In Section~\ref{sec:method} we listed a set of assumptions upon which
 the photometric parallax method in this project is based.
 Here we return to these assumptions, and discuss them critically in more
 detail.
 \begin{description}
-\item[stationarity] Stationarity assumes both the low and high
-  signal to noise objects are being drawn from the same distribution,
-  independent of noise. This isn't precisely true because most
-  \gaia\ objects have similar noise $(\sim 3 \, \mathrm{mas})$, but
-  their signal (parallax) depends on their distance. Nearby stars have
-  higher signal (parallax) because they are closer and the nearby
-  stars are mostly main sequence stars due to the IMF, timing, and
-  malmquist bias. However, we can see bright giants to much larger
-  distances, and therefore lower signal or parallax, leading to lower
-  signal to noise. So the red giant branch is a population of
+\item[stationarity] (HOGG needs to clean this paragraph)
+  We have assumed that (locally) the morphology of
+  the \cmd\ is independent of signal-to-noise; that is, we have assumed that
+  both the low and high
+  signal-to-noise objects are being drawn from the same distribution.
+  This isn't precisely true because nearby stars in \tgas\ are
+  mostly main sequence stars, while we can see luminous giants to much larger
+  distances. So the red giant branch is a population of
   relatively lower signal to noise objects compared with the main
-  sequence. But this does not violate the stationarity assumption in
+  sequence. This does not violate the stationarity assumption in
   detail, because the low and high signal to noise objects have to be
   drawn from the same distribution within some feature or patch of the
   space. This is all assuming the Gaia noise model is correct. If the
@@ -704,8 +704,8 @@ detail.
   metallicity trend with distance, placing more nearby (higher S/N)
   objects at slightly different positions on the CMD pulling lower S/N
   objects to that distribution for our prior. But if something has
-  small error bars is good data is good data both for inference and
-  generating the prior
+  small error bars it is good data is good data both for inference and
+  generating the prior.
 
   For very rare kinds of stars. Inference with our prior is bad for
   underrepresented populations in the \cmd. For example, it appears
