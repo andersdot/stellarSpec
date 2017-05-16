@@ -5,7 +5,9 @@
 
 % # To-do list
 % - We need a standard name for the \tgas--\tmass--\PanSTARRS\ Intersection.
-% - zeroth draft / re-write the method section
+% - deal with all HOGG or Anderson or LMA in the text.
+% - deal with everything in the google doc.
+% - are there any github issues?
 
 \documentclass[modern]{aastex61}
 \usepackage{amsmath}
@@ -282,9 +284,21 @@ Maximizing this joint likelihood of all the data is the same as minimizing
 
 This MML gives us the best fit parameters $\hat{m}$, $\hat{b}$, and $\hat{t}$. In Figure \ref{fig:toy}, lower left panel, the true functions $y_{\true} = m_{\true}\,x + b_{\true} \pm t_{\true}$ are shown as the red lines, and the best fit MML functions $\hat{y}_{\true} = \hat{m}\, x + \hat{b} \pm \hat{t}$ are shown as the blue lines. Now that we have an estimate of the true underlying distribution $\hat{y}_{\true}$, we use this as a prior to infer a posterior belief of the true values for each datum $p(y_{\true,n} \given y_n, \tilde{\sigma}_n^2)$.
 
-Here is a good point to step back and acknowledge that our method is a bit strange. We are using the set of data to determine the noise-deconvolved distribution, which is an estimate of the true distribution, and then using that noise-deconvolved distribution to make inferences on the data. We are technically using the data twice!To be fully, technically correct, we should learn the true distribution while leaving one datum out, the one datum we want to infer the true y value for\footnote{DWH: Remember what this brain dump is for}. Leaving one datum out to estimate the prior and then inferring the posterior for that datum is way too expensive for the 1024 points in our toy model, and also for the 1.2 million stars in our actual data set. Luckily with large data sets, even at 1024, 1 datum is $\sim0.1\%$ of your dataset and therefore leaving that point out will not change the MML parameters of your noise-deconvolved distribution. With the \gaia\ dataset of over a million stars, we can safely step into the Empirical Bayes regime. (Talk more about emperical bayes here?)
+Here is a good point to step back and acknowledge that our method is a
+bit strange. We are using the set of data to determine the
+noise-deconvolved distribution, which is an estimate of the true
+distribution, and then using that noise-deconvolved distribution to
+make inferences on the data. We are technically using the data
+twice! To be fully, technically correct, we should \emph{either} learn the true
+distribution while leaving one datum out, the one datum we want to
+infer the true y value for, or else go to full hierarchical Bayesian inference,
+in which we treat the \cmd\ parameters probabilistically along with everything else.
+With large data sets, the MML or Empirical Bayes approximation is safe,
+in some sense because no individual data point makes a large difference to
+the inference.
 
-So, returning the inference, we use Bayes theorem to turn the likelihood of the noisy data into a posterior believe over the true y value.
+Returning the inference:
+We use Bayes theorem to turn the likelihood of the noisy data into a posterior believe over the true y value.
 \begin{eqnarray}
 p(y_{\true,n} \given y_n, \tilde{\sigma}_n) &=& p(y_n \given y_{\true,n}, \sigma_n)\,p(y_{\true,n}) \\
 \mathrm{where}\;p(y_n \given y_{\true,n}, \sigma_n) &=& \mathcal{N}(y_n \given y_{\true,n}, \sigma_n) \\
@@ -483,7 +497,7 @@ Should I quote some statistics about the dust corrections? mostly small? maybe d
 
 \subsection{Output Data}
 Using a data driven model of the observed \cmd\ we inferred a posterior belief of the true parallax of each star. Given our method, we call our posterior parallax the photometric parallax.
-DWH: Placeholder for the output format for our data products.
+HOGG: Placeholder for the output format for our data products.
 RA, DEC, l, b, tgas source ID, tycho-2 source ID, parallax samples, parallax posterior, flag (some fraction of posterior not in window, negative gaia parallax, ...)
 
 \begin{figure}
