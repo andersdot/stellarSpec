@@ -1,4 +1,4 @@
-# stellarTwins
+# photoParallax
 Capitalizing on the simplicity of stars for *good*.
 
 ## authors
@@ -15,5 +15,4 @@ Copyright 2017 the authors. **All rights reserved**.
 - Adrian Price-Whelan (Princeton)
 
 ## projects
-- Transferring spectroscopic labels to stars with no spectroscopy, making use of spectro-photometric similarities.
 - De-noising geometric parallaxes using spectro-photometry and data-driven models of the color-magnitude diagram of stars.
